@@ -88,6 +88,7 @@ comment on table merlin.external_event is e''
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,
+    enabled boolean not null default true,
     created_at timestamp with time zone default now() not null,
 
     constraint plan_derivation_group_pkey
