@@ -7,18 +7,18 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 /** A wrapper of any type of activity directive containing common data. */
 data class Directive<A: Any>(
   /** The inner payload, typically either [AnyDirective] or a mission model activity type. */
-    @JvmField val inner: A,
+  @JvmField val inner: A,
 
   /** The name of this specific directive. */
-    @JvmField val name: String,
+  @JvmField val name: String,
 
   /** The directive id. */
-    @JvmField val id: ActivityDirectiveId,
+  @JvmField val id: ActivityDirectiveId,
 
   override val type: String,
 
   /** The start behavior for this directive. */
-    val start: DirectiveStart,
+  val start: DirectiveStart,
 ): Activity<Directive<A>> {
   override val startTime: Duration
     get() = when (start) {
@@ -36,10 +36,10 @@ data class Directive<A: Any>(
 
   /** Transform the inner payload with a function, returning a new directive object. */
   fun <R: Any> mapInner(/***/ f: (A) -> R) = Directive(
-      f(inner),
-      name,
-      id,
-      type,
-      start
+    f(inner),
+    name,
+    id,
+    type,
+    start
   )
 }

@@ -24,7 +24,7 @@ fun <I: IntervalLike<I>> coalesceList(list: List<I>, shouldCoalesce: I.(I) -> Bo
   var shortIndex = 0
   var startIndex = 0
   while(mutableList[startIndex].interval.isEmpty()) startIndex++
-  var buffer = mutableList[shortIndex]
+  var buffer = mutableList[startIndex]
   for (segment in mutableList.subList(startIndex + 1, mutableList.size)) {
     if (segment.interval.isEmpty()) continue
     val comparison = buffer.interval.compareEndToStart(segment.interval)

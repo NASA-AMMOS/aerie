@@ -26,8 +26,11 @@ data class SchedulerToProcedurePlanAdapter(
   override fun toAbsolute(rel: Duration) = planningHorizon.startInstant + rel
 
   override fun <A : Any> directives(type: String?, deserializer: (SerializedValue) -> A): Directives<A> {
-    val schedulerActivities = (if (type == null) schedulerPlan.activities else schedulerPlan.activitiesByType[ActivityType(type)])
-        ?: throw Exception("could not find activities by type $type")
+    val schedulerActivities = if (type == null) {
+      this.schedulerPlan.activities
+    } else {
+      this.schedulerPlan.activities.filter { it.type.name == type }
+    }
 
     val result = ArrayList<Directive<A>>(schedulerActivities.size)
     for (activity in schedulerActivities) {

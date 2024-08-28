@@ -259,7 +259,7 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @param truncateMarginal whether objects with only partial overlap with an interval in the windows timeline
    *                         should be truncated to the intersection or included unchanged.
    */
-  fun filterByWindows(windows: Windows, truncateMarginal: Boolean = true) =
+  fun filterByWindows(windows: SerialOps<Interval, *>, truncateMarginal: Boolean = true) =
       if (truncateMarginal) {
         unsafeMap2(ctor, windows) { l, _, i -> l.withNewInterval(i) }
       } else {
