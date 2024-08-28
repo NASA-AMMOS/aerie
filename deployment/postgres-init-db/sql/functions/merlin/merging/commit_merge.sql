@@ -7,6 +7,7 @@ create procedure merlin.commit_merge(_request_id integer)
   declare
     validate_noConflicts integer;
     plan_id_R integer;
+    plan_id_S integer;
     snapshot_id_S integer;
 begin
   if(select id from merlin.merge_request where id = _request_id) is null then
@@ -163,6 +164,15 @@ begin
   update merlin.merge_request
   set status = 'accepted'
   where id = _request_id;
+
+  -- Perform an OR operation on the plans' derivation groups
+  select plan_id from merlin.plan_snapshot ps where ps.snapshot_id = snapshot_id_S into plan_id_S;
+
+  insert into merlin.plan_derivation_group(derivation_group_name, plan_id)
+	  select derivation_group_name, plan_id_R
+	  from merlin.plan_derivation_group pdg where pdg.plan_id = plan_id_S
+  on conflict(derivation_group_name, plan_id) do nothing;
+  -- as branch still exists, no need to delete anything or perform any cleanup in merlin.plan_derivation_group.
 
   -- Attach snapshot history
   insert into merlin.plan_latest_snapshot(plan_id, snapshot_id)
