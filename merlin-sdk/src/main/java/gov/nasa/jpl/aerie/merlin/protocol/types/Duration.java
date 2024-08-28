@@ -152,6 +152,7 @@ public record Duration(long micros) implements Comparable<Duration> {
   public static final Duration MINUTE = SECOND.times(60);
   /** One hour (h), equal to 60m. */
   public static final Duration HOUR = MINUTE.times(60);
+  /** One day (d), equal to 24h. */
   public static final Duration DAY = HOUR.times(24);
 
   /** The unit of measurement for microseconds. */
@@ -164,26 +165,59 @@ public record Duration(long micros) implements Comparable<Duration> {
   public static final Duration MINUTES = MINUTE;
   /** The unit of measurement for hours. */
   public static final Duration HOURS = HOUR;
+  /** The unit of measurement for days. */
   public static final Duration DAYS = DAY;
 
+  /** Constructs a duration from an exact number of microseconds. */
   public static Duration microseconds(final long quantity) throws ArithmeticException {
     return MICROSECOND.times(quantity);
   }
+
+  /** Constructs a duration from an exact number of milliseconds. */
   public static Duration milliseconds(final long quantity) throws ArithmeticException {
     return MILLISECOND.times(quantity);
   }
+  /** Constructs a duration from a double of milliseconds, rounding to the nearest microsecond. */
+  public static Duration milliseconds(final double quantity) {
+    return roundNearest(quantity, MILLISECOND);
+  }
+
+  /** Constructs a duration from an exact number of seconds. */
   public static Duration seconds(final long quantity) throws ArithmeticException {
     return SECOND.times(quantity);
   }
+  /** Constructs a duration from a double of seconds, rounding to the nearest microsecond. */
+  public static Duration seconds(final double quantity) {
+    return roundNearest(quantity, SECOND);
+  }
+
+  /** Constructs a duration from an exact number of minutes. */
   public static Duration minutes(final long quantity) throws ArithmeticException {
     return MINUTE.times(quantity);
   }
+  /** Constructs a duration from a double of minutes, rounding to the nearest microsecond. */
+  public static Duration minutes(final double quantity) {
+    return roundNearest(quantity, MINUTE);
+  }
+
+  /** Constructs a duration from an exact number of hours. */
   public static Duration hours(final long quantity) throws ArithmeticException {
     return HOUR.times(quantity);
   }
+  /** Constructs a duration from a double of hours, rounding to the nearest microsecond. */
+  public static Duration hours(final double quantity) {
+    return roundNearest(quantity, HOUR);
+  }
+
+  /** Constructs a duration from an exact number of days. */
   public static Duration days(final long quantity) throws ArithmeticException {
     return DAY.times(quantity);
   }
+  /** Constructs a duration from a double of days, rounding to the nearest microsecond. */
+  public static Duration days(final double quantity) {
+    return roundNearest(quantity, DAY);
+  }
+
 
   /** Construct a duration in terms of a multiple of some unit. */
   public static Duration of(final long quantity, final Duration unit) {
