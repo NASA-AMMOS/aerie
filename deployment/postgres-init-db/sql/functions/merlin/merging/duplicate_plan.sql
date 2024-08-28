@@ -54,6 +54,10 @@ begin
     select new_plan_id, directive_id, tag_id
     from tags.activity_directive_tags adt where adt.plan_id = _plan_id;
 
+  insert into merlin.plan_derivation_group(derivation_group_name, plan_id)
+    select derivation_group_name, new_plan_id
+  	from merlin.plan_derivation_group pdg where pdg.plan_id = _plan_id;
+
   insert into merlin.plan_latest_snapshot(plan_id, snapshot_id) values(new_plan_id, created_snapshot_id);
   return new_plan_id;
 end
