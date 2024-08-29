@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver.onceAllActivitiesAreFinished;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.scheduleFromPlan;
+import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.schedulingActToActivityDir;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.updatePlanWithChildActivities;
 
 public class CheckpointSimulationFacade implements SimulationFacade {
@@ -308,12 +309,24 @@ public class CheckpointSimulationFacade implements SimulationFacade {
       final Plan plan,
       final Duration until,
       final Set<String> resourceNames
-  ) throws SimulationException, SchedulingInterruptedException
-  {
+  ) throws SimulationException, SchedulingInterruptedException {
     if (this.initialSimulationResults != null) {
       final var inputPlan = scheduleFromPlan(plan, schedulerModel);
-      final var initialPlanA = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
-      if (initialPlanA.equals(inputPlan)) {
+      final HashMap<ActivityDirectiveId, ActivityDirective> planActuallySimulated = new HashMap<>();
+      final var initialPlan = this.initialSimulationResults.plan().getActivitiesById();
+      var allActivitiesFound = true;
+      for (final var activityInstance: this.initialSimulationResults.constraintsResults().activities) {
+        if (activityInstance.directiveId().isPresent()) {
+          final var directiveId = activityInstance.directiveId().get();
+          final var directive = initialPlan.get(directiveId);
+          if (directive != null) {
+            planActuallySimulated.put(activityInstance.directiveId().get(), schedulingActToActivityDir(directive, schedulerModel));
+          } else {
+            allActivitiesFound = false;
+          }
+        }
+      }
+      if (allActivitiesFound && inputPlan.equals(new PlanSimCorrespondence(planActuallySimulated))) {
         return initialSimulationResults;
       }
     }
@@ -332,6 +345,6 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     if (this.latestSimulationData == null)
       return Optional.ofNullable(this.initialSimulationResults);
     else
-      return Optional.ofNullable(this.latestSimulationData);
+      return Optional.of(this.latestSimulationData);
   }
 }
