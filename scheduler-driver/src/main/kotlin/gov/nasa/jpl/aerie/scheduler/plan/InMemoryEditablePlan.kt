@@ -104,7 +104,10 @@ data class InMemoryEditablePlan(
           is DirectiveStart.Absolute -> null
           is DirectiveStart.Anchor -> s.parentId
         },
-        start is DirectiveStart.Anchor && (start as DirectiveStart.Anchor).anchorPoint == DirectiveStart.Anchor.AnchorPoint.Start,
+      when (val s = start) {
+        is DirectiveStart.Absolute -> true
+        is DirectiveStart.Anchor -> s.anchorPoint == DirectiveStart.Anchor.AnchorPoint.Start
+      },
       isNew
     )
   }
