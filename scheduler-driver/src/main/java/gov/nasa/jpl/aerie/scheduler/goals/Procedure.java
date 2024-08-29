@@ -72,7 +72,7 @@ public class Procedure extends Goal {
     procedureMapper.deserialize(this.args).run(editablePlan);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
-      throw new NotImplementedException("emit warning");
+      throw new IllegalStateException("procedural goal %s had changes that were not committed or rolled back".formatted(jarPath.getFileName()));
     }
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
