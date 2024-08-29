@@ -84,7 +84,6 @@ public class Procedure extends Goal {
 
     final var evaluation = eval.forGoal(this);
     for (final var activity : newActivities) {
-      plan.add(activity);
       evaluation.associate(activity, true, null);
     }
     evaluation.setConflictSatisfaction(null, ConflictSatisfaction.SAT);
