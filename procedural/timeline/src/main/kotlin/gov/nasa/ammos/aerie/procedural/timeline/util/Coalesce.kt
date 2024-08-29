@@ -22,8 +22,8 @@ fun <I: IntervalLike<I>> coalesceList(list: List<I>, shouldCoalesce: I.(I) -> Bo
   val mutableList = list.toMutableList()
   if (mutableList.isEmpty()) return mutableList
   var shortIndex = 0
-  var startIndex = 0
-  while(mutableList[startIndex].interval.isEmpty()) startIndex++
+  val startIndex = mutableList.indexOfFirst { !it.interval.isEmpty() }
+  if (startIndex == -1) return listOf();
   var buffer = mutableList[startIndex]
   for (segment in mutableList.subList(startIndex + 1, mutableList.size)) {
     if (segment.interval.isEmpty()) continue
