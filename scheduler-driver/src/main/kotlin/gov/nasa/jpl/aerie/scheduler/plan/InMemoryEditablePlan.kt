@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType
 import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator
 import gov.nasa.jpl.aerie.scheduler.model.*
+import gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.Companion.validateArguments
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
@@ -56,6 +57,7 @@ data class InMemoryEditablePlan(
     }
     val resolved = directive.resolve(id, parent)
     uncommittedChanges.add(Edit.Create(resolved))
+    resolved.validateArguments(lookupActivityType)
     plan.add(resolved.toSchedulingActivityDirective(lookupActivityType, true))
     return id
   }
@@ -91,6 +93,10 @@ data class InMemoryEditablePlan(
   override fun toAbsolute(rel: Duration) = plan.toAbsolute(rel)
 
   companion object {
+    fun Directive<AnyDirective>.validateArguments(lookupActivityType: (String) -> ActivityType) {
+      lookupActivityType(type).specType.inputType.validateArguments(inner.arguments)
+    }
+
     @JvmStatic fun Directive<AnyDirective>.toSchedulingActivityDirective(lookupActivityType: (String) -> ActivityType, isNew: Boolean) = SchedulingActivity(
         id,
         lookupActivityType(type),
