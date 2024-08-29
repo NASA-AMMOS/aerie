@@ -14,6 +14,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType
 import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator
 import gov.nasa.jpl.aerie.scheduler.model.*
 import java.time.Instant
@@ -97,7 +98,18 @@ data class InMemoryEditablePlan(
           is DirectiveStart.Absolute -> s.time
           is DirectiveStart.Anchor -> s.offset
         },
-        Duration.ZERO,
+        when (val d = lookupActivityType(type).durationType) {
+          is DurationType.Controllable -> {
+            inner.arguments[d.parameterName]?.asInt()?.let { Duration(it.get()) }
+          }
+          is DurationType.Parametric -> {
+            d.durationFunction.apply(inner.arguments)
+          }
+          is DurationType.Fixed -> {
+            d.duration
+          }
+          else -> Duration.ZERO
+        },
         inner.arguments,
         null,
         when (val s = start) {
