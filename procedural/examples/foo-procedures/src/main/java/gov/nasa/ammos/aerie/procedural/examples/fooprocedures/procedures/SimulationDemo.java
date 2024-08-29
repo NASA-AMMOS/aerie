@@ -2,7 +2,7 @@ package gov.nasa.ammos.aerie.procedural.examples.fooprocedures.procedures;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.ammos.aerie.procedural.scheduling.Rule;
+import gov.nasa.ammos.aerie.procedural.scheduling.Goal;
 import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real;
@@ -15,7 +15,7 @@ import java.time.temporal.ChronoField;
 import java.util.Map;
 
 @SchedulingProcedure
-public record SimulationDemo(int quantity) implements Rule {
+public record SimulationDemo(int quantity) implements Goal {
   @Override
   public void run(EditablePlan plan) {
 //    final var firstActivityTime = plan.toRelative(Instant.from(DOY_WITHOUT_ZONE_FORMATTER.parse("2024-128T07:00:00")));

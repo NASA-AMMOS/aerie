@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.procedural.examples.fooprocedures.procedures;
 
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
-import gov.nasa.ammos.aerie.procedural.scheduling.Rule;
+import gov.nasa.ammos.aerie.procedural.scheduling.Goal;
 import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart;
@@ -9,7 +9,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveSta
 import java.util.Map;
 
 @SchedulingProcedure
-public record SampleProcedure(int quantity) implements Rule {
+public record SampleProcedure(int quantity) implements Goal {
   @Override
   public void run(EditablePlan plan) {
     final var firstTime = Duration.hours(24);

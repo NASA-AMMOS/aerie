@@ -1,6 +1,6 @@
 package gov.nasa.ammos.aerie.procedural.examples.fooprocedures.procedures;
 
-import gov.nasa.ammos.aerie.procedural.scheduling.Rule;
+import gov.nasa.ammos.aerie.procedural.scheduling.Goal;
 import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedure;
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.ammos.aerie.procedural.timeline.Interval;
@@ -39,7 +39,7 @@ import java.util.Map;
  * @param bitePeriodHours
  */
 @SchedulingProcedure
-public record StayWellFed(double bitePeriodHours) implements Rule {
+public record StayWellFed(double bitePeriodHours) implements Goal {
   @Override
   public void run(@NotNull final EditablePlan plan) {
     final var bitePeriod = Duration.hours(bitePeriodHours);
