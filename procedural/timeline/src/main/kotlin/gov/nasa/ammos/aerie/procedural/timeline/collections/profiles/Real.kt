@@ -13,6 +13,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.util.truncateList
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.unaryMinus
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.pow
+import gov.nasa.ammos.aerie.procedural.timeline.util.duration.*;
 
 /** A profile of [LinearEquations][LinearEquation]; a piece-wise linear real-number profile. */
 data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
@@ -217,5 +218,19 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
     }
 
     /***/ class RealDeserializeException(message: String): Exception(message)
+
+    /**
+     * Creates a real profile step function.
+     *
+     * The result will be `0` on the interval `[Duration.MIN_VALUE, stepTime)`,
+     * then will be `value` on the interval `[stepTime, Duration.MAX_VALUE]`.
+     *
+     * @param stepTime time the step occurs (default [Duration.ZERO])
+     * @param value value the function steps to (default `1.0`)
+     */
+    @JvmStatic @JvmOverloads fun step(stepTime: Duration = Duration.ZERO, value: Double = 1.0) = Real(
+      Segment(Duration.MIN_VALUE ..< stepTime, LinearEquation(0.0)),
+      Segment(stepTime .. Duration.MAX_VALUE, LinearEquation(value))
+    )
   }
 }

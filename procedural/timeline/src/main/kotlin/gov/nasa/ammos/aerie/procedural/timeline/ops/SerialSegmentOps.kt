@@ -23,7 +23,7 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
   /** [(DOC)][assignGaps] Fills in gaps in this profile with another profile. */
   // While this is logically the converse of [set], they can't delegate to each other because it would mess up the return type.
   infix fun assignGaps(other: SerialSegmentOps<V, *>) =
-      map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { l, _, _, -> l })
+      map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { l, _, _ -> l })
   /** [(DOC)][assignGaps] Fills in gaps in this profile with a constant value. */
   infix fun assignGaps(v: V) = assignGaps(Constants(v))
 
