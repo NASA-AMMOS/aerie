@@ -2,8 +2,11 @@ package gov.nasa.jpl.aerie.scheduler.solver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
+import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
+import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
 
 import java.util.Optional;
 
@@ -15,7 +18,10 @@ import java.util.Optional;
  * iteratively improving on a solution, by providing different high level
  * options, etc
  */
-public interface Solver {
+public abstract class SubSolver {
+  protected ConflictSatisfaction satisfaction;
+  protected Solver metaSolver;
+  protected SubSolver dependentSolver;
 
   /**
    * calculates the next solution plan based on solver configuration
@@ -42,12 +48,16 @@ public interface Solver {
    * alternative search space, etc). in general, the solver will return no
    * solution for all requests thereafter, but some algorithms may optionally
    * support further solutions (eg on some input/configuration modification)
-   *
-   * @return an output schedule/plan that (possibly partially) solves the
-   *     previously specified planning problem, or empty if the solver
-   *     cannot provide any more solutions right now
    */
-  Optional<Plan> getNextSolution() throws SchedulingInterruptedException, InstantiationException;
-  void rollback(ConflictSolverResult conflictResults);
-  void rollback(Goal goal);
+  public abstract ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
+  throws SchedulingInterruptedException, InstantiationException;
+
+  public void setDependentSolver(SubSolver solver) {
+    this.dependentSolver = solver;
+  }
+
+  public abstract ConflictSolverResult solveDependencyConflict(Optional<Goal> goal, Conflict conflict)
+  throws SchedulingInterruptedException, InstantiationException;
+
 }
+

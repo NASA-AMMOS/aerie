@@ -38,6 +38,7 @@ public record SchedulingActivity(
     Duration startOffset,
     Duration duration,
     Map<String, SerializedValue> arguments,
+    ActivityDirectiveId htnParent,
     ActivityDirectiveId topParent,
     ActivityDirectiveId anchorId,
     boolean anchoredToStart,
@@ -59,6 +60,7 @@ public record SchedulingActivity(
         startOffset,
         duration,
         Map.of(),
+        null,
         null,
         anchorId,
         anchoredToStart,
@@ -83,6 +85,33 @@ public record SchedulingActivity(
         startOffset,
         duration,
         parameters,
+        null,
+        topParent,
+        anchorId,
+        anchoredToStart,
+        isNew
+    );
+  }
+
+  public static SchedulingActivity of(
+      ActivityDirectiveId id,
+      ActivityType type,
+      Duration startOffset,
+      Duration duration,
+      Map<String, SerializedValue> parameters,
+      ActivityDirectiveId htnParent,
+      ActivityDirectiveId topParent,
+      ActivityDirectiveId anchorId,
+      boolean anchoredToStart,
+      boolean isNew
+  ) {
+    return new SchedulingActivity(
+        id,
+        type,
+        startOffset,
+        duration,
+        parameters,
+        htnParent,
         topParent,
         anchorId,
         anchoredToStart,
@@ -97,6 +126,7 @@ public record SchedulingActivity(
         this.startOffset,
         duration,
         new HashMap<>(this.arguments),
+        this.htnParent,
         this.topParent,
         this.anchorId,
         this.anchoredToStart,
@@ -111,6 +141,7 @@ public record SchedulingActivity(
         startOffset,
         this.duration,
         new HashMap<>(this.arguments),
+        this.htnParent,
         this.topParent,
         anchorId,
         anchoredToStart,
@@ -125,7 +156,23 @@ public record SchedulingActivity(
         startOffset,
         this.duration,
         new HashMap<>(this.arguments),
+        this.htnParent,
         this.topParent,
+        this.anchorId,
+        this.anchoredToStart,
+        this.isNew
+    );
+  }
+
+  public SchedulingActivity withNewHTNParent(ActivityDirectiveId htnParent) {
+    return SchedulingActivity.of(
+        this.id,
+        this.type,
+        startOffset,
+        this.duration,
+        new HashMap<>(this.arguments),
+        htnParent,
+        topParent,
         this.anchorId,
         this.anchoredToStart,
         this.isNew
@@ -139,6 +186,7 @@ public record SchedulingActivity(
         startOffset,
         this.duration,
         new HashMap<>(this.arguments),
+        this.htnParent,
         topParent,
         this.anchorId,
         this.anchoredToStart,
@@ -153,6 +201,7 @@ public record SchedulingActivity(
         activity.startOffset(),
         duration,
         activity.serializedActivity().getArguments(),
+        null,
         null,
         activity.anchorId(),
         activity.anchoredToStart(),

@@ -26,6 +26,9 @@
 @WithActivityType(ControllableDurationActivity.class)
 @WithActivityType(RipenBananaActivity.class)
 @WithActivityType(ExceptionActivity.class)
+@WithActivityType(CompoundConsumeBanana.class)
+@MissionModel.WithCompound(CompoundConsumeBanana.class)
+@MissionModel.WithMethod(TNConsumeBanana.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
@@ -34,6 +37,7 @@ import gov.nasa.jpl.aerie.banananation.activities.BananaNapActivity;
 import gov.nasa.jpl.aerie.banananation.activities.Banannotation;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ChangeProducerActivity;
+import gov.nasa.jpl.aerie.banananation.activities.CompoundConsumeBanana;
 import gov.nasa.jpl.aerie.banananation.activities.ControllableDurationActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingSpawnActivity;
@@ -47,6 +51,7 @@ import gov.nasa.jpl.aerie.banananation.activities.PeelBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.RipenBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ThrowBananaActivity;
+import gov.nasa.jpl.aerie.banananation.methods.TNConsumeBanana;
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;

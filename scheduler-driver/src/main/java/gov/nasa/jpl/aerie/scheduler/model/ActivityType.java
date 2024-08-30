@@ -97,6 +97,10 @@ public class ActivityType {
     return parameterSpecifications.get(0);
   }
 
+  public boolean isCompound(){
+    return specType.getDecompositionRule().isPresent();
+  }
+
   /**
    * fetches the identifier associated with this activity type
    *

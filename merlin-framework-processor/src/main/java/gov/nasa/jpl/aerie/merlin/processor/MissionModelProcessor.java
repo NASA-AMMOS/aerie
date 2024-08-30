@@ -110,7 +110,8 @@ public final class MissionModelProcessor implements Processor {
             missionModelRecord$.expectsPlanStart(),
             missionModelRecord$.modelConfigurationType(),
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes()
+            missionModelRecord$.activityTypes(),
+            missionModelRecord$.methodsByCompound()
         );
 
         final var generatedFiles = new ArrayList<>(List.of(
@@ -125,7 +126,8 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateModelType(missionModelRecord),
             missionModelGen.generateSchedulerModel(missionModelRecord),
             missionModelGen.generateActivityActions(missionModelRecord),
-            missionModelGen.generateActivityTypes(missionModelRecord)
+            missionModelGen.generateActivityTypes(missionModelRecord),
+            missionModelGen.generateActivityReferenceBuilders(missionModelRecord)
         ));
 
         final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(

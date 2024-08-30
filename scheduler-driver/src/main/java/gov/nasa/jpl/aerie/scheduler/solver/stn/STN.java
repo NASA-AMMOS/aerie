@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.solver.stn;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
 import org.jgrapht.alg.shortestpath.NegativeCycleDetectedException;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -12,7 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Representation of a simple temporal network (Dechter, Meiri, and Pearl, 1991).
@@ -149,6 +154,84 @@ public class STN {
     if(latestComputation == null){
       throw new IllegalArgumentException("Must call update() before getting results");
     }
+  }
+
+  public List<String> orderNodesRootToLeaf() {
+    List<String> result = new ArrayList<>();
+    Set<String> visited = new HashSet<>();
+    Set<String> inProcess = new HashSet<>();
+
+    // Start with root nodes
+    Set<String> rootNodes = findRootNodes();
+    for (String node : rootNodes) {
+      dfsVisit(node, result, visited, inProcess);
+    }
+
+    // Process any remaining nodes (in case of cycles or disconnected components)
+    for (String node : graph.vertexSet()) {
+      if (!visited.contains(node)) {
+        dfsVisit(node, result, visited, inProcess);
+      }
+    }
+
+    return result;
+  }
+
+  private void dfsVisit(String node, List<String> result, Set<String> visited, Set<String> inProcess) {
+    if (inProcess.contains(node)) {
+      // Cycle detected, skip this node
+      return;
+    }
+    if (visited.contains(node)) {
+      return;
+    }
+
+    inProcess.add(node);
+
+    for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(node)) {
+      dfsVisit(graph.getEdgeTarget(edge), result, visited, inProcess);
+    }
+
+    inProcess.remove(node);
+    visited.add(node);
+    result.add(0, node); // Add to the beginning of the list
+  }
+
+  public Set<String> findRootNodes() {
+    Set<String> rootNodes = new HashSet<>();
+    for (String vertex : graph.vertexSet()) {
+      if (graph.inDegreeOf(vertex) == 0) {
+        rootNodes.add(vertex);
+      }
+    }
+    return rootNodes;
+  }
+
+  public boolean hasCycle() {
+    CycleDetector<String, DefaultWeightedEdge> cycleDetector = new CycleDetector<>(graph);
+    return cycleDetector.detectCycles();
+  }
+
+  public boolean hasOrphans() {
+    for (String vertex : graph.vertexSet()) {
+      if (graph.incomingEdgesOf(vertex).isEmpty() && graph.outgoingEdgesOf(vertex).isEmpty()) {
+        return true; // Found an orphan
+      }
+    }
+    return false; // No orphans found
+  }
+
+  public boolean hasMultipleStartingNodes() {
+    int startingNodeCount = 0;
+    for (String vertex : graph.vertexSet()) {
+      if (graph.incomingEdgesOf(vertex).isEmpty()) {
+        startingNodeCount++;
+        if (startingNodeCount > 1) {
+          return true; // More than one starting node found
+        }
+      }
+    }
+    return false; // Zero or one starting node found
   }
 
 }

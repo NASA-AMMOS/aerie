@@ -71,6 +71,7 @@ import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,7 +229,7 @@ public record SynchronousSchedulerAgent(
         }
         problem.setGoals(orderedGoals);
 
-      final var scheduler = new PrioritySolver(problem, specification.analysisOnly());
+      final var scheduler = new NexusMetaSolver(problem, specification.analysisOnly());
       //run the scheduler to find a solution to the posed problem, if any
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));

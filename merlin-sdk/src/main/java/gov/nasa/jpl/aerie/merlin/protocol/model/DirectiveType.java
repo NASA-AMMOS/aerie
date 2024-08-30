@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A type of directive that can be issued to a Merlin model.
@@ -35,6 +36,8 @@ public interface DirectiveType<Model, Arguments, Result> {
   //   ought to instead depend on the topics exported by a model on which
   //   the output data is emitted.
   OutputType<Result> getOutputType();
+
+  Optional<Boolean> getDecompositionRule();
 
   /**
    * Initializes a {@link Task} operating on the given model given a directive instance.
