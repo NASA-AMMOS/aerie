@@ -165,7 +165,8 @@ public class NexusMetaSolver implements Solver {
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
     this.decomposer = new NexusDecomposer();
-    this.scheduler = new PrioritySolver();
+    //TODO jd check if that's ok to pass problem here
+    this.scheduler = new PrioritySolver(this.problem, this.analysisOnly);
 
     this.idGenerator = new DirectiveIdGenerator(
         problem
