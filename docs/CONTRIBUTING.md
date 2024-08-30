@@ -3,7 +3,7 @@
 We would love for you to contribute to Aerie and help make it even better than it is today! As a contributor, here are the guidelines we would like you to follow:
 
 - [Question or Problem?](#question)
-- [Building Aerie](#building)
+- [Prerequisites](#prerequisites)
 - [Pull Request Guidelines](#pr-guidelines)
 - [Good Commit, PR, and Code Review Practices](#best-practices)
 - [Submitting a Pull Request](#submit-pr)
@@ -12,13 +12,14 @@ We would love for you to contribute to Aerie and help make it even better than i
 
 If you would like to chat about the question in real-time, you can reach out via [our Slack channel](https://join.slack.com/t/nasa-ammos/shared_invite/zt-1mlgmk5c2-MgqVSyKzVRUWrXy87FNqPw).
 
-## Prerequisites
+## <a name="prerequisites"></a> Prerequisites
+Before you begin contributing to our project, it's a good idea to familiarize yourself with the resources described below.
 
 ### Code of Conduct
 
 Our Code of Conduct helps facilitate a positive interaction environment for everyone involved with the team, and provides guidance on what to do if you experience problematic behavior. Read more in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and make sure you agree to its terms.
 
-### <a name="building"></a> Development Environment
+### Development Environment
 
 To build and develop Aerie please read through the [developer documentation](./DEVELOPER.md).
 
