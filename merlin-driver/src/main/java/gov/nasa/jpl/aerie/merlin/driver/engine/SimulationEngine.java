@@ -884,7 +884,7 @@ public final class SimulationEngine implements AutoCloseable {
                       }
                     }
                   }
-                  var activitySpanID = Optional.of(spanToActivities.get(event.provenance()).id());
+                  var activitySpanID = Optional.ofNullable(spanToActivities.get(event.provenance())).map(ActivityInstanceId::id);
                   output = EventGraph.concurrently(
                       output,
                       EventGraph.atom(
