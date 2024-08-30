@@ -10,6 +10,7 @@ import org.intellij.lang.annotations.Language;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +66,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       statement.setString(5, causalTime);
       statement.setInt(6, event.topicId());
       statement.setString(7, serializedValueP.unparse(event.value()).toString());
-      statement.setLong(8, event.spanId().isPresent() ? event.spanId().get() : null);
+      statement.setObject(8, event.spanId().orElse(null), Types.INTEGER);
       statement.addBatch();
     }
   }
