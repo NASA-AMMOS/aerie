@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.model;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -43,8 +45,15 @@ public interface Plan {
    * @param act IN activity instance to schedule into the plan
    */
   void add(SchedulingActivity act);
+
   /**
-   * adds the given activity instances to the scheduled plan solution
+   * adds the given TaskNetTemplate to the plan
+   * @param tn IN TaskNetTemplate to be added to the plan
+   */
+  void addTaskNetTemplateData(final TaskNetTemplateData tn);
+
+  /**
+   * removes a collection of activity instances from the scheduled plan solution
    *
    * the provided instances must have start times specified
    *
@@ -60,6 +69,12 @@ public interface Plan {
    * @param act IN activity instance to remove from the plan
    */
   void remove(SchedulingActivity act);
+
+  /**
+   * removes the given TaskNetTemplate from the plan
+   * @param tn IN TaskNetTemplate to be removed from the plan
+   */
+  void removeTaskNetTemplate(final TaskNetTemplate tn);
 
   /**
    * replace and old activity by a new one
@@ -109,6 +124,7 @@ public interface Plan {
    */
   Collection<SchedulingActivity> find(
       ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
+
   /**
    * adds a new evaluation to the plan
    *
@@ -117,14 +133,15 @@ public interface Plan {
    *
    * @param eval IN the new evaluation to add to the plan
    */
-  void addEvaluation(Evaluation eval);
+
+  public abstract  void addEvaluation(Evaluation eval);
 
   /**
    * fetches evaluation posted to the plan
    *
    * @return evaluation posted to the plan
    */
-  Evaluation getEvaluation();
+  public Evaluation getEvaluation();
 
   Duration calculateAbsoluteStartOffsetAnchoredActivity(SchedulingActivity actAnchorTo);
 }
