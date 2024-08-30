@@ -159,6 +159,7 @@
 - "!include sequencing/sequence_adaptation.yaml"
 - "!include sequencing/sequence_to_simulated_activity.yaml"
 - "!include sequencing/user_sequence.yaml"
+- "!include sequencing/workspace.yaml"
 
 ############
 #### UI ####
