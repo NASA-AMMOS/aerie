@@ -34,6 +34,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -48,6 +50,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -356,13 +359,40 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                            )
                            .returns(Duration.class)
                            .build())
-
+            .addMethod(generateGetMethods(missionModel))
             .build();
 
     return JavaFile
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
+  }
+
+  public MethodSpec generateGetMethods(final MissionModelRecord missionModel){
+    final var returnType = ParameterizedTypeName.get(ClassName.get(HashMap.class), ClassName.get(String.class), ParameterizedTypeName.get(List.class, TaskNetTemplate.class));
+    final var methodSpec = MethodSpec
+        .methodBuilder("getMethods")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(returnType)
+        .addStatement("final var methodsByActivityName = new $L()", returnType);
+    //Map<string, List<TaskNetTemplate>>
+    for(final var compoundsToMethods: missionModel.methodsByCompound().entrySet()){
+      final var name = missionModel.activityTypes()
+                                   .stream()
+                                   .filter(atr -> atr.fullyQualifiedClass().equals(compoundsToMethods.getKey().getQualifiedName().toString()))
+          .map(ActivityTypeRecord::name).toList().get(0);
+
+      final var elements = new ArrayList<String>();
+      for(final var method: compoundsToMethods.getValue()){
+        CodeBlock cb = CodeBlock.of("new $L()", method.asType());
+        //methodSpec.addStatement("list.add(new $L())", method.asType());
+        elements.add(cb.toString());
+      }
+      methodSpec.addStatement("methodsByActivityName.put(\"$L\", List.of(" + String.join(",", elements) + "))", name);
+    }
+    methodSpec.addStatement("return methodsByActivityName");
+    return methodSpec.build();
   }
 
   /** Generate `ActivityActions` class. */
@@ -796,6 +826,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 computedAttributesCodeBlocks.typeName().box()))
             .addStatement("return new $T()", activityType.inputType().mapper().name.nestedClass("OutputMapper"))
             .build())
+        .addMethod(generateGetDecompositionRule(activityType))
         .addMethod(
             MethodSpec
                 .methodBuilder("getInputTopic")
@@ -885,6 +916,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build());
   }
 
+  private static MethodSpec generateGetDecompositionRule(final ActivityTypeRecord activityType){
+    final var method = MethodSpec
+        .methodBuilder("getDecompositionRule")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(
+            ParameterizedTypeName.get(
+                ClassName.get(Optional.class),
+                ClassName.get(Boolean.class)));
+    String value = "Optional.empty()";
+    if(activityType.inputType().compoundShouldBeDecomposed().isPresent()){
+      value = activityType.inputType().compoundShouldBeDecomposed().get().booleanValue() ? "Optional.of(true)" : "Optional.of(false)";
+    }
+    method.addCode("return " + value + ";");
+    return method.build();
+  }
+
   private static MethodSpec makeGetReturnValueSchemaMethod() {
     return MethodSpec.methodBuilder("getSchema")
                      .addModifiers(Modifier.PUBLIC)
@@ -945,5 +993,42 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
           "Failed to generate value mapper for Duration");
       return Optional.empty();
     }
+  }
+
+  public JavaFile generateActivityReferenceBuilders(final MissionModelRecord missionModel){
+    final var typeName = missionModel.getTypesName();
+    final var activityReferenceClass = ClassName.get(ActivityReference.class);
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(missionModel.getActivityReferenceBuildersName())
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build());
+
+    for(final var activityType: missionModel.activityTypes()){
+      final var mapperBlocks$ = generateParameterMapperBlocks(missionModel, activityType.inputType());
+      if(mapperBlocks$.isEmpty()){ continue; }
+      final var mapperBlocks = mapperBlocks$.get();
+      var methodSpec = MethodSpec.methodBuilder(activityType.name())
+                                 .addModifiers(Modifier.FINAL)
+          .addModifiers(Modifier.PUBLIC)
+          .returns(activityReferenceClass);
+      methodSpec.addStatement("final var arguments = new $L()", ParameterizedTypeName.get(HashMap.class, String.class, SerializedValue.class));
+      for(final var parameter: activityType.inputType().parameters()){
+        methodSpec.addParameter(TypeName.get(parameter.type), parameter.name, Modifier.FINAL);
+        methodSpec.addStatement("arguments.put(\"$L\", $L.serializeValue($L))", parameter.name, mapperBlocks.get(parameter.name), parameter.name);
+      }
+      methodSpec.addStatement("return new $L(\"$L\", arguments)",activityReferenceClass, activityType.name());
+      methodSpec.addModifiers(Modifier.STATIC);
+      typeSpec.addMethod(methodSpec.build());
+    }
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec.build())
+        .skipJavaLangImports(true)
+        .build();
   }
 }
