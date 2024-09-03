@@ -3,6 +3,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.collections.profiles
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.ammos.aerie.procedural.timeline.*
+import gov.nasa.ammos.aerie.procedural.timeline.ops.GeneralOps
 import gov.nasa.ammos.aerie.procedural.timeline.ops.numeric.LinearOps
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
 import gov.nasa.ammos.aerie.procedural.timeline.ops.numeric.SerialNumericOps
@@ -178,6 +179,12 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
 
   override fun increases() = detectChangesInternal({ l, r -> l < r }, { it > 0.0})
   override fun decreases() = detectChangesInternal({ l, r -> l > r }, { it < 0.0})
+
+  /**
+   * Highlights intervals where the value is equal to a specific value.
+   * @see [GeneralOps.highlight]
+   */
+  fun highlightEqualTo(value: Double) = equalTo(value).highlightTrue()
 
   private class UnreachableValueAtException: Exception("internal error. a serial profile had multiple values at the same time.")
 
