@@ -2,7 +2,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.ops
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 
 /**
@@ -31,8 +31,14 @@ interface BooleanOps<THIS: BooleanOps<THIS>>: ConstantOps<Boolean, THIS> {
   fun isolateFalse() = isolateEqualTo(false)
 
   /** [(DOC)][highlightTrue] Creates an [Windows] object that highlights whenever this profile is `true`. */
-  fun highlightTrue() = highlight { it.value }
+  fun highlightTrue() = highlightEqualTo(true)
+
+  /** [(DOC)][highlightFalse] Creates an [Windows] object that highlights whenever this profile is `false`. */
+  fun highlightFalse() = highlightEqualTo(false)
 
   /** [(DOC)][splitTrue] Splits `true` segments into the given number of pieces (leaving `false` unchanged). */
-  fun splitTrue(numPieces: Int) = split { if (it.value) numPieces else 1 }
+  fun splitTrue(numPieces: Int) = splitEqualTo(true, numPieces)
+
+  /** [(DOC)][splitFalse] Splits `false` segments into the given number of pieces (leaving `true` unchanged). */
+  fun splitFalse(numPieces: Int) = splitEqualTo(false, numPieces)
 }
