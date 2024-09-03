@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -1079,13 +1080,14 @@ public class SchedulingTests {
       final var activities = plan.activityDirectives();
 
       assertEquals(2, activities.size());
-      final var first = activities.getFirst();
-      assertEquals(first.type(), "BiteBanana");
-      assertEquals(first.startOffset(), "24:00:00");
 
-      final var second = activities.getLast();
-      assertEquals(second.type(), "BiteBanana");
-      assertEquals(second.startOffset(), "30:00:00");
+      assertTrue(activities.stream().anyMatch(
+          $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "24:00:00")
+      ));
+
+      assertTrue(activities.stream().anyMatch(
+          $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "30:00:00")
+      ));
     }
   }
 }
