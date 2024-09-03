@@ -1,23 +1,24 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,11 +47,7 @@ public final class StubPlanService implements PlanService {
         null,
         true
     );
-
-    EXISTENT_PLAN = new Plan();
-    EXISTENT_PLAN.name = "existent";
-    EXISTENT_PLAN.missionModelId = new MissionModelId(1);
-    EXISTENT_PLAN.activityDirectives = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
+    EXISTENT_PLAN = new Plan("existent", new MissionModelId(1), new Timestamp(Instant.now()), new Timestamp(Instant.now()), Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY));
   }
 
 
@@ -81,7 +78,7 @@ public final class StubPlanService implements PlanService {
 
   @Override
   public Map<Long, Constraint> getConstraintsForPlan(final PlanId planId)
-  {
+  throws NoSuchPlanException {
     return Map.of();
   }
 
@@ -91,6 +88,7 @@ public final class StubPlanService implements PlanService {
       final Optional<SimulationDatasetId> simulationDatasetId,
       final Timestamp datasetStart,
       final ProfileSet profileSet)
+  throws NoSuchPlanException
   {
     return 0;
   }
@@ -104,13 +102,13 @@ public final class StubPlanService implements PlanService {
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(
       final PlanId planId,
       final SimulationDatasetId simulationDatasetId
-      )
+      ) throws NoSuchPlanException
   {
     return List.of();
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException {
     return Map.of("external resource", ValueSchema.BOOLEAN);
   }
 

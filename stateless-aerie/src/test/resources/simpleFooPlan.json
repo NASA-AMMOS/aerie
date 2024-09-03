@@ -1,0 +1,40 @@
+{
+  "activities": [
+    {
+      "anchor_id": null,
+      "anchored_to_start": true,
+      "arguments": {
+        "duration": {
+          "amountInMicroseconds": 2000000
+        }
+      },
+      "id": 4,
+      "metadata": {},
+      "name": "BasicFooActivity",
+      "start_offset": "02:27:15.059",
+      "tags": [],
+      "type": "BasicFooActivity"
+    },
+    {
+      "anchor_id": null,
+      "anchored_to_start": true,
+      "arguments": {
+        "minutesElapsed": 700,
+        "spawnDelay": 1
+      },
+      "id": 5,
+      "metadata": {},
+      "name": "DaemonCheckerSpawner",
+      "start_offset": "11:39:55.219",
+      "tags": [],
+      "type": "DaemonCheckerSpawner"
+    }
+  ],
+  "duration": "24:00:00",
+  "id": 3,
+  "model_id": 4,
+  "name": "foo plan",
+  "simulation_arguments": {},
+  "start_time": "2024-07-01T00:00:00+00:00",
+  "tags": []
+}

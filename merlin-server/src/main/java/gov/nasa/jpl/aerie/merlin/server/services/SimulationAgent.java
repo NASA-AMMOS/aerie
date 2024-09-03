@@ -7,11 +7,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.Plan;
 
 import javax.json.Json;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,19 +49,12 @@ public record SimulationAgent (
       return;
     }
 
-    final var planDuration = Duration.of(
-        plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
-        Duration.MICROSECONDS);
-    final var simDuration = Duration.of(
-        plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
-        Duration.MICROSECONDS);
-
     final SimulationResults results;
     try {
       // Validate plan activity construction
       final var failures = this.missionModelService.validateActivityInstantiations(
-          plan.missionModelId,
-          plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
+          plan.missionModelId(),
+          plan.activityDirectives().entrySet().stream().collect(Collectors.toMap(
               Map.Entry::getKey,
               e -> e.getValue().serializedActivity())));
 
@@ -80,14 +72,7 @@ public record SimulationAgent (
           simulationProgressPollPeriod)
       ) {
         results = this.missionModelService.runSimulation(
-            new CreateSimulationMessage(
-                plan.missionModelId,
-                plan.simulationStartTimestamp.toInstant(),
-                simDuration,
-                plan.startTimestamp.toInstant(),
-                planDuration,
-                plan.activityDirectives,
-                plan.configuration),
+           plan,
             extentListener::updateValue,
             canceledListener,
             resourceManager);

@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.time.Instant;
 import java.util.Map;

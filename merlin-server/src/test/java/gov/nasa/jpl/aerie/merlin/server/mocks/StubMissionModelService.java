@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -10,9 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
@@ -195,24 +195,24 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public SimulationResults runSimulation(
-      final CreateSimulationMessage message,
+      final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
       final SimulationResourceManager resourceManager
   ) throws NoSuchMissionModelException {
-    if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
-      throw new NoSuchMissionModelException(message.missionModelId());
+    if (!Objects.equals(plan.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(plan.missionModelId());
     }
 
     return SUCCESSFUL_SIMULATION_RESULTS;
   }
 
   @Override
-  public void refreshModelParameters(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
+  public void refreshModelParameters(final MissionModelId missionModelId) {}
 
   @Override
-  public void refreshActivityTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
+  public void refreshActivityTypes(final MissionModelId missionModelId) {}
 
   @Override
-  public void refreshResourceTypes(final MissionModelId missionModelId) throws NoSuchMissionModelException {}
+  public void refreshResourceTypes(final MissionModelId missionModelId) {}
 }

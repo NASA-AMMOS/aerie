@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.exceptions;
 
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 public class NoSuchMissionModelException extends Exception {
   private final MissionModelId id;

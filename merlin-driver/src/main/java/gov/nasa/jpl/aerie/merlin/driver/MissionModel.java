@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 
 import java.util.Collections;
 import java.util.List;

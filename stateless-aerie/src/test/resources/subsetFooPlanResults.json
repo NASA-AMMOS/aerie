@@ -1,0 +1,559 @@
+{
+    "version": 1.0,
+    "simulationStartTime": "2024-183T12:00:00",
+    "simulationEndTime": "2024-184T00:00:00",
+    "canceled": false,
+    "simulationConfiguration": {
+        "startTime": "2024-183T12:00:00",
+        "endTime": "2024-184T00:00:00",
+        "arguments": {
+        }
+    },
+    "profiles": {
+        "realProfiles": [
+            {
+                "name": "/utcClock",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 1000.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/simple_data/b/volume",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 5.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/simple_data/a/volume",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 10.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/sink/rate",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.5,
+                            "rate": 0.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/source/rate",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 1.0,
+                            "rate": 0.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/sink",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 0.5
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/simple_data/a/rate",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 10.0,
+                            "rate": 0.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/batterySoC",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 100.0,
+                            "rate": 0.5
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/simple_data/b/rate",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 5.0,
+                            "rate": 0.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/data/rate",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 42.0,
+                            "rate": 0.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/data",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 42.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/simple_data/total_volume",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 0.0,
+                            "rate": 15.0
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "/source",
+                "schema": {
+                    "type": "struct",
+                    "items": {
+                        "initial": {
+                            "type": "real"
+                        },
+                        "rate": {
+                            "type": "real"
+                        }
+                    }
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": {
+                            "initial": 100.0,
+                            "rate": 1.0
+                        }
+                    }
+                ]
+            }
+        ],
+        "discreteProfiles": [
+            {
+                "name": "/foo",
+                "schema": {
+                    "type": "real"
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": 21.0
+                    }
+                ]
+            },
+            {
+                "name": "/foo/conflicted",
+                "schema": {
+                    "type": "boolean"
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": false
+                    }
+                ]
+            },
+            {
+                "name": "/counter",
+                "schema": {
+                    "type": "int"
+                },
+                "segments": [
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 0
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 1
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 2
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 3
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 4
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 5
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 6
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 7
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 8
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 9
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 10
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 11
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 12
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 13
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 14
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 15
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 16
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 17
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 18
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 19
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 20
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 21
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 22
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 23
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 24
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 25
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 26
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 27
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 28
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 29
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 30
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 31
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 32
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 33
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 34
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 35
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 36
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 37
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 38
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 39
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 40
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 41
+                    },
+                    {
+                        "extent": "+00:16:40.000000",
+                        "dynamics": 42
+                    },
+                    {
+                        "extent": "+00:03:20.000000",
+                        "dynamics": 43
+                    }
+                ]
+            },
+            {
+                "name": "/activitiesExecuted",
+                "schema": {
+                    "type": "int"
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": 0
+                    }
+                ]
+            },
+            {
+                "name": "/foo/starting_after_unix_epoch",
+                "schema": {
+                    "type": "boolean"
+                },
+                "segments": [
+                    {
+                        "extent": "+12:00:00.000000",
+                        "dynamics": true
+                    }
+                ]
+            }
+        ]
+    },
+    "spans": {
+        "simulatedActivities": [
+        ],
+        "unfinishedActivities": [
+        ]
+    },
+    "events": {
+        "event": [
+        ]
+    }
+}

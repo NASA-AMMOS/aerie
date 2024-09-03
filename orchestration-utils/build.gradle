@@ -1,0 +1,74 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'jacoco'
+  id 'application'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+
+  withJavadocJar()
+  withSourcesJar()
+}
+
+test {
+  useJUnitPlatform {
+    includeEngines 'junit-jupiter'
+  }
+  testLogging {
+    exceptionFormat = 'full'
+  }
+  // Allow security manager so it can be overridden with mock for unit tests
+  systemProperty("java.security.manager", "allow")
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
+
+
+dependencies {
+  implementation project(':merlin-server')
+  implementation project(':merlin-driver')
+  implementation project(':parsing-utilities')
+  implementation project(':type-utils')
+  implementation 'commons-cli:commons-cli:1.8.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+// Link references to standard Java classes to the official Java 11 documentation.
+javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
+    }
+  }
+}
