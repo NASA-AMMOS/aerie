@@ -3,13 +3,13 @@ package gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial;
 import gov.nasa.jpl.aerie.contrib.streamline.core.*;
 import gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.CommutativityTestInput;
 import gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad;
+import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ErrorCatchingMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.*;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.Clock;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear;
-import gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Domain;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.StandardUnits;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.Unit;
 import gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAware;
@@ -34,11 +34,11 @@ import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resourc
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.neverExpiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.set;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Reactions.wheneverDynamicsChange;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.DynamicsMonad.bindEffect;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.*;
+import static gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad.reduce;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.*;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.Approximation.approximate;
@@ -50,9 +50,6 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.black_box.SecantApp
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.clocks.ClockResources.clock;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.assertThat;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.choose;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.Comparison.*;
-import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.LinearBoundaryConsistencySolver.LinearExpression.lx;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.polynomial.Polynomial.polynomial;
 import static gov.nasa.jpl.aerie.contrib.streamline.unit_aware.UnitAwareResources.extend;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
@@ -260,7 +257,7 @@ public final class PolynomialResources {
   }
 
   public static Resource<Polynomial> sum(Stream<? extends Resource<Polynomial>> summands) {
-    return reduce(summands, constant(0), map(Polynomial::add), "Sum");
+    return reduce(summands.toList(), polynomial(0), Polynomial::add, "Sum");
   }
 
   /**
@@ -297,7 +294,7 @@ public final class PolynomialResources {
    * Multiply polynomial resources.
    */
   public static Resource<Polynomial> product(Stream<? extends Resource<Polynomial>> factors) {
-    return reduce(factors, constant(1), map(Polynomial::multiply), "Product");
+    return reduce(factors.toList(), polynomial(1), Polynomial::multiply, "Product");
   }
 
   /**
@@ -583,7 +580,13 @@ public final class PolynomialResources {
   }
 
   public static Resource<Polynomial> min(Stream<Resource<Polynomial>> args) {
-    return signalling(reduce(args, constant(Double.POSITIVE_INFINITY), bind((p, q) -> pure(p.min(q))), "Min"));
+    // The awkward wrapped-dynamics level reduction is necessary because
+    // the min operation introduces expiry, so a map-style lift isn't possible.
+    return signalling(reduce(
+            args.toList(),
+            DynamicsMonad.pure(polynomial(Double.POSITIVE_INFINITY)),
+            DynamicsMonad.bind((p, q) -> ErrorCatchingMonad.pure(p.min(q))),
+            "Min"));
   }
 
   @SafeVarargs
@@ -592,7 +595,13 @@ public final class PolynomialResources {
   }
 
   public static Resource<Polynomial> max(Stream<Resource<Polynomial>> args) {
-    return signalling(reduce(args, constant(Double.NEGATIVE_INFINITY), bind((p, q) -> pure(p.max(q))), "Max"));
+    // The awkward wrapped-dynamics level reduction is necessary because
+    // the max operation introduces expiry, so a map-style lift isn't possible.
+    return signalling(reduce(
+            args.toList(),
+            DynamicsMonad.pure(polynomial(Double.NEGATIVE_INFINITY)),
+            DynamicsMonad.bind((p, q) -> ErrorCatchingMonad.pure(p.max(q))),
+            "Max"));
   }
 
   /**

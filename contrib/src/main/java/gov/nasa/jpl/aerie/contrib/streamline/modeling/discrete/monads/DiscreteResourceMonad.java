@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.monads.ResourceMonad;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.*;
 import org.apache.commons.lang3.function.TriFunction;
 
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -28,6 +29,26 @@ public final class DiscreteResourceMonad {
 
   public static <A> Resource<Discrete<A>> join(Resource<Discrete<Resource<Discrete<A>>>> a) {
     return ResourceMonad.map(ResourceMonad.join(ResourceMonad.map(a, DiscreteResourceMonad::distribute)), DiscreteMonad::join);
+  }
+
+  /**
+   * Efficiently reduce a collection of discrete resources using an operator on their values.
+   *
+   * @see DiscreteResourceMonad#reduce(Collection, Object, BiFunction, String)
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction)
+   */
+  public static <A> Resource<Discrete<A>> reduce(Collection<? extends Resource<Discrete<A>>> operands, A identity, BiFunction<A, A, A> f) {
+    return ResourceMonad.reduce(operands, DiscreteMonad.pure(identity), DiscreteMonad.map(f));
+  }
+
+  /**
+   * Like {@link DiscreteResourceMonad#reduce(Collection, Object, BiFunction)}, but names the result.
+   *
+   * @see DiscreteResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   */
+  public static <A> Resource<Discrete<A>> reduce(Collection<? extends Resource<Discrete<A>>> operands, A identity, BiFunction<A, A, A> f, String operationName) {
+    return ResourceMonad.reduce(operands, DiscreteMonad.pure(identity), DiscreteMonad.map(f), operationName);
   }
 
   // GENERATED CODE START
