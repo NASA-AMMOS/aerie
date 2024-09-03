@@ -9,7 +9,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.Interval.Companion.between
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Companion.betweenClosedOpen
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Exclusive
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Inclusive
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Constants
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Numbers
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Booleans
@@ -57,7 +57,7 @@ class GeneralOpsTest {
   @Test
   fun inspect() {
     var count: Int? = null
-    val tl = Intervals(
+    val tl = Universal(
         at(seconds(1)),
         at(seconds(2))
     ).inspect {
@@ -73,7 +73,7 @@ class GeneralOpsTest {
 
   @Test
   fun unset() {
-    val result = Intervals(
+    val result = Universal(
         seconds(0) .. seconds(2),
         seconds(2) .. seconds(3),
         seconds(3) .. seconds(5),
@@ -105,7 +105,7 @@ class GeneralOpsTest {
 
   @Test
   fun filterPreserveMargin() {
-    val intervals = Intervals(
+    val universal = Universal(
         between(seconds(-1), seconds(1)),
         seconds(1) .. seconds(4),
         seconds(4) .. seconds(8),
@@ -114,7 +114,7 @@ class GeneralOpsTest {
     // without preserve margin
     assertIterableEquals(
         listOf(seconds(1) .. seconds(4)),
-        intervals.filter(false) { it.duration() >= seconds(2) }
+        universal.filter(false) { it.duration() >= seconds(2) }
             .collect(seconds(0) .. seconds(5))
     )
 
@@ -126,22 +126,22 @@ class GeneralOpsTest {
             seconds(1) .. seconds(4),
             seconds(4) .. seconds(5),
         ),
-        intervals.filter(true) { it.duration() >= seconds(2) }
+        universal.filter(true) { it.duration() >= seconds(2) }
             .collect(seconds(0) .. seconds(5))
     )
 
     // with preserve margin, without truncate margin
     // notice that the marginal intervals are retained and NOT truncated later
     assertIterableEquals(
-        intervals.collect(),
-        intervals.filter(true) { it.duration() >= seconds(2) }
+        universal.collect(),
+        universal.filter(true) { it.duration() >= seconds(2) }
             .collect(CollectOptions(seconds(0) .. seconds(5), false))
     )
   }
 
   @Test
   fun map() {
-    val result = Intervals(
+    val result = Universal(
         at(seconds(1)),
         seconds(2) .. seconds(3)
     ).unsafeMap(::Booleans, BoundsTransformer.IDENTITY, false) { Segment(it.interval, it.interval.isPoint()) }
@@ -158,7 +158,7 @@ class GeneralOpsTest {
 
   @Test
   fun shiftBoundsTransform() {
-    val intervals = Intervals(
+    val universal = Universal(
         between(seconds(-1), seconds(0)),
         seconds(2) .. seconds(4),
     ).shift(Duration.SECOND)
@@ -170,28 +170,28 @@ class GeneralOpsTest {
 
     assertIterableEquals(
         expected,
-        intervals.collect()
+        universal.collect()
     )
 
     assertIterableEquals(
         expected,
-        intervals.collect(seconds(0) .. seconds(5))
+        universal.collect(seconds(0) .. seconds(5))
     )
   }
 
   @Test
   fun shiftOutOfBounds() {
-    val intervals = Intervals(at(seconds(3))).shift(seconds(3))
+    val universal = Universal(at(seconds(3))).shift(seconds(3))
 
     assertIterableEquals(
         listOf<Interval>(),
-        intervals.collect(seconds(0) .. seconds(5))
+        universal.collect(seconds(0) .. seconds(5))
     )
   }
 
   @Test
   fun flatMapTest() {
-    val result = Intervals(
+    val result = Universal(
         seconds(2) .. seconds(8),
         seconds(0) .. seconds(3)
     )

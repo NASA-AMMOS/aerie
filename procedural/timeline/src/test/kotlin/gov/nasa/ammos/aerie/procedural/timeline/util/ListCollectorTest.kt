@@ -5,7 +5,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.CollectOptions
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Companion.between
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 
 val bounds = (seconds(0) .. seconds(10))
@@ -17,7 +17,7 @@ class ListCollectorTest {
         seconds(2) .. seconds(3),
         seconds(4) .. seconds(5),
     )
-    val result = Intervals(input).collect(bounds)
+    val result = Universal(input).collect(bounds)
 
     assertIterableEquals(input, result)
   }
@@ -28,7 +28,7 @@ class ListCollectorTest {
         seconds(2) .. seconds(3),
         seconds(14) .. seconds(15),
     )
-    val result = Intervals(input).collect(bounds)
+    val result = Universal(input).collect(bounds)
 
     val expected = listOf(
         seconds(2) .. seconds(3),
@@ -43,7 +43,7 @@ class ListCollectorTest {
         seconds(2) .. seconds(3),
         seconds(9) .. seconds(11),
     )
-    val result = Intervals(input).collect(bounds)
+    val result = Universal(input).collect(bounds)
 
     val expected = listOf(
         seconds(2) .. seconds(3),
@@ -63,7 +63,7 @@ class ListCollectorTest {
         seconds(13) .. seconds(14)
     )
 
-    val result = Intervals(input).collect(CollectOptions(bounds, false))
+    val result = Universal(input).collect(CollectOptions(bounds, false))
 
     val expected = listOf(
         between(seconds(-1), seconds(1)),

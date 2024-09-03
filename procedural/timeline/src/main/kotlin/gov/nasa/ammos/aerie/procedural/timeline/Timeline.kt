@@ -37,7 +37,7 @@ interface Timeline<V: IntervalLike<V>, THIS: Timeline<V, THIS>> {
    * The payload type [V] must be equal between the two types.
    *
    * This operation allows you to break the invariants of more specialized timeline types. For example, casting
-   * [`Intervals<Segment<Boolean>>`][gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals] to [Booleans][gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Booleans]
+   * [`Intervals<Segment<Boolean>>`][gov.nasa.ammos.aerie.procedural.timeline.collections.Universal] to [Booleans][gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Booleans]
    * without sorting and coalescing the segments could result in an invalid profile. In cases like that, it is better to
    * use [flattenIntoProfile][gov.nasa.ammos.aerie.procedural.timeline.ops.ParallelOps.flattenIntoProfile] or [reduceIntoProfile][gov.nasa.ammos.aerie.procedural.timeline.ops.ParallelOps.reduceIntoProfile].
    */

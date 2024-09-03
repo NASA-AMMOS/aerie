@@ -2,7 +2,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.ops
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.*
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Numbers
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Booleans
 import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceNoOp
@@ -28,7 +28,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
   }
 
   /** [(DOC)][merge] Combines this timeline with a single payload object by overlaying them. */
-  infix fun merge(i: T) = merge(Intervals(i))
+  infix fun merge(i: T) = merge(Universal(i))
 
   /**
    * [(DOC)][mapIntoProfile] Maps the objects into a parallel profile.
@@ -179,7 +179,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
   }
 
   /**
-   * [(DOC)][connectTo] Creates an [Intervals] object of [Connections][Connection] that associate of this timeline's
+   * [(DOC)][connectTo] Creates an [Universal] object of [Connections][Connection] that associate of this timeline's
    * object to the (chronologically) next object in another timeline that starts after this one ends.
    *
    * For a connection from an object A (in this timeline) to an object B (in the other timeline), the interval of the
@@ -196,7 +196,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param connectToBounds whether to connect to the end of the bounds if the other timeline ends prematurely
    */
   fun <U: IntervalLike<U>> connectTo(other: ParallelOps<U, *>, connectToBounds: Boolean) =
-      unsafeOperate(::Intervals) { opts ->
+      unsafeOperate(::Universal) { opts ->
         val sortedFrom = collect(opts).sortedWith { l, r -> l.interval.compareEnds(r.interval) }
         val sortedTo = other.collect(opts).sortedWith { l, r -> l.interval.compareStarts(r.interval) }
         val result = mutableListOf<Connection<T, U>>()
