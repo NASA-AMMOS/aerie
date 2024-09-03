@@ -49,9 +49,10 @@ public interface Task<Output> {
   /**
    * Serialize this task
    */
-  default SerializedValue serialize(Executor executor) {
-    throw new UnsupportedOperationException("Tasks must implement duplicate in order to be used in a simulation checkpoint");
-  }
+//  default SerializedValue serialize(Executor executor) {
+//    throw new UnsupportedOperationException("Tasks must implement duplicate in order to be used in a simulation checkpoint");
+//  }
+//  SerializedValue serialize(Executor executor);
 
   default <Output> Task<Output> andThen(Task<Output> task2) {
     return new Task<>() {

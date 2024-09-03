@@ -47,3 +47,15 @@ There are also compromises to be made around when checkpoints can be taken:
 
 Warnings:
 - We can attempt to serialize the initial values of all cells, and issue a warning if any did not override serialize or deserialize, or if deserialize(serialize(x)).equals(x) is not true. 
+
+## Test procedure
+
+1. Build and bring up Aerie
+2. Stop aerie_merlin_worker_2 `docker compose stop aerie_merlin_worker_2`
+3. Shell into aerie_merlin_worker_1 `docker exec -it aerie_merlin_worker_1 /bin/sh`
+4. Upload mission model
+5. Create plan 1 and 2 adjoining
+6. Simulate plan 1
+7. Simulate plan 2
+
+Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the open shell.
