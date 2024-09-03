@@ -139,23 +139,26 @@ public class SchedulingTests {
     hasura.deleteMissionModel(modelId);
   }
 
+  private int directiveId1 = -1;
+  private int directiveId2 = -1;
+
   private void insertActivities() throws IOException {
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
-    hasura.insertActivity(planId, "GrowBanana", "1h", JsonValue.EMPTY_JSON_OBJECT);
-    hasura.insertActivity(planId, "GrowBanana", "3h", Json.createObjectBuilder()
-                                                          .add("growingDuration", 7200000000L) // 2h
-                                                          .build());
+    directiveId1 = hasura.insertActivityDirective(planId, "GrowBanana", "1h", JsonValue.EMPTY_JSON_OBJECT);
+    directiveId2 = hasura.insertActivityDirective(planId, "GrowBanana", "3h", Json.createObjectBuilder()
+                                                                   .add("growingDuration", 7200000000L) // 2h
+                                                                   .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
   }
 
   private void insertSatisfyingActivities() throws IOException {
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
-    hasura.insertActivity(planId, "BiteBanana", "2h5m", Json.createObjectBuilder()
-                                                          .add("biteSize", 1) // 2h
-                                                          .build());
-    hasura.insertActivity(planId, "BiteBanana", "5h5m", Json.createObjectBuilder()
-                                                          .add("biteSize", 1) // 2h
-                                                          .build());
+    hasura.insertActivityDirective(planId, "BiteBanana", "2h5m", Json.createObjectBuilder()
+                                                                     .add("biteSize", 1) // 2h
+                                                                     .build());
+    hasura.insertActivityDirective(planId, "BiteBanana", "5h5m", Json.createObjectBuilder()
+                                                                     .add("biteSize", 1) // 2h
+                                                                     .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
   }
 
@@ -163,18 +166,18 @@ public class SchedulingTests {
     ArrayList<Integer> anchors = new ArrayList<Integer>();
 
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
-    Integer id1 = hasura.insertActivity(planId, "GrowBanana", "0h",
-                                    Json.createObjectBuilder()
+    Integer id1 = hasura.insertActivityDirective(planId, "GrowBanana", "0h",
+                                                 Json.createObjectBuilder()
                                         .add("growingDuration", 10800000L) // 3h
                                         .build());
     anchors.add(id1);
-    Integer id2 = hasura.insertActivity(planId, "GrowBanana", "5h",
-                                    Json.createObjectBuilder()
+    Integer id2 = hasura.insertActivityDirective(planId, "GrowBanana", "5h",
+                                                 Json.createObjectBuilder()
                                                           .add("growingDuration", 10800000L) // 3h
                                                           .build());
     anchors.add(id1);
-    Integer id3 = hasura.insertActivity(planId, "GrowBanana", "10h",
-                                    Json.createObjectBuilder()
+    Integer id3 = hasura.insertActivityDirective(planId, "GrowBanana", "10h",
+                                                 Json.createObjectBuilder()
                                         .add("growingDuration", 10800000L) // 3h
                                         .build());
     anchors.add(id3);
@@ -501,7 +504,7 @@ public class SchedulingTests {
     void outdatedPlanRevision() throws IOException {
       hasura.awaitSimulation(planId);
       // Add Grow Banana
-      hasura.insertActivity(planId, "GrowBanana", "5h", JsonObject.EMPTY_JSON_OBJECT);
+      hasura.insertActivityDirective(planId, "GrowBanana", "5h", JsonObject.EMPTY_JSON_OBJECT);
 
       // Setup: Add Goal
       final int coexistenceGoalId = hasura.createSchedulingSpecGoal(
@@ -600,6 +603,30 @@ public class SchedulingTests {
           "24h",
           plantType,
           List.of(new ProfileSegment("0h", false, Json.createValue(400))));
+
+      hasura.insertActivityInstance(
+          datasetId,
+          directiveId1,
+          "GrowBanana",
+          "1h",
+          "1h",
+          Json.createObjectBuilder()
+              .add("quantity", 1)
+              .add("growingDuration", 3600000000L)
+              .build()
+      );
+
+      hasura.insertActivityInstance(
+          datasetId,
+          directiveId2,
+          "GrowBanana",
+          "3h",
+          "2h",
+          Json.createObjectBuilder()
+              .add("quantity", 1)
+              .add("growingDuration", 7200000000L)
+              .build()
+      );
 
       // Insert Goal
       final int plantGoal = hasura.createSchedulingSpecGoal(

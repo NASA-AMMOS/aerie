@@ -92,7 +92,7 @@ public class TimelineRemoteTests {
         "1212h",
         "2021-01-01T00:00:00Z");
     //Insert the Activity
-    activityId = hasura.insertActivity(
+    activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",

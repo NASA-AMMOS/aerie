@@ -17,8 +17,6 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -221,7 +219,7 @@ public class HasuraRequests implements AutoCloseable {
     makeRequest(GQL.DELETE_PLAN, variables);
   }
 
-  public int insertActivity(int planId, String type, String startOffset, JsonObject arguments) throws IOException {
+  public int insertActivityDirective(int planId, String type, String startOffset, JsonObject arguments) throws IOException {
     final var insertActivityBuilder = Json.createObjectBuilder()
                                           .add("plan_id", planId)
                                           .add("type", type)
@@ -229,6 +227,26 @@ public class HasuraRequests implements AutoCloseable {
                                           .add("arguments", arguments);
     final var variables = Json.createObjectBuilder().add("activityDirectiveInsertInput", insertActivityBuilder).build();
     return makeRequest(GQL.CREATE_ACTIVITY_DIRECTIVE, variables).getJsonObject("createActivityDirective").getInt("id");
+  }
+
+  public void insertActivityInstance(int datasetId, int directiveId, String type, String startOffset, String duration, JsonObject arguments) throws IOException {
+    final var hasuraAdminHeader = Map.of("x-hasura-role", "admin");
+
+    final var insertActivityBuilder = Json.createObjectBuilder()
+        .add("span_id", directiveId)
+        .add("dataset_id", datasetId)
+        .add("type", type)
+        .add("start_offset", startOffset)
+        .add("duration", duration)
+        .add(
+            "attributes",
+            Json.createObjectBuilder()
+                .add("arguments", arguments)
+                .add("directiveId", directiveId)
+                .add("computedAttributes", Json.createObjectBuilder())
+        );
+    final var variables = Json.createObjectBuilder().add("span", insertActivityBuilder).build();
+    makeRequest(GQL.INSERT_SPAN, variables, hasuraAdminHeader);
   }
 
   public void updateActivityDirectiveArguments(int planId, int activityId, JsonObject arguments) throws IOException {
