@@ -81,6 +81,10 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Keeps track of entry points for all in-progress tasks */
   public final Map<TaskId, TaskEntryPoint> entrypoints;
+  public final Map<TaskId, Duration> lastStepTime;
+  public final Map<TaskId, List<SerializedValue>> readLog;
+  public final Map<TaskId, Integer> taskSteps;
+  public final Map<TaskId, Integer> childCount;
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -91,13 +95,18 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<SpanId, MutableInt> spanContributorCount;
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
-  public final ExecutorService executor;
+  public ExecutorService executor; // MD: not final for Matt's purposes - don't merge this way
 
   /* The top-level simulation timeline. */
   private final TemporalEventSource timeline;
   private final TemporalEventSource referenceTimeline;
-  private final LiveCells cells;
+  public final LiveCells cells;
   private Duration elapsedTime;
+
+  public SimulationEngine(LiveCells initialCells, ExecutorService executor) {
+    this(initialCells);
+    this.executor = executor;
+  }
 
   public SimulationEngine(LiveCells initialCells) {
     timeline = new TemporalEventSource();
@@ -117,6 +126,10 @@ public final class SimulationEngine implements AutoCloseable {
     spans = new LinkedHashMap<>();
     spanContributorCount = new LinkedHashMap<>();
     entrypoints = new LinkedHashMap<>();
+    lastStepTime = new LinkedHashMap<>();
+    readLog = new LinkedHashMap<>();
+    taskSteps = new LinkedHashMap<>();
+    childCount = new LinkedHashMap<>();
     executor = Executors.newVirtualThreadPerTaskExecutor();
   }
 
@@ -153,6 +166,13 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var entry : other.spanContributorCount.entrySet()) {
       spanContributorCount.put(entry.getKey(), new MutableInt(entry.getValue().getValue()));
     }
+    lastStepTime = new LinkedHashMap<>(other.lastStepTime);
+    readLog = new LinkedHashMap<>();
+    for (final var entry : other.readLog.entrySet()) {
+      readLog.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+    }
+    taskSteps = new LinkedHashMap<>(other.taskSteps);
+    childCount = new LinkedHashMap<>(other.childCount);
     entrypoints = other.entrypoints;
   }
 
@@ -167,7 +187,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Start daemon task(s) immediately, before anything else happens.
-    this.scheduleTask(Duration.ZERO, daemons, new TaskEntryPoint.Daemon());
+    this.scheduleTask(Duration.ZERO, daemons, new TaskEntryPoint.Daemon(TaskEntryPoint.freshId()));
     {
       final var batch = this.extractNextJobs(Duration.MAX_VALUE);
       final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -275,6 +295,8 @@ public final class SimulationEngine implements AutoCloseable {
     this.unstartedTasks.put(task, startTime);
 
     this.entrypoints.put(task, entrypoint);
+    this.taskSteps.put(task, 0);
+    this.childCount.put(task, 0);
 
     return span;
   }
@@ -418,6 +440,9 @@ public final class SimulationEngine implements AutoCloseable {
   throws SpanException {
     if (this.closed) throw new IllegalStateException("Cannot step task on closed simulation engine");
     this.unstartedTasks.remove(task);
+    this.lastStepTime.put(task, currentTime);
+    this.taskSteps.putIfAbsent(task, 0);
+    this.taskSteps.put(task, this.taskSteps.get(task) + 1);
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
     var state = this.tasks.remove(task);
@@ -433,7 +458,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) throws SpanException {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
+    final var scheduler = new EngineScheduler(currentTime, progress.span(), task, progress.caller(), frame);
     final TaskStatus<Output> status;
     try {
       status = progress.state().step(scheduler);
@@ -471,7 +496,9 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       case TaskStatus.Delayed<Output> s -> {
-        if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
+        if (s.delay().isNegative()) {
+          throw new IllegalArgumentException("Cannot schedule a task in the past");
+        }
 
         this.tasks.put(task, progress.continueWith(s.continuation()));
         this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
@@ -494,6 +521,8 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Spawn the child task.
         final var childTask = TaskId.generate();
+        entrypoints.putIfAbsent(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), entrypoints.get(task).id(), childCount.get(task)));
+        childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
         SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
         SimulationEngine.this.tasks.put(
             childTask,
@@ -591,7 +620,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  private record SpanInfo(
+  public record SpanInfo(
       Map<SpanId, ActivityDirectiveId> spanToPlannedDirective,
       Map<SpanId, SerializedActivity> input,
       Map<SpanId, SerializedValue> output
@@ -723,7 +752,7 @@ public final class SimulationEngine implements AutoCloseable {
       Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities
   ) {}
 
-  private SpanInfo computeSpanInfo(
+  public SpanInfo computeSpanInfo(
       final Topic<ActivityDirectiveId> activityTopic,
       final Iterable<SerializableTopic<?>> serializableTopics,
       final TemporalEventSource timeline
@@ -1055,12 +1084,14 @@ public final class SimulationEngine implements AutoCloseable {
   private final class EngineScheduler implements Scheduler {
     private final Duration currentTime;
     private final SpanId span;
+    private final TaskId taskId;
     private final Optional<TaskId> caller;
     private final TaskFrame<JobId> frame;
 
     public EngineScheduler(
         final Duration currentTime,
         final SpanId span,
+        final TaskId taskId,
         final Optional<TaskId> caller,
         final TaskFrame<JobId> frame)
     {
@@ -1068,6 +1099,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.span = Objects.requireNonNull(span);
       this.caller = Objects.requireNonNull(caller);
       this.frame = Objects.requireNonNull(frame);
+      this.taskId = taskId;
     }
 
     @Override
@@ -1079,6 +1111,9 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
       final var state$ = this.frame.getState(query.query());
+
+      readLog.computeIfAbsent(taskId, $ -> new ArrayList<>()).add(this.frame.serialize(query.query()));
+
       return state$.orElseThrow(IllegalArgumentException::new);
     }
 
@@ -1105,6 +1140,9 @@ public final class SimulationEngine implements AutoCloseable {
       };
 
       final var childTask = TaskId.generate();
+      entrypoints.putIfAbsent(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), entrypoints.get(taskId).id(), childCount.get(taskId)));
+      childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
+
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
       SimulationEngine.this.tasks.put(
           childTask,

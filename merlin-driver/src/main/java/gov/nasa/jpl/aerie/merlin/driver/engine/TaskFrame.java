@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,10 @@ public final class TaskFrame<Job> {
 
   public <State> Optional<State> getState(final Query<State> query) {
     return this.cells.getState(query);
+  }
+
+  public <State> SerializedValue serialize(final Query<State> query) {
+    return this.cells.getCell(query).get().serialize();
   }
 
   public Optional<Duration> getExpiry(final Query<?> query) {

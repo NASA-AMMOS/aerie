@@ -381,7 +381,7 @@ public class CheckpointSimulationDriver {
             computedStartTime,
             executor ->
                 Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
-                    .andThen(task.create(executor)), new TaskEntryPoint.Directive(serializedDirective));
+                    .andThen(task.create(executor)), new TaskEntryPoint.Directive(TaskEntryPoint.freshId(), serializedDirective));
         activityToTask.put(directiveIdToSchedule, taskId);
         if (resolved.containsKey(directiveIdToSchedule)) {
           toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);

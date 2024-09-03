@@ -59,3 +59,30 @@ Warnings:
 7. Simulate plan 2
 
 Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the open shell.
+
+
+## TODO
+
+- [x] Demonstrate serializable cells
+- [ ] Demonstrate restarting activities
+  - [x] Paused on Delay
+    - [x] Save
+    - [x] Resume
+  - [x] Paused on Condition
+    - [x] Save
+    - [x] Resume
+  - [ ] Paused on Call
+    - [ ] Save
+    - [ ] Resume
+  - [ ] Performed a read
+    - [ ] Save
+    - [x] Resume
+- [ ] Demonstrate restarting subtasks
+- [ ] Demonstrate poking in new values
+- [ ] Demonstrate conditionally omitting activities from being restarted
+- [ ] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it?
+- [ ] Demonstrate spans that continue from a previous plan
+- [ ] Demonstrate multi-step task
+- [ ] Investigate approaches to minimizing size - maybe gzip?
+- [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
+- [ ] Demonstrate anchors?
