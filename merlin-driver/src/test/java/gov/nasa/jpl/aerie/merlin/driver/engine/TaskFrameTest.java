@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -266,6 +267,16 @@ public final class TaskFrameTest {
     @Override
     public Optional<Duration> getExpiry(final MutableObject<EventGraph<T>> self) {
       return Optional.empty();
+    }
+
+    @Override
+    public SerializedValue serialize(final MutableObject<EventGraph<T>> eventGraphMutableObject) {
+      throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public MutableObject<EventGraph<T>> deserialize(final SerializedValue serializedValue) {
+      return null;
     }
   }
 }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SampledResourceTest {
   final Accumulator accumulator = new Accumulator(0.0, 1.0);
-  final SampledResource<Double> sampledResource = new SampledResource<>(() -> accumulator.get(), $ -> $, 10.0);
+  final SampledResource<Double> sampledResource = new SampledResource<>(accumulator::get, $ -> $, 10.0, new DoubleValueMapper());
 
   @Test
   void testSampledResource() {

@@ -111,6 +111,16 @@ public final class CellExpiryTest {
               }
             };
           }
+
+          @Override
+          public SerializedValue serialize(final Object object) {
+            throw new UnsupportedOperationException("Not implemented");
+          }
+
+          @Override
+          public Object deserialize(final SerializedValue serializedValue) {
+            throw new UnsupportedOperationException("Not implemented");
+          }
         },
         $ -> $,
         new Topic<>()

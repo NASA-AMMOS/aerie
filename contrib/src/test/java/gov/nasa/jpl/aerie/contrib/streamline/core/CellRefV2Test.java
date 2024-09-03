@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.streamline.core;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.commutingEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.noncommutingEffects;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource.resource;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Resources.currentValue;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.monads.DiscreteDynamicsMonad.effect;
@@ -30,7 +30,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), noncommutingEffects(), mapper);
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), noncommutingEffects(), Discrete.valueMapper(new IntegerValueMapper()));
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -69,7 +69,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), commutingEffects(), mapper);
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), commutingEffects(), Discrete.valueMapper(new IntegerValueMapper()));
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {
@@ -112,7 +112,7 @@ class MutableResourceTest {
       Resources.init();
     }
 
-    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), autoEffects(), mapper);
+    private final MutableResource<Discrete<Integer>> cell = MutableResource.resource(discrete(42), autoEffects(), Discrete.valueMapper(new IntegerValueMapper()));
 
     @Test
     void gets_initial_value_if_no_effects_are_emitted() {

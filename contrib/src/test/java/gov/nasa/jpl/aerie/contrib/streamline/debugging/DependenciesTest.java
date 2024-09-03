@@ -23,7 +23,7 @@ class DependenciesTest {
   Resource<Discrete<Boolean>> constantTrue = DiscreteResources.constant(true);
   Resource<Polynomial> constant1234 = constant(1234);
   Resource<Polynomial> constant5678 = constant(5678);
-  Resource<Polynomial> polynomialCell = resource(polynomial(1), mapper);
+  Resource<Polynomial> polynomialCell = resource(polynomial(1), Polynomial.VALUE_MAPPER);
   Resource<Polynomial> derived = map(constantTrue, constant1234, constant5678,
                                      (b, x, y) -> b.extract() ? x : y);
 

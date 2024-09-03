@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskEntryPoint;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -380,7 +381,7 @@ public class CheckpointSimulationDriver {
             computedStartTime,
             executor ->
                 Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
-                    .andThen(task.create(executor)));
+                    .andThen(task.create(executor)), new TaskEntryPoint.Directive(serializedDirective));
         activityToTask.put(directiveIdToSchedule, taskId);
         if (resolved.containsKey(directiveIdToSchedule)) {
           toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);

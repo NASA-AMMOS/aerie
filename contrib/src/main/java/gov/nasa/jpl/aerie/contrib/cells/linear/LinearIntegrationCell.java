@@ -77,8 +77,8 @@ public final class LinearIntegrationCell {
     public SerializedValue serialize(final LinearIntegrationCell linearIntegrationCell) {
       return SerializedValue.of(Map.of(
           "initialVolume", SerializedValue.of(linearIntegrationCell.initialVolume),
-          "accumulatedVolume", SerializedValue.of(linearIntegrationCell.accumulatedVolume),
-          "rate", SerializedValue.of(linearIntegrationCell.rate)
+          "rate", SerializedValue.of(linearIntegrationCell.rate),
+          "accumulatedVolume", SerializedValue.of(linearIntegrationCell.accumulatedVolume)
       ));
     }
 
@@ -87,8 +87,8 @@ public final class LinearIntegrationCell {
       final var map = serializedValue.asMap().get();
       return new LinearIntegrationCell(
           map.get("initialVolume").asReal().get(),
-          map.get("accumulatedVolume").asReal().get(),
-          map.get("rate").asReal().get()
+          map.get("rate").asReal().get(),
+          map.get("accumulatedVolume").asReal().get()
       );
     }
   }

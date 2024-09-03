@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import static gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.string;
@@ -39,6 +40,16 @@ public class SimpleLogger {
         @Override
         public void apply(Unit unit, Unit s) {
         }
+
+      @Override
+      public SerializedValue serialize(final Unit unit) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public Unit deserialize(final SerializedValue serializedValue) {
+        throw new UnsupportedOperationException();
+      }
     }, $ -> UNIT);
 
     public SimpleLogger(String name, Registrar registrar) {

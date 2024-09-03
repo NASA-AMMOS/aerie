@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.streamline.core.MutableResource;
 import gov.nasa.jpl.aerie.contrib.streamline.core.ErrorCatching;
 import gov.nasa.jpl.aerie.contrib.streamline.core.Resources;
@@ -44,7 +47,7 @@ class DiscreteEffectsTest {
     Resources.init();
   }
 
-  private final MutableResource<Discrete<Integer>> settable = resource(discrete(42), mapper);
+  private final MutableResource<Discrete<Integer>> settable = resource(discrete(42), Discrete.valueMapper(new IntegerValueMapper()));
 
   @Test
   void set_effect_changes_to_new_value() {
@@ -68,7 +71,7 @@ class DiscreteEffectsTest {
     assertEquals(789, currentValue(settable));
   }
 
-  private final MutableResource<Discrete<Boolean>> flag = resource(discrete(false), mapper);
+  private final MutableResource<Discrete<Boolean>> flag = resource(discrete(false), Discrete.valueMapper(new BooleanValueMapper()));
 
   @Test
   void flag_set_makes_value_true() {
@@ -92,7 +95,7 @@ class DiscreteEffectsTest {
     assertTrue(currentValue(flag));
   }
 
-  private final MutableResource<Discrete<Integer>> counter = resource(discrete(0), mapper);
+  private final MutableResource<Discrete<Integer>> counter = resource(discrete(0), Discrete.valueMapper(new IntegerValueMapper()));
 
   @Test
   void increment_increases_value_by_1() {
@@ -122,7 +125,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 3, currentValue(counter));
   }
 
-  private final MutableResource<Discrete<Double>> consumable = resource(discrete(10.0), mapper);
+  private final MutableResource<Discrete<Double>> consumable = resource(discrete(10.0), Discrete.valueMapper(new DoubleValueMapper()));
 
   @Test
   void consume_decreases_value_by_amount() {
@@ -147,7 +150,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue - 2.7 + 5.6, currentValue(consumable));
   }
 
-  private final MutableResource<Discrete<Double>> nonconsumable = resource(discrete(10.0), mapper);
+  private final MutableResource<Discrete<Double>> nonconsumable = resource(discrete(10.0), Discrete.valueMapper(new DoubleValueMapper()));
 
   @Test
   void using_decreases_value_while_action_is_running() {
@@ -158,7 +161,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  MutableResource<Clock> DEBUG_clock = resource(new Clock(ZERO), mapper);
+//  MutableResource<Clock> DEBUG_clock = resource(new Clock(ZERO), mapper);
 
   @Test
   void using_runs_synchronously() {
@@ -187,7 +190,7 @@ class DiscreteEffectsTest {
     assertEquals(initialValue, currentValue(nonconsumable));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> settableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> settableDataVolume = unitAware(resource(discrete(10.0), Discrete.valueMapper(new DoubleValueMapper())), BIT);
 
   @Test
   void unit_aware_set_converts_to_resource_unit() {
@@ -200,7 +203,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> set(settableDataVolume, quantity(2, METER)));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> consumableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> consumableDataVolume = unitAware(resource(discrete(10.0), Discrete.valueMapper(new DoubleValueMapper())), BIT);
 
   @Test
   void unit_aware_consume_converts_to_resource_unit() {
@@ -228,7 +231,7 @@ class DiscreteEffectsTest {
     assertThrows(IllegalArgumentException.class, () -> restore(consumableDataVolume, quantity(1, METER)));
   }
 
-  UnitAware<MutableResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(resource(discrete(10.0), mapper), BIT);
+  UnitAware<MutableResource<Discrete<Double>>> nonconsumableDataVolume = unitAware(resource(discrete(10.0), Discrete.valueMapper(new DoubleValueMapper())), BIT);
 
   @Test
   void unit_aware_using_converts_to_resource_unit() {

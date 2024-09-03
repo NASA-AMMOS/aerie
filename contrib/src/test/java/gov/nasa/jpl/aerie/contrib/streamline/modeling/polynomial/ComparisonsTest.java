@@ -32,8 +32,8 @@ public class ComparisonsTest {
     Resources.init();
   }
 
-  private final MutableResource<Polynomial> p = resource(polynomial(0), mapper);
-  private final MutableResource<Polynomial> q = resource(polynomial(0), mapper);
+  private final MutableResource<Polynomial> p = resource(polynomial(0), Polynomial.VALUE_MAPPER);
+  private final MutableResource<Polynomial> q = resource(polynomial(0), Polynomial.VALUE_MAPPER);
 
   private final Resource<Discrete<Boolean>> p_lt_q = lessThan(p, q);
   private final Resource<Discrete<Boolean>> p_lte_q = lessThanOrEquals(p, q);
