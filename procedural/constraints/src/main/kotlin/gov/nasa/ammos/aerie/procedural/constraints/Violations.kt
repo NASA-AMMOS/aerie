@@ -3,7 +3,7 @@ package gov.nasa.ammos.aerie.procedural.constraints
 import gov.nasa.ammos.aerie.procedural.timeline.BaseTimeline
 import gov.nasa.ammos.aerie.procedural.timeline.BoundsTransformer
 import gov.nasa.ammos.aerie.procedural.timeline.Timeline
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Windows
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real
 import gov.nasa.ammos.aerie.procedural.timeline.ops.*
@@ -52,7 +52,7 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
         }
 
     /** Creates a [Violations] object that violates inside each interval. */
-    @JvmStatic fun Windows.violateInside() = unsafeCast(::Intervals).violations()
+    @JvmStatic fun Windows.violateInside() = unsafeCast(::Universal).violations()
     /** Creates a [Violations] object that violates outside each interval. */
     @JvmStatic fun Windows.violateOutside() = complement().violateInside()
 

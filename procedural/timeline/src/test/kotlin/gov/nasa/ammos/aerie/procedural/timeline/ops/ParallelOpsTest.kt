@@ -8,7 +8,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.Interval.Companion.betweenClosed
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Exclusive
 import gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Inclusive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Numbers
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 import org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 class ParallelOpsTest {
   @Test
   fun flattenIntoProfile() {
-    val result = Intervals(
+    val result = Universal(
         Segment(seconds(1) .. seconds(3), 1),
         Segment(seconds(0) .. seconds(2), 2),
         Segment(seconds(4) .. seconds(6), 5)
@@ -35,7 +35,7 @@ class ParallelOpsTest {
 
   @Test
   fun reduceIntoProfile() {
-    val result = Intervals(
+    val result = Universal(
         Segment(seconds(1) .. seconds(4), 1),
         Segment(seconds(0) .. seconds(3), 2),
         Segment(seconds(4) .. seconds(6), 5),

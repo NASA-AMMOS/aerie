@@ -2,7 +2,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.ops
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.*
-import gov.nasa.ammos.aerie.procedural.timeline.collections.Intervals
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Windows
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.IntervalLike
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
@@ -122,11 +122,11 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
   }
 
   /**
-   * [(DOC)][isolate] Similar to [filter], but returns an [Intervals] timeline.
+   * [(DOC)][isolate] Similar to [filter], but returns an [Universal] timeline.
    *
    * @param f a predicate which decides if a given payload object's interval should be included in the result.
    */
-  fun isolate(f: (V) -> Boolean) = filter(false, f).unsafeCast(::Intervals)
+  fun isolate(f: (V) -> Boolean) = filter(false, f).unsafeCast(::Universal)
 
   /**
    * [(DOC)][highlight] Similar to [filter], but produces a coalesced [Windows] object
@@ -135,7 +135,7 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
    * @param f a predicate that decides if a given payload object's interval should be included in the result.
    */
   fun highlight(f: (V) -> Boolean) =
-      unsafeMap(::Intervals, BoundsTransformer.IDENTITY, false) {
+      unsafeMap(::Universal, BoundsTransformer.IDENTITY, false) {
         if (f(it)) it.interval
         else Interval.EMPTY
       }.convert(::Windows)
@@ -263,7 +263,7 @@ interface GeneralOps<V: IntervalLike<V>, THIS: GeneralOps<V, THIS>>: Timeline<V,
       if (truncateMarginal) {
         unsafeMap2(ctor, windows) { l, _, i -> l.withNewInterval(i) }
       } else {
-        unsafeMap2(::Intervals, windows) { l, _, _ -> l }.unsafeOperate { collect(it).distinct() }.unsafeCast(ctor)
+        unsafeMap2(::Universal, windows) { l, _, _ -> l }.unsafeOperate { collect(it).distinct() }.unsafeCast(ctor)
       }
 
   /** [(DOC)][shift] Uniformly shifts the entire timeline in time (positive shifts toward the future). */

@@ -24,8 +24,11 @@ interface BooleanOps<THIS: BooleanOps<THIS>>: ConstantOps<Boolean, THIS> {
   /** [(DOC)][falsifyLongerThan] Falsifies any `true` segments with durations longer than the given duration. */
   fun falsifyLongerThan(dur: Duration) = falsifyByDuration(Duration.MIN_VALUE .. dur)
 
-  /** [(DOC)][isolateTrue] Creates an [Intervals] object with intervals whenever this profile is `true`. */
-  fun isolateTrue() = isolate { it.value }
+  /** [(DOC)][isolateTrue] Creates an [Universal] object with intervals whenever this profile is `true`. */
+  fun isolateTrue() = isolateEqualTo(true)
+
+  /** [(DOC)][isolateFalse] Creates an [Universal] object with intervals whenever this profile is `false`. */
+  fun isolateFalse() = isolateEqualTo(false)
 
   /** [(DOC)][highlightTrue] Creates an [Windows] object that highlights whenever this profile is `true`. */
   fun highlightTrue() = highlight { it.value }
