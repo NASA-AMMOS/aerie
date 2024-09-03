@@ -152,7 +152,7 @@ public class EquationSolvingAlgorithms {
     /**
      * Addition of longs with safety from overflow
      */
-    private static long plus( long rd1, long rd2 ) {
+    private static long plus(final long rd1, final long rd2 ) {
       long result;
       // check for overflow
       if ( rd1 >= 0 && Long.MAX_VALUE - rd1 <= rd2 ) {
@@ -168,7 +168,7 @@ public class EquationSolvingAlgorithms {
     /**
      * Subtraction of longs with safety from overflow
      */
-    private static long minus( long rd1, long rd2 ) {
+    private static long minus(final long rd1, final long rd2 ) {
       long result;
       // use plus, but don't risk trying to negate +/-inf
       if ( rd2 == Long.MAX_VALUE ) result = plus( rd1, Long.MIN_VALUE );
