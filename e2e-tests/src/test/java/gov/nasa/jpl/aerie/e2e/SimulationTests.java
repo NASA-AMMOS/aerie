@@ -88,7 +88,7 @@ public class SimulationTests {
   @Test
   void simulationMicrosecondResolution() throws IOException {
     final var activityArgs = Json.createObjectBuilder().add("duration", 1).build();
-    hasura.insertActivity(planId, "ControllableDurationActivity", "1h", activityArgs);
+    hasura.insertActivityDirective(planId, "ControllableDurationActivity", "1h", activityArgs);
     assertDoesNotThrow(() -> hasura.awaitSimulation(planId));
   }
 
@@ -97,8 +97,8 @@ public class SimulationTests {
    */
   @Test
   void incompleteParentIdsPosted() throws IOException {
-    hasura.insertActivity(planId, "parent", "0h", JsonValue.EMPTY_JSON_OBJECT);
-    hasura.insertActivity(planId, "DecomposingSpawnParent", "0h", JsonValue.EMPTY_JSON_OBJECT);
+    hasura.insertActivityDirective(planId, "parent", "0h", JsonValue.EMPTY_JSON_OBJECT);
+    hasura.insertActivityDirective(planId, "DecomposingSpawnParent", "0h", JsonValue.EMPTY_JSON_OBJECT);
     final var simulatedActivities = hasura.getSimulationDataset(hasura.awaitSimulation(planId).simDatasetId())
                                           .activities();
 
@@ -150,17 +150,17 @@ public class SimulationTests {
     @BeforeEach
     void beforeEach() throws IOException {
       // Insert Activities
-      firstHalfActivityId = hasura.insertActivity(
+      firstHalfActivityId = hasura.insertActivityDirective(
           planId,
           "ControllableDurationActivity",
           "1hr",
           Json.createObjectBuilder().add("duration", 3600000000L).build()); //1hr duration
-      midpointActivityId = hasura.insertActivity(
+      midpointActivityId = hasura.insertActivityDirective(
           planId,
           "ControllableDurationActivity",
           "12hr",
           Json.createObjectBuilder().add("duration", 7200000000L).build()); //2hr duration
-      secondHalfActivityId = hasura.insertActivity(
+      secondHalfActivityId = hasura.insertActivityDirective(
           planId,
           "ControllableDurationActivity",
           "14hr",
@@ -324,7 +324,7 @@ public class SimulationTests {
                                  .add("duration", Json.createObjectBuilder()
                                                       .add("amountInMicroseconds", 60000000*60L))  // 1 hour
                                  .build();
-        hasura.insertActivity(fooPlan, "ControllableDurationActivity", startOffset, growArgs);
+        hasura.insertActivityDirective(fooPlan, "ControllableDurationActivity", startOffset, growArgs);
       }
     }
 
@@ -451,7 +451,7 @@ public class SimulationTests {
     @Test
     void directiveIdIncluded() throws IOException {
       // Setup: Insert a directive that will throw
-      int dirId = hasura.insertActivity(
+      int dirId = hasura.insertActivityDirective(
           fooPlan,
           "DaemonCheckerActivity",
           "01:00:00",
@@ -499,7 +499,7 @@ public class SimulationTests {
     @Test
     void directiveIdOnDescendant() throws IOException {
       // Setup: Insert a directive that will throw
-      int dirId = hasura.insertActivity(
+      int dirId = hasura.insertActivityDirective(
           fooPlan,
           "DaemonTaskActivity",
           "01:00:00",
@@ -593,7 +593,7 @@ public class SimulationTests {
       // Set up: Update the config to force an exception 1hr into the plan
       // and add an activity that will be executing at that time
       hasura.updateSimArguments(fooPlan, Json.createObjectBuilder().add("raiseException", JsonValue.TRUE).build());
-      hasura.insertActivity(
+      hasura.insertActivityDirective(
           fooPlan,
           "DaemonCheckerSpawner",
           "00:59:00",
