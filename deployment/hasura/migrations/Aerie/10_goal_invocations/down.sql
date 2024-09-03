@@ -90,4 +90,4 @@ alter table scheduler.scheduling_specification_goals
 comment on column scheduler.scheduling_goal_definition.definition is e''
   'An executable expression in the Merlin scheduling language.';
 
-call migrations.mark_migration_rolled_back('9');
+call migrations.mark_migration_rolled_back('10');

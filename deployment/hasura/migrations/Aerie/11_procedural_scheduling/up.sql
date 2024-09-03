@@ -47,4 +47,4 @@ comment on column scheduler.scheduling_goal_analysis.arguments is e''
   'The "as run" arguments passed to this goal during the scheduling run.'
   'Follows scheduler.scheduling_goal_definition.parameter_schema.';
 
-call migrations.mark_migration_applied('10');
+call migrations.mark_migration_applied('11');
