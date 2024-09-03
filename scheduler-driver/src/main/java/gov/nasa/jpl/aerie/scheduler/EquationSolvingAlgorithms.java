@@ -127,23 +127,54 @@ public class EquationSolvingAlgorithms {
         final int maxIteration)
     throws ExceededMaxIterationException, SchedulingInterruptedException
     {
+      // the number of possible values may be less than the number of iterations, so stop after all have been visited.
+      long numTimepoints = minus(minus(max.in(Duration.MICROSECONDS), min.in(Duration.MICROSECONDS)), 1);
+      long maxIters = Long.min(maxIteration, numTimepoints);
       var cur = init;
-      int i = 0;
+      long i = 0;
       do {
         //we should not come back to previously visited values
         if (!history.alreadyVisited(cur) && cur.between(min, max)) {
           i++;
           try {
             final var value = function.valueAt(cur, history);
-            return new IteratingResult(new FunctionCoordinate<>(cur, value), i);
+            return new IteratingResult(new FunctionCoordinate<>(cur, value), ((Long)i).intValue());
           } catch (DiscontinuityException e) {
             //nothing, keep iterating
           }
         }
         cur = chooseRandomX(min, max);
-        //if min == max, another call to random will have no effect and thus we should exit
-      } while(i < maxIteration && !min.isEqualTo(max));
+        //if all timepoints have been visited, another call to random will have no effect and thus we should exit
+      } while(i < maxIters);
       throw new ExceededMaxIterationException();
+    }
+
+    /**
+     * Addition of longs with safety from overflow
+     */
+    private static long plus(final long rd1, final long rd2 ) {
+      long result;
+      // check for overflow
+      if ( rd1 >= 0 && Long.MAX_VALUE - rd1 <= rd2 ) {
+        result = Long.MAX_VALUE;
+      } else if ( rd1 < 0 && Long.MIN_VALUE - rd1 >= rd2 ) {
+        result = Long.MIN_VALUE;
+      } else {
+        result = rd1 + rd2;
+      }
+      return result;
+    }
+
+    /**
+     * Subtraction of longs with safety from overflow
+     */
+    private static long minus(final long rd1, final long rd2 ) {
+      long result;
+      // use plus, but don't risk trying to negate +/-inf
+      if ( rd2 == Long.MAX_VALUE ) result = plus( rd1, Long.MIN_VALUE );
+      else if ( rd2 == Long.MIN_VALUE ) result = plus( rd1, Long.MAX_VALUE );
+      else result = plus(rd1, -rd2);
+      return result;
     }
 
     /**
@@ -182,6 +213,7 @@ public class EquationSolvingAlgorithms {
         public Duration valueAt(final Duration x, final History<Duration, Metadata> history)
         throws EquationSolvingAlgorithms.DiscontinuityException, SchedulingInterruptedException
         {
+          // don't add value to history -- it breaks things
           return f.valueAt(x, history).minus(y);
         }
       };
