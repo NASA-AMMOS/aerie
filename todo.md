@@ -81,7 +81,7 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
 - [x] Demonstrate multi-step task
 - [x] Demonstrate restarting directive subtasks
 
-- [ ] Demonstrate restarting anonymous subtasks
+- [x] Demonstrate restarting anonymous subtasks
 - [ ] Demonstrate spans that continue from a previous plan
 - [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
 
@@ -92,3 +92,9 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
 - [ ] Demonstrate anchors?
 - [ ] Allow user to select EITHER simconfig OR incons from a given simulation. Display warning if time doesn't line up
 - [ ] Demonstrate handover period (i.e. overlap instead of startB = endA)
+- [ ] Make sure that tasks that have finished (but are merely awaiting spawned children) do not retain a longer than necessary readLog
+      and do not get stepped up past the start of their last unfinished non-directive child. However they DO need to be maintained in order
+      to restart their children
+- [ ] Consider the implications of the extra step, and whether we could/should try to avoid it
+- [ ] Analyze runtime and memory costs, calculate theoretical minimum necessary, see how far we are from that, and suggest user strategies for mitigating worst case, and show observability that user could leverage to find worst offenders and fix them
+- [ ] Stress test (large number of cells, large cells, large number of tasks, tasks with many reads, deeply nested tasks)

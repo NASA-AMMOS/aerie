@@ -27,9 +27,11 @@
 @WithActivityType(RipenBananaActivity.class)
 @WithActivityType(ExceptionActivity.class)
 @WithActivityType(ToggleFlagWhenProducerChanges.class)
+@WithActivityType(AsyncAnonymous.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.banananation.activities.AsyncAnonymous;
 import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BananaNapActivity;
 import gov.nasa.jpl.aerie.banananation.activities.Banannotation;

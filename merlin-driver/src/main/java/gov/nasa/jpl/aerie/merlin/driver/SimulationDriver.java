@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.EngineCellId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskEntryPoint;
@@ -44,6 +45,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -188,81 +190,38 @@ public final class SimulationDriver {
 
         final var spanInfo = engine.computeSpanInfo(activityTopic, missionModel.getTopics(), engine.timeline);
 
-        for (final var entry : engine.tasks.entrySet()) {
-          final var task = entry.getKey();
-          final var spanId = entry.getValue().span(); // TODO task -> span mapping may be many to one... need to handle that
+        final var tasksSaved = new LinkedHashSet<TaskId>();
+        final var tasksNeeded = new LinkedHashSet<>(engine.tasks.keySet());
 
-          final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
-          final Optional<TaskEntryPoint.ParentReference> parent;
-          if (engine.entrypoints.containsKey(task)) {
-            final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
-            if (entrypoint instanceof TaskEntryPoint.Subtask e) {
-              parent = Optional.of(e.parent$());
+        var missingTasks = setDifference(tasksNeeded, tasksSaved);
+
+        while (!missingTasks.isEmpty()) {
+          for (final var task : missingTasks) {
+            tasksSaved.add(task);
+            final var spanId = engine.taskSpan.get(task);
+            final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
+            final Optional<TaskEntryPoint.ParentReference> parent;
+            if (engine.entrypoints.containsKey(task)) {
+              final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
+              if (entrypoint instanceof TaskEntryPoint.Subtask e) {
+                parent = Optional.of(e.parent$());
+              } else {
+                parent = Optional.empty();
+              }
             } else {
               parent = Optional.empty();
             }
-          } else {
-            parent = Optional.empty();
+            TaskEntryPoint entrypoint;
+            if (spanInfo.isActivity(spanId) && spanInfo.isActivity(task)) {
+              entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
+            } else {
+              entrypoint = engine.entrypoints.get(task);
+              tasksNeeded.add(engine.taskParent.get(task));
+              if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId());
+            }
+            serializedTasks.add(serializeTask(engine, task, entrypoint));
           }
-
-
-          TaskEntryPoint entrypoint;
-          if (spanInfo.isActivity(spanId)) {
-            entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
-          } else {
-            entrypoint = engine.entrypoints.get(task);
-            if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId());
-          }
-
-          final var lastStepTime = engine.lastStepTime.get(task);
-          final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
-          final var numSteps = engine.taskSteps.get(task);
-          final var serializedEntryPoint = switch (entrypoint) {
-            case TaskEntryPoint.Directive e -> SerializedValue.of(Map.of(
-                "id",
-                SerializedValue.of(e.id()),
-                "type",
-                SerializedValue.of("directive"),
-                "parentId",
-                e.parent().map($ -> SerializedValue.of($.id())).orElse(SerializedValue.NULL),
-                "childNumber",
-                e.parent().map($ -> SerializedValue.of($.childNumber())).orElse(SerializedValue.NULL),
-                "directive",
-                SerializedValue.of(Map.of(
-                    "type",
-                    SerializedValue.of(e.directive().getTypeName()),
-                    "args",
-                    SerializedValue.of(e.directive().getArguments())))
-            ));
-            case TaskEntryPoint.Daemon e -> SerializedValue.of(Map.of(
-                "id",
-                SerializedValue.of(e.id()),
-                "type",
-                SerializedValue.of("daemon")
-            ));
-            case TaskEntryPoint.Subtask e -> SerializedValue.of(Map.of(
-                "id",
-                SerializedValue.of(e.id()),
-                "type",
-                SerializedValue.of("subtask"),
-                "parentId",
-                SerializedValue.of(e.parent$().id()),
-                "childNumber",
-                SerializedValue.of(e.parent$().childNumber())
-            ));
-            case TaskEntryPoint.SystemTask e -> SerializedValue.of(Map.of(
-                "id",
-                SerializedValue.of(e.id()),
-                "type",
-                SerializedValue.of("system")
-            ));
-          };
-          serializedTasks.add(SerializedValue.of(Map.of(
-              "entrypoint", serializedEntryPoint,
-              "reads", SerializedValue.of(readLog),
-              "steps", SerializedValue.of(numSteps),
-              "lastStepTime",
-              SerializedValue.of(lastStepTime.minus(engine.getElapsedTime()).in(MICROSECONDS))))); // expected to be negative
+          missingTasks = setDifference(tasksNeeded, tasksSaved);
         }
 
         Files.write(Path.of(inconsFile), List.of(new SerializedValueJsonParser().unparse(SerializedValue.of(Map.of(
@@ -276,6 +235,68 @@ public final class SimulationDriver {
       final var topics = missionModel.getTopics();
       return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
     }
+  }
+
+  private static <T> boolean isSubset(Set<T> a, Set<T> b) {
+    return setDifference(a, b).isEmpty();
+  }
+
+  private static <T> Set<T> setDifference(Set<T> a, Set<T> b) {
+    final var aCopy = new LinkedHashSet<>(a);
+    aCopy.removeAll(b);
+    return aCopy;
+  }
+
+  private static SerializedValue serializeTask(SimulationEngine engine, TaskId task, TaskEntryPoint entrypoint) {
+    final var lastStepTime = engine.lastStepTime.get(task);
+    final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
+    final var numSteps = engine.taskSteps.get(task);
+    final var serializedEntryPoint = switch (entrypoint) {
+      case TaskEntryPoint.Directive e -> SerializedValue.of(Map.of(
+          "id",
+          SerializedValue.of(e.id()),
+          "type",
+          SerializedValue.of("directive"),
+          "parentId",
+          e.parent().map($ -> SerializedValue.of($.id())).orElse(SerializedValue.NULL),
+          "childNumber",
+          e.parent().map($ -> SerializedValue.of($.childNumber())).orElse(SerializedValue.NULL),
+          "directive",
+          SerializedValue.of(Map.of(
+              "type",
+              SerializedValue.of(e.directive().getTypeName()),
+              "args",
+              SerializedValue.of(e.directive().getArguments())))
+      ));
+      case TaskEntryPoint.Daemon e -> SerializedValue.of(Map.of(
+          "id",
+          SerializedValue.of(e.id()),
+          "type",
+          SerializedValue.of("daemon")
+      ));
+      case TaskEntryPoint.Subtask e -> SerializedValue.of(Map.of(
+          "id",
+          SerializedValue.of(e.id()),
+          "type",
+          SerializedValue.of("subtask"),
+          "parentId",
+          SerializedValue.of(e.parent$().id()),
+          "childNumber",
+          SerializedValue.of(e.parent$().childNumber())
+      ));
+      case TaskEntryPoint.SystemTask e -> SerializedValue.of(Map.of(
+          "id",
+          SerializedValue.of(e.id()),
+          "type",
+          SerializedValue.of("system")
+      ));
+    };
+    return SerializedValue.of(Map.of(
+        "entrypoint", serializedEntryPoint,
+        "reads", SerializedValue.of(readLog),
+        "steps", numSteps == null ? SerializedValue.NULL : SerializedValue.of(numSteps),
+        "lastStepTime", lastStepTime == null ? SerializedValue.NULL : SerializedValue.of(lastStepTime.minus(engine.getElapsedTime()).in(MICROSECONDS))  // expected to be negative
+    ));
   }
 
   private record InitialConditions(LiveCells cells, List<TaskFactory<?>> tasks) {}

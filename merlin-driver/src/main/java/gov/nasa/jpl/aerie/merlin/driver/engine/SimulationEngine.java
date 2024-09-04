@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,8 @@ public final class SimulationEngine implements AutoCloseable {
   public final Map<TaskId, List<SerializedValue>> readLog;
   public final Map<TaskId, Integer> taskSteps;
   public final Map<TaskId, Integer> childCount;
+  public final Map<TaskId, TaskId> taskParent;
+  public final Map<TaskId, SpanId> taskSpan;
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -130,6 +133,8 @@ public final class SimulationEngine implements AutoCloseable {
     readLog = new LinkedHashMap<>();
     taskSteps = new LinkedHashMap<>();
     childCount = new LinkedHashMap<>();
+    taskParent = new LinkedHashMap<>();
+    taskSpan = new LinkedHashMap<>();
     executor = Executors.newVirtualThreadPerTaskExecutor();
   }
 
@@ -173,6 +178,8 @@ public final class SimulationEngine implements AutoCloseable {
     }
     taskSteps = new LinkedHashMap<>(other.taskSteps);
     childCount = new LinkedHashMap<>(other.childCount);
+    taskParent = new LinkedHashMap<>(other.taskParent);
+    taskSpan = new LinkedHashMap<>(other.taskSpan);
     entrypoints = other.entrypoints;
   }
 
@@ -290,6 +297,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var task = TaskId.generate();
     this.spanContributorCount.put(span, new MutableInt(1));
     this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
+    this.taskSpan.put(task, span);
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     this.unstartedTasks.put(task, startTime);
@@ -529,6 +537,7 @@ public final class SimulationEngine implements AutoCloseable {
         }
         childCount.put(childTask, 0);
         childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
+        taskParent.put(childTask, task);
 
         SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
         SimulationEngine.this.tasks.put(
@@ -537,6 +546,7 @@ public final class SimulationEngine implements AutoCloseable {
                 childSpan,
                 Optional.of(task),
                 s.child().create(this.executor)));
+        taskSpan.put(childTask, childSpan);
         frame.signal(JobId.forTask(childTask));
 
         // Arrange for the parent task to resume.... later.
@@ -630,14 +640,19 @@ public final class SimulationEngine implements AutoCloseable {
   public record SpanInfo(
       Map<SpanId, ActivityDirectiveId> spanToPlannedDirective,
       Map<SpanId, SerializedActivity> input,
-      Map<SpanId, SerializedValue> output
-  ) {
+      Map<SpanId, SerializedValue> output,
+      Set<TaskId> activityTasks
+      ) {
     public SpanInfo() {
-      this(new HashMap<>(), new HashMap<>(), new HashMap<>());
+      this(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashSet<>());
     }
 
     public boolean isActivity(final SpanId id) {
-      return this.input.containsKey(id);
+      return this.input.containsKey(id) || this.output.containsKey(id);
+    }
+
+    public boolean isActivity(final TaskId id) {
+      return this.activityTasks.contains(id);
     }
 
     public boolean isDirective(SpanId id) {
@@ -704,6 +719,8 @@ public final class SimulationEngine implements AutoCloseable {
           spanInfo.input.put(
               ev.provenance(),
               new SerializedActivity(activityType, topic.outputType().serialize(input).asMap().orElseThrow()));
+
+          spanInfo.activityTasks.add(ev.emitter());
         });
       }
 
@@ -715,6 +732,7 @@ public final class SimulationEngine implements AutoCloseable {
           spanInfo.output.put(
               ev.provenance(),
               topic.outputType().serialize(output));
+          spanInfo.activityTasks.add(ev.emitter());
         });
       }
     }
@@ -1127,7 +1145,7 @@ public final class SimulationEngine implements AutoCloseable {
     @Override
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       // Append this event to the timeline.
-      this.frame.emit(Event.create(topic, event, this.span));
+      this.frame.emit(Event.create(topic, event, this.span, this.taskId));
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
@@ -1147,8 +1165,9 @@ public final class SimulationEngine implements AutoCloseable {
       };
 
       final var childTask = TaskId.generate();
-      entrypoints.put(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
+      if (entrypoints.get(taskId) != null) entrypoints.put(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
       childCount.put(childTask, 0);
+      taskParent.put(childTask, taskId);
       childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
 
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
@@ -1158,6 +1177,7 @@ public final class SimulationEngine implements AutoCloseable {
               childSpan,
               this.caller,
               state.create(SimulationEngine.this.executor)));
+      taskSpan.put(childTask, childSpan);
       this.frame.signal(JobId.forTask(childTask));
 
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());

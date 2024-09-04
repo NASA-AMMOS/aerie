@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 
 import java.util.Objects;
@@ -16,8 +17,8 @@ public final class Event {
   }
 
   public static <EventType>
-  Event create(final Topic<EventType> topic, final EventType event, final SpanId provenance) {
-    return new Event(new Event.GenericEvent<>(topic, event, provenance));
+  Event create(final Topic<EventType> topic, final EventType event, final SpanId provenance, final TaskId emitter) {
+    return new Event(new Event.GenericEvent<>(topic, event, provenance, emitter));
   }
 
   public <EventType, Target>
@@ -38,12 +39,16 @@ public final class Event {
     return this.inner.provenance();
   }
 
+  public TaskId emitter() {
+    return this.inner.emitter();
+  }
+
   @Override
   public String toString() {
     return "<@%s, %s>".formatted(System.identityHashCode(this.inner.topic), this.inner.event);
   }
 
-  private record GenericEvent<EventType>(Topic<EventType> topic, EventType event, SpanId provenance) {
+  private record GenericEvent<EventType>(Topic<EventType> topic, EventType event, SpanId provenance, TaskId emitter) {
     private GenericEvent {
       Objects.requireNonNull(topic);
       Objects.requireNonNull(event);
