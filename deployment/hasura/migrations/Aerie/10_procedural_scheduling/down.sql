@@ -73,12 +73,12 @@ where (ca.analysis_id, ca.goal_invocation_id) = (ga.analysis_id, ga.goal_invocat
 
 -- explictly restore non-nullability before PKing
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
-  alter column goal_id integer set not null,
-  alter column goal_revision integer set not null;
+  alter column goal_id set not null,
+  alter column goal_revision set not null;
 
 alter table scheduler.scheduling_goal_analysis_created_activities
-  alter column goal_id integer set not null,
-  alter column goal_revision integer set not null;
+  alter column goal_id set not null,
+  alter column goal_revision set not null;
 
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
   add constraint satisfying_activities_primary_key
