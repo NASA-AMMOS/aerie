@@ -13,6 +13,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId
+import gov.nasa.jpl.aerie.types.ActivityInstanceId
 import java.io.StringReader
 import java.sql.Connection
 import javax.json.Json
@@ -141,11 +142,11 @@ data class AeriePostgresSimulationResults(
   }
 
   private val allInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name, id from merlin.simulated_activity" +
+      "select start_offset, duration, attributes, activity_type_name, id, parent_id from merlin.simulated_activity" +
           " where simulation_dataset_id = ?;"
   )
   private val filteredInstancesStatement = c.prepareStatement(
-      "select start_offset, duration, attributes, activity_type_name, id from merlin.simulated_activity" +
+      "select start_offset, duration, attributes, activity_type_name, id, parent_id from merlin.simulated_activity" +
           " where simulation_dataset_id = ? and activity_type_name = ?;"
   )
   override fun <A: Any> instances(type: String?, deserializer: (SerializedValue) -> A): Instances<A> {
@@ -159,15 +160,17 @@ data class AeriePostgresSimulationResults(
     while (response.next()) {
       val start = Duration.parseISO8601(response.getString(1))
       val id = response.getLong(5)
+      val parentId = response.getLong(6)
       val attributesString = response.getString(3)
       val attributes = parseJson(attributesString)
       val directiveId = attributes.asMap().getOrNull()?.get("directiveId")?.asInt()?.getOrNull()
       result.add(Instance(
-          deserializer(attributes),
-          response.getString(4),
-        gov.nasa.jpl.aerie.types.ActivityInstanceId(id),
-          directiveId?.let { ActivityDirectiveId(it) },
-          between(start, start.plus(Duration.parseISO8601(response.getString(2))))
+        deserializer(attributes),
+        response.getString(4),
+        ActivityInstanceId(id),
+        directiveId?.let { ActivityDirectiveId(it) },
+        if (parentId == 0L) null else ActivityInstanceId(parentId),
+        between(start, start.plus(Duration.parseISO8601(response.getString(2))))
       ))
     }
     return Instances(result)
