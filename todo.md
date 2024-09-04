@@ -64,25 +64,31 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
 ## TODO
 
 - [x] Demonstrate serializable cells
-- [ ] Demonstrate restarting activities
+- [X] Demonstrate restarting activities
   - [x] Paused on Delay
     - [x] Save
     - [x] Resume
   - [x] Paused on Condition
     - [x] Save
     - [x] Resume
-  - [ ] Paused on Call
-    - [ ] Save
-    - [ ] Resume
-  - [ ] Performed a read
-    - [ ] Save
+  - [x] Paused on Call
+    - [x] Save
     - [x] Resume
-- [ ] Demonstrate restarting subtasks
+  - [x] Performed a read
+    - [x] Save
+    - [x] Resume
+- [x] Replace subtasks with directives where possible (still needs a little fixing to make reliable)
+- [x] Demonstrate multi-step task
+- [x] Demonstrate restarting directive subtasks
+
+- [ ] Demonstrate restarting anonymous subtasks
+- [ ] Demonstrate spans that continue from a previous plan
+- [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
+
 - [ ] Demonstrate poking in new values
 - [ ] Demonstrate conditionally omitting activities from being restarted
 - [ ] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it?
-- [ ] Demonstrate spans that continue from a previous plan
-- [ ] Demonstrate multi-step task
 - [ ] Investigate approaches to minimizing size - maybe gzip?
-- [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
 - [ ] Demonstrate anchors?
+- [ ] Allow user to select EITHER simconfig OR incons from a given simulation. Display warning if time doesn't line up
+- [ ] Demonstrate handover period (i.e. overlap instead of startB = endA)

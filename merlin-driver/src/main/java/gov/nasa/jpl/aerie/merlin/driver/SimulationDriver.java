@@ -24,7 +24,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.types.ActivityDirective;
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
-import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableLong;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 
@@ -39,17 +40,17 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 
 public final class SimulationDriver {
   public static <Model> SimulationResults simulate(
@@ -85,139 +86,14 @@ public final class SimulationDriver {
       final SimulationResourceManager resourceManager
   ) {
     var timeline = new TemporalEventSource();
-
-    final LiveCells cells;
-
-    record ScheduleEntry<T>(Duration startTime, TaskFactory<T> state, TaskEntryPoint entrypoint) {}
-    final List<ScheduleEntry<?>> tasksToSchedule = new ArrayList<>();
     final var executor = Executors.newVirtualThreadPerTaskExecutor();
 
     final String inconsFile = "fincons.json";
-    if (new File(inconsFile).exists()) {
-      try {
-        cells = new LiveCells(timeline);
-        final var incons = new SerializedValueJsonParser().parse(
-            Json
-                .createReader(new StringReader(Files.readString(Path.of(inconsFile))))
-                .readValue()).getSuccessOrThrow();
-        final var serializedCells = incons.asMap().get().get("cells").asList().get();
-        final var queries = missionModel.getInitialCells().queries();
+    InitialConditions initialConditions = readInitialConditionsFromFile(inconsFile, missionModel, timeline, executor);
 
-        for (int i = 0; i < serializedCells.size(); i++) {
-          final var serializedCell = serializedCells.get(i);
-          final var query = queries.get(i);
-
-          putCell(cells, query, serializedCell, missionModel.getInitialCells());
-        }
-
-        // First pass: build map by id, include refcount
-        final var references = new LinkedHashMap<String, MutableInt>();
-
-        record TaskToRestart(String id, List<Integer> childrenToRestart) {}
-        record ReadyTask(TaskFactory<?> taskFactory, int steps, List<SerializedValue> readLog, Duration lastStepTime, String type, Map<String, SerializedValue> args) {}
-        record WaitingTask(int childNumber, int steps, Duration lastStepTime) {}
-
-        final var waitingTasks = new LinkedHashMap<String, List<WaitingTask>>();
-        final var readyToRestart = new LinkedList<ReadyTask>();
-        for (final var serializedTask : incons.asMap().get().get("tasks").asList().get()) {
-          final var entrypoint = serializedTask.asMap().get().get("entrypoint").asMap().get();
-
-          final var id = entrypoint.get("id").asString().get();
-          references.computeIfAbsent(id, $ -> new MutableInt());
-
-          switch (entrypoint.get("type").asString().get()) {
-            case "directive" -> {
-              final var directive = entrypoint.get("directive").asMap().get();
-              final var type = directive.get("type").asString().get();
-              final var args = directive.get("args").asMap().get();
-              final var taskFactory = deserializeActivity(missionModel, new SerializedActivity(type, args));
-              final var steps = serializedTask.asMap().get().get("steps").asInt().get();
-              readyToRestart.add(new ReadyTask(
-                  taskFactory,
-                  (int) (long) steps,
-                  serializedTask.asMap().get().get("reads").asList().get(),
-                  Duration.of(serializedTask.asMap().get().get("lastStepTime").asInt().get(), MICROSECONDS),
-                  type,
-                  args));
-            }
-
-            case "subtask" -> {
-              final var parentId = entrypoint.get("parentId").asString().get();
-              final var childNumber = entrypoint.get("childNumber").asInt().get();
-              final var steps = serializedTask.asMap().get().get("steps").asInt().get();
-              waitingTasks.computeIfAbsent(parentId, $ -> new ArrayList<>()).add(
-                  new WaitingTask((int) (long) childNumber,
-                                  (int) (long) steps,
-                                  Duration.of(serializedTask.asMap().get().get("lastStepTime").asInt().get(), MICROSECONDS)));
-            }
-
-            case "system" -> {
-//              readyToRestart.add(new ReadyTask(
-//                  taskFactory,
-//                  (int) (long) steps,
-//                  serializedTask.asMap().get().get("reads").asList().get(),
-//                  Duration.of(serializedTask.asMap().get().get("lastStepTime").asInt().get(), MICROSECONDS),
-//                  type,
-//                  args));
-            }
-
-            case "daemon" -> {}
-          }
-        }
-
-        while (!readyToRestart.isEmpty()) {
-          final var readyTask = readyToRestart.pop();
-          final var readIterator = readyTask.readLog().iterator();
-          final var task = readyTask.taskFactory().create(executor);
-          final var scheduler = new Scheduler() {
-            @Override
-            public <State> State get(final CellId<State> cellId) {
-              final var query = ((EngineCellId<?, State>) cellId);
-              // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
-              //  if the same state is requested multiple times in a row.
-              return cells.getCell(query.query()).get().deserialize(readIterator.next()).getState();
-            }
-
-            @Override
-            public <Event> void emit(final Event event, final Topic<Event> topic) {
-
-            }
-
-            @Override
-            public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {
-
-            }
-          };
-          TaskStatus<?> status = null;
-          for (var i = 0; i < readyTask.steps(); i++) {
-            status = task.step(scheduler);
-          }
-          final TaskStatus<?> $status =
-              switch (status) {
-                case TaskStatus.AwaitingCondition<?> s -> s;
-                case TaskStatus.CallingTask<?> s -> s;
-                case TaskStatus.Completed<?> s -> s;
-                case TaskStatus.Delayed<?> s -> {
-                  yield TaskStatus.delayed(s.delay().plus(readyTask.lastStepTime()), s.continuation());
-                }
-                case null -> null;
-              };
-          if ($status == null) {
-            tasksToSchedule.add(new ScheduleEntry<>(ZERO, $ -> task, new TaskEntryPoint.Directive(TaskEntryPoint.freshId(), new SerializedActivity(readyTask.type, readyTask.args))));
-          } else {
-            tasksToSchedule.add(new ScheduleEntry<>(ZERO, $ -> Task.of($$ -> $status).andThen(task), new TaskEntryPoint.Directive(TaskEntryPoint.freshId(), new SerializedActivity(readyTask.type, readyTask.args))));
-          }
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      cells = new LiveCells(timeline, missionModel.getInitialCells());
-    }
-
-    try (final var engine = new SimulationEngine(cells, executor)) {
-      for (final var entry : tasksToSchedule) {
-        engine.scheduleTask(entry.startTime(), entry.state(), entry.entrypoint());
+    try (final var engine = new SimulationEngine(initialConditions.cells(), executor)) {
+      for (final var task : initialConditions.tasks()) {
+        engine.scheduleTask(ZERO, task, null); // TODO figure out how to propagate entrypoints for previous tasks, especially child directives
       }
 
       /* The current real time. */
@@ -310,15 +186,33 @@ public final class SimulationDriver {
         // get unfinished tasks
         // for each unfinished task, get its entrypoint
 
-        final SimulationEngine.SpanInfo spanInfo = engine.computeSpanInfo(activityTopic, missionModel.getTopics(), engine.combineTimeline());
+        final var spanInfo = engine.computeSpanInfo(activityTopic, missionModel.getTopics(), engine.timeline);
 
-//        spanInfo.isActivity()
+        for (final var entry : engine.tasks.entrySet()) {
+          final var task = entry.getKey();
+          final var spanId = entry.getValue().span(); // TODO task -> span mapping may be many to one... need to handle that
 
-        for (final var task : engine.tasks.keySet()) {
-          final var entrypoint = engine.entrypoints.get(task);
+          final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
+          final Optional<TaskEntryPoint.ParentReference> parent;
+          if (engine.entrypoints.containsKey(task)) {
+            final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
+            if (entrypoint instanceof TaskEntryPoint.Subtask e) {
+              parent = Optional.of(e.parent$());
+            } else {
+              parent = Optional.empty();
+            }
+          } else {
+            parent = Optional.empty();
+          }
 
-          // TODO look up the activity args event and replace the entrypoint if you can
 
+          TaskEntryPoint entrypoint;
+          if (spanInfo.isActivity(spanId)) {
+            entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
+          } else {
+            entrypoint = engine.entrypoints.get(task);
+            if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId());
+          }
 
           final var lastStepTime = engine.lastStepTime.get(task);
           final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
@@ -329,6 +223,10 @@ public final class SimulationDriver {
                 SerializedValue.of(e.id()),
                 "type",
                 SerializedValue.of("directive"),
+                "parentId",
+                e.parent().map($ -> SerializedValue.of($.id())).orElse(SerializedValue.NULL),
+                "childNumber",
+                e.parent().map($ -> SerializedValue.of($.childNumber())).orElse(SerializedValue.NULL),
                 "directive",
                 SerializedValue.of(Map.of(
                     "type",
@@ -348,9 +246,9 @@ public final class SimulationDriver {
                 "type",
                 SerializedValue.of("subtask"),
                 "parentId",
-                SerializedValue.of(e.parentId()),
+                SerializedValue.of(e.parent$().id()),
                 "childNumber",
-                SerializedValue.of(e.childNumber())
+                SerializedValue.of(e.parent$().childNumber())
             ));
             case TaskEntryPoint.SystemTask e -> SerializedValue.of(Map.of(
                 "id",
@@ -370,13 +268,188 @@ public final class SimulationDriver {
         Files.write(Path.of(inconsFile), List.of(new SerializedValueJsonParser().unparse(SerializedValue.of(Map.of(
             "cells", SerializedValue.of(serializedCells),
             "tasks", SerializedValue.of(serializedTasks)
-        ))).toString()), StandardOpenOption.CREATE);
+        ))).toString()), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
 
       final var topics = missionModel.getTopics();
       return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
+    }
+  }
+
+  private record InitialConditions(LiveCells cells, List<TaskFactory<?>> tasks) {}
+
+  record MyTask<T>(MutableObject<TaskFactory<T>> task, long steps, List<SerializedValue> readLog, Duration lastStepTime, TaskEntryPoint entrypoint, List<MyTask<?>> childrenToRestart) {
+    <F> void setTaskFactory(TaskFactory<F> taskFactory) {
+      this.task.setValue((TaskFactory<T>) taskFactory);
+    }
+  }
+
+  private static <Model> InitialConditions readInitialConditionsFromFile(
+      final String inconsFile,
+      final MissionModel<Model> missionModel,
+      final TemporalEventSource timeline,
+      final ExecutorService executor)
+  {
+    final LiveCells cells;
+
+    if (!new File(inconsFile).exists()) {
+      return new InitialConditions(new LiveCells(timeline, missionModel.getInitialCells()), List.of());
+    }
+
+    cells = new LiveCells(timeline);
+    final var incons = readJsonFromFile(inconsFile);
+    final var serializedCells = incons.asMap().get().get("cells").asList().get();
+    final var queries = missionModel.getInitialCells().queries();
+
+    for (int i = 0; i < serializedCells.size(); i++) {
+      final var serializedCell = serializedCells.get(i);
+      final var query = queries.get(i);
+
+      putCell(cells, query, serializedCell, missionModel.getInitialCells());
+    }
+
+    final var tasks = new LinkedHashMap<String, MyTask<?>>();
+    for (final var serializedTask : incons.asMap().get().get("tasks").asList().get()) {
+      final var entrypoint = serializedTask.asMap().get().get("entrypoint").asMap().get();
+
+      final var id = entrypoint.get("id").asString().get();
+
+      switch (entrypoint.get("type").asString().get()) {
+        case "directive" -> {
+          final var directive = entrypoint.get("directive").asMap().get();
+          final var type = directive.get("type").asString().get();
+          final var args = directive.get("args").asMap().get();
+          final var taskFactory = deserializeActivity(missionModel, new SerializedActivity(type, args));
+          final var steps = serializedTask.asMap().get().get("steps").asInt().get();
+          final Optional<TaskEntryPoint.ParentReference> parentReference;
+          if (!entrypoint.get("parentId").isNull()) {
+            parentReference = Optional.of(new TaskEntryPoint.ParentReference(entrypoint.get("parentId").asString().get(), entrypoint.get("childNumber").asInt().get()));
+          } else {
+            parentReference = Optional.empty();
+          }
+          final List<SerializedValue> readLog = serializedTask.asMap().get().get("reads").asList().get();
+          final Duration lastStepTime = Duration.of(
+              serializedTask.asMap().get().get("lastStepTime").asInt().get(),
+              MICROSECONDS);
+          tasks.put(id, new MyTask<>(new MutableObject<>(taskFactory), steps, readLog, lastStepTime, new TaskEntryPoint.Directive(id, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
+        }
+
+        case "subtask" -> {
+          final var parentId = entrypoint.get("parentId").asString().get();
+          final var childNumber = entrypoint.get("childNumber").asInt().get();
+          final var parentReference = new TaskEntryPoint.ParentReference(parentId, childNumber);
+          final var steps = serializedTask.asMap().get().get("steps").asInt().get();
+
+          final List<SerializedValue> readLog = serializedTask.asMap().get().get("reads").asList().get();
+          final Duration lastStepTime = Duration.of(
+              serializedTask.asMap().get().get("lastStepTime").asInt().get(),
+              MICROSECONDS);
+          tasks.put(id, new MyTask<>(new MutableObject<>(null), steps, readLog, lastStepTime, new TaskEntryPoint.Subtask(id, parentReference), new ArrayList<>()));
+        }
+
+        case "system" -> {
+        }
+
+        case "daemon" -> {
+          // TODO
+        }
+      }
+    }
+
+    var rootIds = new LinkedHashSet<>(tasks.keySet());
+    for (final var entry : tasks.entrySet()) {
+      final var task = entry.getValue();
+      if (task.entrypoint.parent().isPresent()) {
+        final var parent = tasks.get(task.entrypoint.parent().get().id());
+        if (parent != null) {
+          parent.childrenToRestart.add(task);
+          rootIds.remove(entry.getKey());
+        }
+      }
+    }
+
+    final var roots = new ArrayList<MyTask<?>>();
+    for (final var taskId : rootIds) {
+      roots.add(tasks.get(taskId));
+    }
+
+    final InitialConditions result = new InitialConditions(cells, new ArrayList<>());
+    for (final var task : roots) {
+      result.tasks().add(instantiateTask(task, cells, executor));
+    }
+    return result;
+  }
+
+  private static <T> TaskFactory<T> instantiateTask(MyTask<T> readyTask, final LiveCells cells, ExecutorService executor) {
+    final var readIterator = readyTask.readLog().iterator();
+    final var task = readyTask.task().getValue().create(executor);
+
+    final var childCounter = new MutableLong(0);
+
+    final var childrenToSpawn = new ArrayList<TaskFactory<?>>();
+
+    final var scheduler = new Scheduler() {
+      @Override
+      public <State> State get(final CellId<State> cellId) {
+        final var query = ((EngineCellId<?, State>) cellId);
+        // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
+        //  if the same state is requested multiple times in a row.
+        return cells.getCell(query.query()).get().deserialize(readIterator.next()).getState();
+      }
+
+      @Override
+      public <Event> void emit(final Event event, final Topic<Event> topic) {
+
+      }
+
+      @Override
+      public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {
+        for (final var waitingChild : readyTask.childrenToRestart) {
+          if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
+            waitingChild.setTaskFactory(task);
+            childrenToSpawn.add(instantiateTask(waitingChild, cells, executor));
+          }
+        }
+        childCounter.increment();
+      }
+    };
+    TaskStatus<T> status = null;
+    for (var i = 0; i < readyTask.steps(); i++) {
+      status = task.step(scheduler);
+      if (status instanceof TaskStatus.CallingTask<T> s) {
+        for (final var waitingChild : readyTask.childrenToRestart) {
+          if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
+            waitingChild.setTaskFactory(s.child());
+            status = TaskStatus.calling(s.childSpan(), instantiateTask(waitingChild, cells, executor), s.continuation());
+          }
+        }
+        childCounter.increment();
+      }
+    }
+
+    if (status instanceof TaskStatus.Delayed<T> s) {
+      status = TaskStatus.delayed(s.delay().plus(readyTask.lastStepTime), s.continuation());
+    }
+
+    final var finalStatus = status;
+    return $ -> Task.of(s -> {
+      for (final var child : childrenToSpawn) {
+        s.spawn(InSpan.Fresh, child);
+      }
+      return finalStatus;
+    });
+  }
+
+  private static SerializedValue readJsonFromFile(String inconsFile) {
+    try {
+      return new SerializedValueJsonParser().parse(
+          Json
+              .createReader(new StringReader(Files.readString(Path.of(inconsFile))))
+              .readValue()).getSuccessOrThrow();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

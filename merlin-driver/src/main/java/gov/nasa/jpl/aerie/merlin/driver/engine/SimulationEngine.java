@@ -98,7 +98,7 @@ public final class SimulationEngine implements AutoCloseable {
   public ExecutorService executor; // MD: not final for Matt's purposes - don't merge this way
 
   /* The top-level simulation timeline. */
-  private final TemporalEventSource timeline;
+  public final TemporalEventSource timeline;
   private final TemporalEventSource referenceTimeline;
   public final LiveCells cells;
   private Duration elapsedTime;
@@ -521,8 +521,15 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Spawn the child task.
         final var childTask = TaskId.generate();
-        entrypoints.putIfAbsent(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), entrypoints.get(task).id(), childCount.get(task)));
+        if (entrypoints.get(task) != null) {
+          entrypoints.put(childTask,
+                          new TaskEntryPoint.Subtask(
+                              TaskEntryPoint.freshId(),
+                              new TaskEntryPoint.ParentReference(entrypoints.get(task).id(), childCount.get(task))));
+        }
+        childCount.put(childTask, 0);
         childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
+
         SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
         SimulationEngine.this.tasks.put(
             childTask,
@@ -1140,7 +1147,8 @@ public final class SimulationEngine implements AutoCloseable {
       };
 
       final var childTask = TaskId.generate();
-      entrypoints.putIfAbsent(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), entrypoints.get(taskId).id(), childCount.get(taskId)));
+      entrypoints.put(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
+      childCount.put(childTask, 0);
       childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
 
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
@@ -1188,7 +1196,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The state of an executing task. */
-  private record ExecutionState<Output>(SpanId span, Optional<TaskId> caller, Task<Output> state) {
+  public record ExecutionState<Output>(SpanId span, Optional<TaskId> caller, Task<Output> state) {
     public ExecutionState<Output> continueWith(final Task<Output> newState) {
       return new ExecutionState<>(this.span, this.caller, newState);
     }
