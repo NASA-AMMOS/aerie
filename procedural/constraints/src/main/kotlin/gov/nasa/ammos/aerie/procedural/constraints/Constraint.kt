@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.procedural.constraints
 
-import gov.nasa.ammos.aerie.procedural.timeline.CollectOptions
-import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulatedPlan
+import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
+import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
 
 /** The interface that all constraints must satisfy. */
 interface Constraint {
@@ -12,7 +12,7 @@ interface Constraint {
    * the constraint is run. The constraint does not need to use the options unless it collects a timeline prematurely.
    *
    * @param plan the plan to check the constraint on
-   * @param options the [CollectOptions] that the result will be collected with
+   * @param simResults the [SimulationResults] that the result will be collected with
    */
-  fun run(plan: SimulatedPlan, options: CollectOptions): Violations
+  fun run(plan: Plan, simResults: SimulationResults): Violations
 }

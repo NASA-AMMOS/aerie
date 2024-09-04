@@ -5,7 +5,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.IntervalLike
 import gov.nasa.jpl.aerie.types.ActivityId
 
 /** A single violation of a constraint. */
-data class Violation(
+data class Violation @JvmOverloads constructor(
     /** Interval on which the violation occurs. */
     override val interval: Interval,
 
