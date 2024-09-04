@@ -22,6 +22,7 @@ create table sequencing.workspace (
     on delete set null
 );
 
+
 comment on table sequencing.workspace is e''
   'A container for multiple sequences.';
 comment on column sequencing.workspace.name is e''
@@ -46,7 +47,7 @@ alter table sequencing.user_sequence
   add column workspace_id integer,
 
   add foreign key (workspace_id)
-    references sequencing.parcel (id)
+    references sequencing.workspace (id)
     on delete cascade;
 
 comment on column sequencing.user_sequence.workspace_id is e''
