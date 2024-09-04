@@ -98,11 +98,6 @@ event_triggers:
       enable_manual: false
       insert:
         columns: "*"
-      update:
-        columns:
-          - goal_id
-          - revision
-          - uploaded_jar_id
     name: refreshSchedulingProcedureParameterTypes
     retry_conf:
       interval_sec: 10
