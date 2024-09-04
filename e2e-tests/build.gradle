@@ -59,6 +59,7 @@ dependencies {
   testImplementation "com.zaxxer:HikariCP:5.1.0"
   testImplementation("org.postgresql:postgresql:42.6.0")
   testImplementation project(':merlin-driver')
+  testImplementation project(':type-utils')
 
   testImplementation 'com.microsoft.playwright:playwright:1.37.0'
 
