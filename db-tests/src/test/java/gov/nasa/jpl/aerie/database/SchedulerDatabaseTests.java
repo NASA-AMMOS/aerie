@@ -612,5 +612,91 @@ class SchedulerDatabaseTests {
         );
       }
     }
+
+    @Test
+    void testCantHaveEDSLGoalWithoutDefinition() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var exception = assertThrowsExactly(
+            PSQLException.class,
+            () -> statement.executeUpdate(
+              //language=sql
+              """
+              update scheduler.scheduling_goal_definition
+              set definition = null
+              where goal_id = %d
+              """.formatted(goalIds[0])
+            )
+        );
+
+        assertTrue(exception.getMessage().contains(
+            "new row for relation \"scheduling_goal_definition\" violates check constraint \"check_goal_definition_type_consistency\"")
+        );
+      }
+    }
+
+    @Test
+    void testCantHaveEDSLGoalWithUploadedJarID() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var jarId = merlinHelper.insertFileUpload();
+
+        final var exception = assertThrowsExactly(
+            PSQLException.class,
+            () -> statement.executeUpdate(
+              //language=sql
+              """
+              update scheduler.scheduling_goal_definition
+              set uploaded_jar_id = %d
+              where goal_id = %d
+              """.formatted(jarId, goalIds[0])
+            )
+        );
+
+        assertTrue(exception.getMessage().contains(
+            "new row for relation \"scheduling_goal_definition\" violates check constraint \"check_goal_definition_type_consistency\"")
+        );
+      }
+    }
+
+    @Test
+    void testCantHaveProcedureWithDefinition() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var exception = assertThrowsExactly(
+            PSQLException.class,
+            () -> statement.executeUpdate(
+              //language=sql
+              """
+              update scheduler.scheduling_goal_definition
+              set definition = 'nope'
+              where goal_id = %d
+              """.formatted(goalIds[1])
+            )
+        );
+
+        assertTrue(exception.getMessage().contains(
+            "new row for relation \"scheduling_goal_definition\" violates check constraint \"check_goal_definition_type_consistency\"")
+        );
+      }
+    }
+
+    @Test
+    void testCantHaveProcedureWithoutUploadedJarId() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var exception = assertThrowsExactly(
+            PSQLException.class,
+            () -> statement.executeUpdate(
+              //language=sql
+              """
+              update scheduler.scheduling_goal_definition
+              set uploaded_jar_id = null
+              where goal_id = %d
+              """.formatted(goalIds[1])
+            )
+        );
+
+        assertTrue(exception.getMessage().contains(
+            "new row for relation \"scheduling_goal_definition\" violates check constraint \"check_goal_definition_type_consistency\"")
+        );
+      }
+    }
   }
 }
