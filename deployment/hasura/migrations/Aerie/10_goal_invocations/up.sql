@@ -14,6 +14,9 @@ alter table scheduler.scheduling_goal_analysis
 
   drop constraint scheduling_goal_analysis_primary_key;
 
+comment on table scheduler.scheduling_goal_analysis is e''
+  'The analysis of single goal invocation from a scheduling run.';
+
 comment on column scheduler.scheduling_goal_analysis.goal_invocation_id is e''
   'The associated goal invocation ID.';
 
