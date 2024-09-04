@@ -23,13 +23,9 @@ object_relationships:
 array_relationships:
 - name: satisfying_activities
   using:
-    manual_configuration:
-      column_mapping:
-        goal_invocation_id: goal_invocation_id
-        analysis_id: analysis_id
-      remote_table:
-        name: scheduling_goal_analysis_satisfying_activities
-        schema: scheduler
+    foreign_key_constraint_on:
+      - goal_invocation_id
+      - analysis_id
 select_permissions:
   - role: aerie_admin
     permission:
