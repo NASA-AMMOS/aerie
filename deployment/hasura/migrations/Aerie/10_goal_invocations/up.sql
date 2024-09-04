@@ -25,6 +25,10 @@ from scheduler.scheduling_request as sr
 where sr.analysis_id = sga.analysis_id
   and sga.goal_id = ssg.goal_id;
 
+-- explictly set not null before PKing
+alter table scheduler.scheduling_goal_analysis
+  alter column goal_invocation_id set not null;
+
 alter table scheduler.scheduling_goal_analysis
   add constraint scheduling_goal_analysis_primary_key
     primary key (analysis_id, goal_invocation_id);
@@ -45,6 +49,10 @@ from scheduler.scheduling_request as sr
             on sr.specification_id = ssg.specification_id
 where sr.analysis_id = sgaca.analysis_id
   and sgaca.goal_id = ssg.goal_id;
+
+-- explictly set not null before PKing
+alter table scheduler.scheduling_goal_analysis_created_activities
+  alter column goal_invocation_id set not null;
 
 alter table scheduler.scheduling_goal_analysis_created_activities
   drop column goal_id,
@@ -74,6 +82,10 @@ from scheduler.scheduling_request as sr
             on sr.specification_id = ssg.specification_id
 where sr.analysis_id = sgasa.analysis_id
   and sgasa.goal_id = ssg.goal_id;
+
+-- explictly set not null before PKing
+alter table scheduler.scheduling_goal_analysis_satisfying_activities
+  alter column goal_invocation_id set not null;
 
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop column goal_id,
