@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.orchestration.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;

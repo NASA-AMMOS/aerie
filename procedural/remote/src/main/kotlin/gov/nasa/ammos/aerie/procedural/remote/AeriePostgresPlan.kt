@@ -12,7 +12,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveSta
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId
 import java.io.StringReader
 import java.sql.Connection
 import java.time.Instant

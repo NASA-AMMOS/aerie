@@ -1,8 +1,7 @@
-package gov.nasa.jpl.aerie.merlin.driver;
+package gov.nasa.jpl.aerie.types;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.time.Instant;
 import java.util.List;

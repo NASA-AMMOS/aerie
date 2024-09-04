@@ -6,7 +6,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId
 
 /** A plan representation that can be edited and simulated. */
 interface EditablePlan: Plan {

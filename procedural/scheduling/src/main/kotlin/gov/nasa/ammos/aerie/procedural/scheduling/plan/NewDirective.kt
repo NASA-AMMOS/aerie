@@ -3,7 +3,7 @@ package gov.nasa.ammos.aerie.procedural.scheduling.plan
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId
 
 /** A new directive to be created, which doesn't have an id yet. */
 data class NewDirective(
