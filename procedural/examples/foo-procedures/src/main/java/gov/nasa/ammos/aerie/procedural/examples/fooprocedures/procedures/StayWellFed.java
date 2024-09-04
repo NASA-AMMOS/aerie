@@ -50,8 +50,8 @@ public record StayWellFed(double bitePeriodHours) implements Goal {
     // This goal will only apply during the Dole mission phase. :)
     final var dolePhase = simResults
         .resource("/producer", Strings::deserialize)
-        .highlightEqualTo("Dole");
-    dolePhase.cache();
+        .highlightEqualTo("Dole")
+        .cache();
 
     // Manual recurrence goal: during Dole phase, require a bitebanana every `bitePeriod`.
     final var bites = plan.directives("BiteBanana")
@@ -59,7 +59,7 @@ public record StayWellFed(double bitePeriodHours) implements Goal {
         .collect();
 
     var currentTime = Duration.MIN_VALUE;
-    for (final var phase: dolePhase.collect()) {
+    for (final var phase: dolePhase) {
       currentTime = Duration.max(currentTime, phase.start);
 
       while (currentTime.plus(bitePeriod).shorterThan(phase.end)) {
@@ -91,8 +91,7 @@ public record StayWellFed(double bitePeriodHours) implements Goal {
     // So we iteratively find the first time /fruit drops below zero
     // and add a grow banana fix it. We then mock the effect of grow banana
     // by adding one to /fruit, rather than resimulating, and do it again.
-    var fruit = simResults.resource("/fruit", Real::deserialize);
-    fruit.cache();
+    var fruit = simResults.resource("/fruit", Real::deserialize).cache();
 
     var ranOutAt = fruit.lessThan(0).filterByWindows(dolePhase, true).risingEdges().highlightTrue().collect();
     while (!ranOutAt.isEmpty()) {

@@ -8,7 +8,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.IntervalLike
  * Should be implemented by composing a raw timeline in your container
  * and delegating to it with the `by` keyword. See any timeline for examples.
  */
-interface Timeline<V: IntervalLike<V>, THIS: Timeline<V, THIS>> {
+interface Timeline<V: IntervalLike<V>, THIS: Timeline<V, THIS>>: Iterable<V> {
   /**
    * [(DOC)][collect] Evaluates the stack of operations and produces a list of timeline payload objects.
    *
@@ -62,7 +62,7 @@ interface Timeline<V: IntervalLike<V>, THIS: Timeline<V, THIS>> {
   /**
    * Caches the result of collecting this timeline, to be reused for future collect requests if possible.
    */
-  fun cache(opts: CollectOptions)
+  fun cache(opts: CollectOptions): THIS
 
   /**
    * [(DOC)][cache] A simplified version of [cache].

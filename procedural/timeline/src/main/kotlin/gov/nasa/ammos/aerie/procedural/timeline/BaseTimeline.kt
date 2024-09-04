@@ -15,12 +15,15 @@ data class BaseTimeline<V: IntervalLike<V>, TL: Timeline<V, TL>>(
   private var cached: List<V>? = null
   private var cachedOptions: CollectOptions? = null
 
-  override fun cache(opts: CollectOptions) {
+  override fun cache(opts: CollectOptions): TL {
     if (cachedOptions == null || !cachedOptions!!.contains(opts)) {
       cached = collect(opts)
       cachedOptions = opts
     }
+    return specialize()
   }
+
+  override fun iterator(): Iterator<V> = collect().iterator()
 
   override fun collect(opts: CollectOptions) =
     if (cached == null || !cachedOptions!!.contains(opts)) collector(opts)

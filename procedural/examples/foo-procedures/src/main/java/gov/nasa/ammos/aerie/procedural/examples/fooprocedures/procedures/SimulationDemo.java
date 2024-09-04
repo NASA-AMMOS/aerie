@@ -35,7 +35,7 @@ public record SimulationDemo(int quantity) implements Goal {
     final var connections = lowFruit.starts().shift(Duration.MINUTE.negate())
                                     .connectTo(bites.ends(), false);
 
-    for (final var connection: connections.collect()) {
+    for (final var connection: connections) {
       assert connection.to != null;
       plan.create(
           "GrowBanana",

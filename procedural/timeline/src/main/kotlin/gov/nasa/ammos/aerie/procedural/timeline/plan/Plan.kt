@@ -12,6 +12,9 @@ interface Plan {
   /** Total extent of the plan's bounds, whether it was simulated on the full extent or not. */
   fun totalBounds(): Interval
 
+  /** The total duration of the plan, whether simulated on the full extent or not. */
+  fun duration() = totalBounds().duration()
+
   /** Convert a time instant to a relative duration (relative to plan start). */
   fun toRelative(abs: Instant): Duration
   /** Convert a relative duration to a time instant. */
