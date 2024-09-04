@@ -3,6 +3,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.payloads.activities
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId
+import gov.nasa.jpl.aerie.types.ActivityInstanceId
 
 /** A wrapper of any type of activity instance containing common data. */
 data class Instance<A: Any>(
@@ -11,7 +12,7 @@ data class Instance<A: Any>(
   override val type: String,
 
   /** The instance id. */
-  @JvmField val id: gov.nasa.jpl.aerie.types.ActivityInstanceId,
+  @JvmField val id: ActivityInstanceId,
 
   /**
    * The maybe-null id of the directive associated with this instance.
@@ -19,10 +20,11 @@ data class Instance<A: Any>(
    * Will be `null` if this is a child activity.
    */
   @JvmField val directiveId: ActivityDirectiveId?,
+  @JvmField val parentId: ActivityInstanceId?,
   override val interval: Interval,
 ): Activity<Instance<A>> {
   override val startTime: Duration
     get() = interval.start
 
-  override fun withNewInterval(i: Interval) = Instance(inner, type, id, directiveId, i)
+  override fun withNewInterval(i: Interval) = Instance(inner, type, id, directiveId, parentId, i)
 }

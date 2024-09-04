@@ -8,6 +8,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.collections.Instances
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceSegmentsOp
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Activity
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
 import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
@@ -62,9 +63,10 @@ class MerlinToProcedureSimulationResultsAdapter(
   private data class CommonActivity(
       val arguments: Map<String, SerializedValue>,
       val type: String,
-      val directiveId: Long?,
-      val spanId: Long,
+      val directiveId: ActivityDirectiveId?,
+      val instanceId: ActivityInstanceId,
       val startTime: Instant,
+      val parentId: ActivityInstanceId?,
       val finishedActivityAttributes: FinishedActivityAttributes?
   )
 
@@ -72,22 +74,24 @@ class MerlinToProcedureSimulationResultsAdapter(
     val result = mutableListOf<CommonActivity>()
     for ((key, a) in results.simulatedActivities) {
       result.add(CommonActivity(
-          a.arguments,
-          a.type,
-          a.directiveId.map(ActivityDirectiveId::id).getOrNull(),
-          key.id,
-          a.start,
-          FinishedActivityAttributes(a.duration, a.computedAttributes)
+        a.arguments,
+        a.type,
+        a.directiveId.getOrNull(),
+        ActivityInstanceId(key.id),
+        a.start,
+        a.parentId,
+        FinishedActivityAttributes(a.duration, a.computedAttributes)
       ))
     }
     for ((key, a) in results.unfinishedActivities) {
       result.add(CommonActivity(
-          a.arguments,
-          a.type,
-          a.directiveId.map(ActivityDirectiveId::id).getOrNull(),
-          key.id,
-          a.start,
-          null
+        a.arguments,
+        a.type,
+        a.directiveId.getOrNull(),
+        ActivityInstanceId(key.id),
+        a.start,
+        a.parentId,
+        null
       ))
     }
     result
@@ -99,18 +103,19 @@ class MerlinToProcedureSimulationResultsAdapter(
       if (type != null && a.type != type) continue
       val startTime = plan.toRelative(a.startTime)
       val endTime = a.finishedActivityAttributes?.let { it.duration + startTime }
-          ?: simBounds().end
+        ?: simBounds().end
       val computedAttributes = a.finishedActivityAttributes?.computedAttributes ?: SerializedValue.of(mapOf())
       val serializedActivity = SerializedValue.of(mapOf(
-          "arguments" to SerializedValue.of(a.arguments),
-          "computedAttributes" to computedAttributes
+        "arguments" to SerializedValue.of(a.arguments),
+        "computedAttributes" to computedAttributes
       ))
       instances.add(Instance(
-          deserializer(serializedActivity),
-          a.type,
-        ActivityInstanceId(a.spanId),
-          a.directiveId?.let { ActivityDirectiveId(it) },
-          Interval(startTime, endTime)
+        deserializer(serializedActivity),
+        a.type,
+        a.instanceId,
+        a.directiveId,
+        a.parentId,
+        Interval(startTime, endTime)
       ))
     }
     return Instances(instances)
