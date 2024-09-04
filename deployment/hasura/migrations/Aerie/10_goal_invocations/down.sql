@@ -10,12 +10,22 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
   add column goal_id integer null,
   add column goal_revision integer null;
 
+comment on column scheduler.scheduling_goal_analysis_satisfying_activities.goal_id is e''
+  'The associated goal ID.';
+comment on column scheduler.scheduling_goal_analysis_satisfying_activities.goal_revision is e''
+  'The associated version of the goal definition used.';
+
 alter table scheduler.scheduling_goal_analysis_created_activities
   drop constraint created_activities_primary_key,
   drop constraint created_activities_references_scheduling_goal_analysis,
 
   add column goal_id integer null,
   add column goal_revision integer null;
+
+comment on column scheduler.scheduling_goal_analysis_created_activities.goal_id is e''
+  'The associated goal ID.';
+comment on column scheduler.scheduling_goal_analysis_created_activities.goal_revision is e''
+  'The associated version of the goal definition used.';
 
 update scheduler.scheduling_goal_analysis_satisfying_activities as sa
 set goal_id = ga.goal_id, goal_revision = ga.goal_revision
@@ -95,5 +105,11 @@ alter table scheduler.scheduling_specification_goals
     primary key (specification_id, goal_id),
 
   drop column goal_invocation_id;
+
+comment on column scheduler.scheduling_specification_goals.specification_id is e''
+  'The plan scheduling specification this goal is on. Half of the primary key.';
+
+comment on column scheduler.scheduling_specification_goals.goal_id is e''
+  'The id of a specific goal in the specification. Half of the primary key.';
 
 call migrations.mark_migration_rolled_back('10');
