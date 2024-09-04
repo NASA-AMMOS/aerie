@@ -24,8 +24,12 @@ array_relationships:
 - name: satisfying_activities
   using:
     foreign_key_constraint_on:
-      - goal_invocation_id
-      - analysis_id
+      columns:
+        - goal_invocation_id
+        - analysis_id
+      table:
+        name: scheduling_goal_analysis_satisfying_activities
+        schema: scheduler
 select_permissions:
   - role: aerie_admin
     permission:
