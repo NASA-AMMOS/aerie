@@ -5,10 +5,14 @@ on:
     paths:
       - "deployment/hasura/migrations/**"
       - "deployment/postgres-init-db/sql/**"
+      - ".github/workflows/pgcmp.yml"
+      - ".github/workflows/scripts/compareDatabases*"
   push:
     paths:
       - "deployment/hasura/migrations/**"
       - "deployment/postgres-init-db/sql/**"
+      - ".github/workflows/pgcmp.yml"
+      - ".github/workflows/scripts/compareDatabases*"
     branches:
       - develop
       - dev-[0-9]+.[0-9]+.[0-9]+
