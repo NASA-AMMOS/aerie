@@ -147,8 +147,10 @@ jobs:
       fail-fast: false
     name: scan ${{ matrix.image }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Scan ${{ matrix.image }} for vulnerabilities
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}:develop
           ignore-unfixed: true
@@ -158,6 +160,7 @@ jobs:
           template: "@/contrib/html.tpl"
           scanners: "vuln"
           output: "${{ matrix.image }}-results.html"
+          trivyignores: .github/config/.trivyignore
 
       - name: Upload ${{ matrix.image }} scan results
         if: always()
