@@ -38,9 +38,9 @@ import java.util.regex.Pattern;
  * Merlin-provided units like {@code SECONDS}.</p>
  *
  * <p>A time value is represented as a {@code long} where an increment maps to number a specific time unit. Currently,
- * the underlying time unit is microseconds, however, one should not rely on this always being the case. The maximum
- * value of a fixed-point type is the half of the largest value that can be represented by the underlying integer type.
- * For a {@code long} this yields a range of -2^62 to 2^62, or about 146,000 years in the future and past, at microsecond
+ * the underlying time unit is microseconds, however, one should not rely on this always being the case. The Duration type
+ * restricts this {@code long} to a range from half of long-min to half of long-max.
+ * This yields a range of -2^62 to 2^62, or about 146,000 years in the future and past, at microsecond
  * resolution.</p>
 
  * <p>
