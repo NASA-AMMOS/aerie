@@ -7,6 +7,7 @@ import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedur
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +18,7 @@ import java.util.Map;
 @SchedulingProcedure
 public record SimulationDemo(int quantity) implements Goal {
   @Override
-  public void run(EditablePlan plan) {
+  public void run(@NotNull final EditablePlan plan) {
 //    final var firstActivityTime = plan.toRelative(Instant.from(DOY_WITHOUT_ZONE_FORMATTER.parse("2024-128T07:00:00")));
 //
 //    plan.create(

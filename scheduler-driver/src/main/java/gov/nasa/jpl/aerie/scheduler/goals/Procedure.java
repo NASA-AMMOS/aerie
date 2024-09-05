@@ -25,7 +25,6 @@ import java.util.function.Function;
 import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivityDirective;
 
 public class Procedure extends Goal {
-  //  private final gov.nasa.jpl.aerie.scheduling.Procedure procedure;
   private final Path jarPath;
   private final SerializedValue args;
 
