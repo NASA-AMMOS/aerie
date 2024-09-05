@@ -45,6 +45,8 @@ public class ActivityType {
    */
   private final DurationType durationType;
 
+  //TODO needs to be populated
+  private boolean isCompound;
   /**
    * ctor creates a new empty activity type container
    *
@@ -95,6 +97,10 @@ public class ActivityType {
     }
     assert(parameterSpecifications.size()==1);
     return parameterSpecifications.get(0);
+  }
+
+  public boolean isCompound(){
+    return specType.getDecompositionRule().isPresent();
   }
 
   /**

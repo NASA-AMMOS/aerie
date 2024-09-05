@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.apache.commons.collections4.BidiMap;
@@ -127,7 +127,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    */
   @Override
   public Collection<Conflict> getConflicts(
-      final Plan plan,
+      final PlanInMemory plan,
       final SimulationResults simulationResults,
       final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
@@ -215,7 +215,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     return conflicts;
   }
 
-  private boolean stuckInsertingZeroDurationActivities(final Plan plan, final boolean occurrencePartIsSatisfied){
+  private boolean stuckInsertingZeroDurationActivities(final PlanInMemory plan, final boolean occurrencePartIsSatisfied){
     if(this.durationRange != null && occurrencePartIsSatisfied){
       final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
       final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();

@@ -49,10 +49,10 @@ public record SchedulingActivityDirective(
   //TODO: reconsider unscheduled activity instances
   public static SchedulingActivityDirective of(ActivityType type, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                Duration.ZERO,
-                                Duration.ZERO,
-                                Map.of(), null,
-                                anchorId, anchoredToStart);
+                                  Duration.ZERO,
+                                  Duration.ZERO,
+                                  Map.of(), null,
+                                  anchorId, anchoredToStart);
   }
 
   /**
@@ -64,10 +64,10 @@ public record SchedulingActivityDirective(
    */
   public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                startOffset,
-                                Duration.ZERO,
-                                Map.of(), null,
-                                anchorId, anchoredToStart);
+                                  startOffset,
+                                  Duration.ZERO,
+                                  Map.of(), null,
+                                  anchorId, anchoredToStart);
   }
 
   /**
@@ -80,9 +80,9 @@ public record SchedulingActivityDirective(
    */
   public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                startOffset,
-                                duration,
-                                Map.of(), null, anchorId, anchoredToStart);
+                                  startOffset,
+                                  duration,
+                                  Map.of(), null, anchorId, anchoredToStart);
 
   }
   public static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
@@ -99,16 +99,16 @@ public record SchedulingActivityDirective(
 
   public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                startOffset,
-                                duration,
-                                parameters, null, anchorId, anchoredToStart);
+                                  startOffset,
+                                  duration,
+                                  parameters, null, anchorId, anchoredToStart);
   }
 
   public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent, SchedulingActivityDirectiveId anchorId, boolean anchoredToStart) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                startOffset,
-                                duration,
-                                parameters, topParent, anchorId, anchoredToStart);
+                                  startOffset,
+                                  duration,
+                                  parameters, topParent, anchorId, anchoredToStart);
   }
 
   public static SchedulingActivityDirective of(

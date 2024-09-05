@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.solver.stn;
+package gov.nasa.jpl.aerie.scheduler.solver.scheduler.stn;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;

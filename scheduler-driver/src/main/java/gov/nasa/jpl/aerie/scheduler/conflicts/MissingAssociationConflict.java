@@ -20,7 +20,7 @@ public class MissingAssociationConflict extends Conflict {
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param instancesToChooseFrom IN STORED the list of instances to choose from to perform the association
    * @param anchorToStart IN STORED boolean indicating whether the anchor is associated to the START or the END
-   * The value is used to support a Solver implementation to calculate the absolute START time offset
+   * The value is used to support a SolverDecomposer implementation to calculate the absolute START time offset
    */
   public MissingAssociationConflict(
       final Goal goal,

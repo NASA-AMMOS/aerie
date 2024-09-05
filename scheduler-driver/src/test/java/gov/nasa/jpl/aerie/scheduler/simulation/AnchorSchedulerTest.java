@@ -1,18 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -370,7 +359,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Decomposition and anchors do not interfere with each other")
-    public void decomposingActivitiesAndAnchors() throws SchedulingInterruptedException{
+    public void decomposingActivitiesAndAnchors() throws SchedulingInterruptedException {
       // Given positions Left, Center, Right in an anchor chain, where each position can either contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
       // and the connection between Center and Left and Right and Center can be either Start (<-s-) or End (<-e-),
       // and two NDs cannot be adjacent to each other, there are 20 permutations.
@@ -610,7 +599,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities arranged in a wide anchor tree simulate at the correct time")
-    public void naryTreeAnchorChain() throws SchedulingInterruptedException{
+    public void naryTreeAnchorChain() throws SchedulingInterruptedException {
       // Full and complete 5-ary tree,  6 levels deep
       // Number of activity directives = 5^0 + 5^1 + 5^2 + 5^3 + 5^4 + 5^5 = 3906
 
@@ -682,6 +671,11 @@ public class AnchorSchedulerTest {
         }));
       });
     }
+
+    @Override
+    public Optional<Boolean> getDecompositionRule() {
+      return Optional.empty();
+    }
   };
 
   private static final Topic<Object> decomposingActivityDirectiveInputTopic = new Topic<>();
@@ -723,6 +717,11 @@ public class AnchorSchedulerTest {
               }));
             }));
       });
+    }
+
+    @Override
+    public Optional<Boolean> getDecompositionRule() {
+      return Optional.empty();
     }
   };
 

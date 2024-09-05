@@ -12,6 +12,5 @@ public record EffectModelRecord(
     Optional<String> durationParameter,
     Optional<String> fixedDurationExpr,
     Optional<String> parametricDuration,
-    Optional<String> maximumDuration
-) {
+    Optional<String> maximumDuration) {
 }

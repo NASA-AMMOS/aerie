@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -14,16 +15,16 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -32,13 +33,15 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.scheduler.TestUtility.assertSetEquality;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PrioritySolverTest {
-  private static PrioritySolver makeEmptyProblemSolver() {
+  private static NexusMetaSolver makeEmptyProblemSolver() {
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    return new PrioritySolver(
+    return new NexusMetaSolver(
             new Problem(
                     bananaMissionModel,
                     h,
@@ -52,13 +55,13 @@ public class PrioritySolverTest {
                     schedulerModel));
   }
 
-  private static PrioritySolver makeProblemSolver(Problem problem) {
-    return new PrioritySolver(problem);
+  private static NexusMetaSolver makeProblemSolver(Problem problem) {
+    return new NexusMetaSolver(problem);
   }
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new Problem(null,h, null, null));
+    new NexusMetaSolver(new Problem(null,h, null, null));
   }
 
   @Test
@@ -308,7 +311,7 @@ public class PrioritySolverTest {
 
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(cardGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     //will insert an activity at the beginning of the plan in addition of the two already-present activities

@@ -67,6 +67,10 @@ public class Evaluation {
       this.nbConflictsDetected = nbConflictsDetected;
     }
 
+    public void increaseNbConflictsDetected(final int nbConflictsDetected) {
+      this.nbConflictsDetected = nbConflictsDetected;
+    }
+
     public Optional<Integer> getNbConflictsDetected() {
       if(nbConflictsDetected == null){
         return Optional.empty();

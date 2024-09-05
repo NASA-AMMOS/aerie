@@ -356,12 +356,12 @@ public class SchedulingIntegrationTests {
         BANANANATION,
         List.of(new ActivityDirective(
             Duration.ZERO,
-            "GrowBanana",
-            Map.of(
-                "quantity", SerializedValue.of(3),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            null,
-            true)),
+                    "GrowBanana",
+                    Map.of(
+                        "quantity", SerializedValue.of(3),
+                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    null,
+                    true)),
         List.of(new SchedulingGoal(new GoalId(0L, 0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -440,6 +440,54 @@ public class SchedulingIntegrationTests {
     }
   }
 
+  /**
+   * Here the anchor window is [01:00:00, plan end]. The coexisting activity starts at 00:55:00 and the `valueAt` interval for
+   * the parametric parameter is then outside of the anchor window causing the intervals not to intersect as the valueAt
+   * was evaluated only in the start ([00:55:00, 00:55:00]) interval. Now, it is evaluated in Interval.FOREVER. Determining
+   * the right bounds for simulation is the scheduler's responsability (upstream of the goal conflict evaluation).
+   */
+  @Test
+  void testBugValueAt() {
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new ActivityDirective(
+                    Duration.HOUR,
+                    "GrowBanana",
+                    Map.of(
+                        "quantity", SerializedValue.of(3),
+                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                    null,
+                    true),
+                new ActivityDirective(
+                    Duration.MINUTE.times(50),
+                    "ChangeProducer",
+                    Map.of(
+                        "producer", SerializedValue.of("Company")),
+                    null,
+                    true)),
+        List.of(new SchedulingGoal(new GoalId(0L, 0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: Real.Resource("/fruit").greaterThan(4.0),
+            activityTemplate: interval => ActivityTemplates.ChangeProducer({producer: Discrete.Resource("/producer").valueAt(Spans.FromInterval(interval).starts())}),
+            startsAt: TimingConstraint.singleton(WindowProperty.START).minus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L, 0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    assertEquals(1, goalResult.satisfyingActivities().size());
+    final var activityCreated = results.updatedPlan
+        .stream()
+        .filter(a -> a.startOffset().isEqualTo(Duration.MINUTES.times(55)))
+        .collect(Collectors.toSet());
+    assertEquals(1, activityCreated.size());
+    assertEquals(new SerializedValue.StringValue("Company"), activityCreated.iterator().next().serializedActivity().getArguments().get("producer"));
+  }
 
   @Test
   void testCoexistenceGoalWithAnchors() {

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A Merlin simulation model.

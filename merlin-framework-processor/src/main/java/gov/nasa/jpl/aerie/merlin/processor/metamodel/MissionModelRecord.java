@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public record MissionModelRecord(
@@ -13,7 +14,9 @@ public record MissionModelRecord(
     boolean expectsPlanStart,
     Optional<InputTypeRecord> modelConfigurationType,
     List<TypeRule> typeRules,
-    List<ActivityTypeRecord> activityTypes) {
+    List<ActivityTypeRecord> activityTypes,
+    //from compound to list of tasknettemplate
+    Map<TypeElement, List<TypeElement>> methodsByCompound) {
 
   public ClassName getMerlinPluginName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMerlinPlugin");
@@ -41,5 +44,9 @@ public record MissionModelRecord(
 
   public ClassName getAutoValueMappersName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "AutoValueMappers");
+  }
+
+  public ClassName getActivityReferenceBuildersName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityReferences");
   }
 }

@@ -22,8 +22,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
-import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import kotlin.DeepRecursiveFunction;
+import gov.nasa.jpl.aerie.scheduler.solver.scheduler.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;

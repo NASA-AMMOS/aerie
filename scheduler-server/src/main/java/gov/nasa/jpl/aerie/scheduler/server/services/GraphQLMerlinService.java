@@ -4,12 +4,8 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.*;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -130,7 +126,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI, String hasuraGraphQlAdm
    * dispatch the given graphql request to aerie and collect the results
    *
    * absorbs any io errors and returns an empty response object in order to keep exception
-   * signature of callers cleanly matching the MerlinService interface
+   * signature of callers cleanly matching the MerlinDatabaseService interface
    *
    * @param gqlStr the graphQL query or mutation to send to aerie
    * @return the json response returned by aerie, or an empty optional in case of io errors

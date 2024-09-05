@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -37,6 +39,7 @@ public class PlanInMemory implements Plan {
    * container of all activity instances in plan, indexed by start time
    */
   private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime;
+  private List<TaskNetTemplateData> decompositions;
 
   /**
    * ctor creates a new empty solution plan
@@ -44,6 +47,7 @@ public class PlanInMemory implements Plan {
    */
   public PlanInMemory() {
     this.actsByTime = new TreeMap<>();
+    this.decompositions = new ArrayList<>();
   }
 
   public PlanInMemory(final PlanInMemory other){
@@ -52,10 +56,12 @@ public class PlanInMemory implements Plan {
     for(final var entry: other.actsByTime.entrySet()){
       this.actsByTime.put(entry.getKey(), new ArrayList<>(entry.getValue()));
     }
+    this.decompositions = new ArrayList<>();
+    Collections.copy(this.decompositions,other.decompositions);
   }
 
   @Override
-  public Plan duplicate() {
+  public PlanInMemory duplicate() {
     return new PlanInMemory(this);
   }
 
@@ -98,6 +104,20 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
+  public void addTaskNetTemplateData(final TaskNetTemplateData tn){
+    if (tn == null) {
+      throw new IllegalArgumentException(
+          "adding null tasknet to plan");
+    }
+    if (tn.subtasks() == null) {
+      throw new IllegalArgumentException(
+          "adding template with null list of substasks");
+    }
+    this.decompositions.add(tn);
+    //TODO need to add code in scheduler to instantiate activities
+  }
+
+  @Override
   public void remove(Collection<SchedulingActivityDirective> acts) {
     for (var act : acts) {
       remove(act);
@@ -110,6 +130,10 @@ public class PlanInMemory implements Plan {
     if (acts != null) acts.remove(act);
   }
 
+  @Override
+  public void removeTaskNetTemplate(final TaskNetTemplate tn){
+    this.decompositions.remove(tn);
+  }
   /**
    * {@inheritDoc}
    */
@@ -177,6 +201,10 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableSet(set);
   }
 
+  public List<TaskNetTemplateData> getDecompositions() {
+    return decompositions;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -199,17 +227,23 @@ public class PlanInMemory implements Plan {
   }
 
   /**
-   * {@inheritDoc}
+   * adds a new evaluation to the plan
+   *
+   * note that different solvers or metrics will have different evaluations
+   * for the same plan
+   *
+   * @param eval IN the new evaluation to add to the plan
    */
-  @Override
+
   public void addEvaluation(Evaluation eval) {
     evaluation = eval;
   }
 
   /**
-   * {@inheritDoc}
+   * fetches evaluation posted to the plan
+   *
+   * @return evaluation posted to the plan
    */
-  @Override
   public Evaluation getEvaluation() {
     return evaluation;
   }

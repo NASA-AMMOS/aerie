@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.solver.optimizers;
+package gov.nasa.jpl.aerie.scheduler.newsolver.solver.scheduler.optimizers;
 
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 

@@ -1,13 +1,17 @@
-package gov.nasa.jpl.aerie.scheduler.solver.stn;
+package gov.nasa.jpl.aerie.scheduler.newsolver.solver.scheduler.stn;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
 import org.jgrapht.alg.shortestpath.NegativeCycleDetectedException;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Representation of a simple temporal network (Dechter, Meiri, and Pearl, 1991).
@@ -131,6 +135,22 @@ public class STN {
     if(latestComputation == null){
       throw new IllegalArgumentException("Must call update() before getting results");
     }
+  }
+
+  public Set<String> findRootNodes() {
+    Set<String> rootNodes = new HashSet<>();
+
+    for (String vertex : graph.vertexSet()) {
+      if (graph.inDegreeOf(vertex) == 0) {
+        rootNodes.add(vertex);
+      }
+    }
+    return rootNodes;
+  }
+
+  public boolean hasCycle() {
+    CycleDetector<String, DefaultWeightedEdge> cycleDetector = new CycleDetector<>(graph);
+    return cycleDetector.detectCycles();
   }
 
 }

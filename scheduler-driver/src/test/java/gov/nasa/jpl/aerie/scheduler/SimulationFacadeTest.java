@@ -18,7 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -146,7 +146,7 @@ public class SimulationFacadeTest {
 
     problem.setGoals(List.of(goal));
     problem.setInitialPlan(plan);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan1 = solver.getNextSolution();
     assertTrue(plan1.isPresent());
 
@@ -154,7 +154,7 @@ public class SimulationFacadeTest {
     assertEquals(1, actAssociatedInFirstRun.size());
 
     problem.setInitialPlan(plan1.get());
-    final var solver2 = new PrioritySolver(problem);
+    final var solver2 = new NexusMetaSolver(problem);
     final var plan2 = solver2.getNextSolution();
     assertTrue(plan2.isPresent());
 
@@ -265,7 +265,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(cg));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
   }
@@ -304,7 +304,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
@@ -346,7 +346,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.solver.optimizers;
+package gov.nasa.jpl.aerie.scheduler.solver.scheduler.optimizers;
 
 public class Optimizers {
 

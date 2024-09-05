@@ -167,7 +167,7 @@ public class SimulationResultsComparisonUtils {
     }
   }
 
-  //Representation of SimulatedActivity stripped of parent/child/directive id information
+  //Representation of ActivityInstance stripped of parent/child/directive id information
   //used for comparison purposes
   public record StrippedSimulatedActivity(
       String type,

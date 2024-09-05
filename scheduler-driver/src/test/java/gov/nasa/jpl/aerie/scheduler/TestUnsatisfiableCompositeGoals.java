@@ -17,7 +17,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -104,7 +104,7 @@ public class TestUnsatisfiableCompositeGoals {
                                                                          ));
     problem.add(exclusionBasic);
     problem.setGoals(List.of(compositeAndGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     //AND goal is unsatisfiable because of exclusion zone for the Basic activities
     //by default, goals are not backtracking so the plan should show 2 BAR activities and 1 basic activity and the 2 controllable acts from the base plan
@@ -139,7 +139,7 @@ public class TestUnsatisfiableCompositeGoals {
                                                                          ));
     problem.add(exclusionBasic);
     problem.setGoals(List.of(compositeAndGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     //AND goal is unsatisfiable because of exclusion zone for the Basic activities
     //and goal is backtracking here so the plan should show only the 2 controllable acts from the base plan
@@ -176,7 +176,7 @@ public class TestUnsatisfiableCompositeGoals {
     problem.add(exclusionBasic);
     problem.add(exclusionBar);
     problem.setGoals(List.of(orGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     //OR goal is unsatisfiable because of exclusion zone for both the Basic and Bar activities
     //goal is not configured to backtrack plan should show 2 controllable acts from the base plan + the two activities that could be scheduled out of the exclusion zone
@@ -212,7 +212,7 @@ public class TestUnsatisfiableCompositeGoals {
     problem.add(exclusionBasic);
     problem.add(exclusionBar);
     problem.setGoals(List.of(orGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     //OR goal is unsatisfiable beacuse of exclusion zone for the Basic and Bar activities
     //goals are backtracking so the plan should show only 2 controllable acts from the base plan
@@ -253,7 +253,7 @@ public class TestUnsatisfiableCompositeGoals {
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(unsatisfiableGoal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertEquals(0, plan.getActivities().size());

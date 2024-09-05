@@ -29,11 +29,28 @@ public @interface MissionModel {
     WithMappers[] value();
   }
 
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @interface AllMethods {
+    WithMethod[] value();
+  }
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
   @Repeatable(AllActivityTypes.class)
   @interface WithActivityType {
+    Class<?> value();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @interface WithCompound {
+    Class<?> value();
+  }
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @Repeatable(AllMethods.class)
+  @interface WithMethod {
     Class<?> value();
   }
 
