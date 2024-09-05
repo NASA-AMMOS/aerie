@@ -140,8 +140,8 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
   /** [(DOC)][countActive] Returns a [Numbers] profile that corresponds to the number of active objects at any given time. */
   fun countActive() = reduceIntoProfile(::Numbers, NullBinaryOperation.reduce(
       { _, _ -> 1 },
-      { _, acc, _ -> acc.toInt() + 1}
-  )).assignGaps(Numbers(0))
+      { _, acc, _ -> acc + 1}
+  )).assignGaps(0)
 
   /**
    * [(DOC)][accumulatedDuration] Creates a Real profile corresponding to the running total of time
