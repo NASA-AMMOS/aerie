@@ -136,7 +136,7 @@ public class TimelineRemoteTests {
 
   @Test
   void queryResources() {
-    final var fruit = simulatedPlan.resource("/fruit", Real::deserialize).collect();
+    final var fruit = simulatedPlan.resource("/fruit", Real.deserializer()).collect();
     assertIterableEquals(
         List.of(
             Segment.of(Interval.betweenClosedOpen(Duration.ZERO, Duration.HOUR), new LinearEquation(4.0)),

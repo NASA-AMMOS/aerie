@@ -214,7 +214,7 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
      *
      * Prefers converting to longs if possible, and falls back to doubles if not.
      */
-    @JvmStatic fun deserialize(list: List<Segment<SerializedValue>>) = Numbers(list.map { seg ->
+    @JvmStatic fun deserializer() = { list: List<Segment<SerializedValue>> -> Numbers(list.map { seg ->
       val bigDecimal = seg.value.asNumeric().orElseThrow { Exception("value was not numeric: $seg") }
       val number: Number = try {
         bigDecimal.longValueExact()
@@ -222,6 +222,6 @@ data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers
         bigDecimal.toDouble()
       }
       seg.withNewValue(number)
-    })
+    }) }
   }
 }

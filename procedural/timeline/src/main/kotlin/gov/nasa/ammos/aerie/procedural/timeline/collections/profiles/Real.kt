@@ -210,7 +210,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
      * While plain numbers are acceptable and will be converted to a [LinearEquation] without warning, consider using [Numbers]
      * to keep the precision.
      */
-    @JvmStatic fun deserialize(list: List<Segment<SerializedValue>>): Real {
+    @JvmStatic fun deserializer() = { list: List<Segment<SerializedValue>> ->
       val converted: List<Segment<LinearEquation>> = list.map { s ->
         s.value.asReal().getOrNull()?.let { return@map s.withNewValue(LinearEquation(it)) }
         val map = s.value.asMap().orElseThrow { RealDeserializeException("value was not a map or plain number: $s") }
@@ -221,7 +221,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
             .asReal().orElseThrow { RealDeserializeException("rate was not a double") }
         s.withNewValue(LinearEquation(s.interval.start, initialValue, rate))
       }
-      return Real(converted)
+      Real(converted)
     }
 
     /***/ class RealDeserializeException(message: String): Exception(message)
