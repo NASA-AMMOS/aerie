@@ -16,7 +16,8 @@ create table merlin.simulation_dataset (
   dataset_revision integer null,
 
   -- Simulation Arguments
-  arguments jsonb not null,
+  arguments jsonb null, -- either arguments or prequel must be non-null
+  prequel integer null,
   simulation_start_time timestamptz not null,
   simulation_end_time timestamptz not null,
 
@@ -48,7 +49,9 @@ create table merlin.simulation_dataset (
     on update cascade
     on delete set null,
   constraint start_before_end
-    check (simulation_start_time <= simulation_end_time)
+    check (simulation_start_time <= simulation_end_time),
+  constraint simulation_dataset_initial_conditions
+    check ( num_nonnulls(arguments, prequel) = 1 )
 );
 
 create index simulation_dataset_simulation_has_many_datasets

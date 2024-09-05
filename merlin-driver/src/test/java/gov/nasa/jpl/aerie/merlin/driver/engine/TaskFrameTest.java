@@ -74,7 +74,7 @@ public final class TaskFrameTest {
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Integer> g) {
-      frame.emit(Event.create(topic, g.atom(), ORIGIN));
+      frame.emit(Event.create(topic, g.atom(), ORIGIN, TaskId.generate()));
     } else if (graph instanceof EventGraph.Sequentially<Integer> g) {
       runGraph(topic, frame, g.prefix());
       runGraph(topic, frame, g.suffix());
@@ -115,7 +115,7 @@ public final class TaskFrameTest {
       return;
     } else if (graph instanceof EventGraph.Atom<Pair<EventGraph<Integer>, Integer>> g) {
       assertEquals(g.atom().getLeft().toString(), frame.getState(query).orElseThrow().toString());
-      frame.emit(Event.create(topic, g.atom().getRight(), ORIGIN));
+      frame.emit(Event.create(topic, g.atom().getRight(), ORIGIN, TaskId.generate()));
     } else if (graph instanceof EventGraph.Sequentially<Pair<EventGraph<Integer>, Integer>> g) {
       checkHistory(topic, query, frame, g.prefix());
       checkHistory(topic, query, frame, g.suffix());

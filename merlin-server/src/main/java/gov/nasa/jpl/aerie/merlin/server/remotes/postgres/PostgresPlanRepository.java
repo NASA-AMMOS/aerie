@@ -87,6 +87,13 @@ public final class PostgresPlanRepository implements PlanRepository {
       final var simStartTime = simulationRecord.simulationStartTime();
       final var simEndTime = simulationRecord.simulationEndTime();
 
+      Plan.InitialConditions incons;
+      if (simulationRecord.prequel().isPresent()) {
+        incons = new Plan.InitialConditions.FromFincons(getFincons(connection, simulationRecord.prequel().get()));
+      } else {
+        incons = new Plan.InitialConditions.FromArguments(arguments);
+      }
+
       return new Plan(
           planRecord.name(),
           new MissionModelId(planRecord.missionModelId()),
@@ -94,6 +101,7 @@ public final class PostgresPlanRepository implements PlanRepository {
           planRecord.endTime(),
           activities,
           arguments,
+          incons,
           simStartTime,
           simEndTime
       );
@@ -323,6 +331,17 @@ public final class PostgresPlanRepository implements PlanRepository {
                   a.arguments(),
                   a.anchorId()!=null? new ActivityDirectiveId(a.anchorId()): null,
                   a.anchoredToStart())));
+    }
+  }
+
+  private SerializedValue getFincons(
+      final Connection connection,
+      final long datasetId
+  ) throws SQLException {
+    try (
+        final var getFinconsAction = new GetSimulationFinconsAction(connection)
+    ) {
+      return getFinconsAction.get(datasetId);
     }
   }
 

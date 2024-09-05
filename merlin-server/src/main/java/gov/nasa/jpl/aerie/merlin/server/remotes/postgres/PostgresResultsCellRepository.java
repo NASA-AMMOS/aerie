@@ -375,6 +375,17 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  private static void insertFincons(
+      final Connection connection,
+      final long datasetId,
+      final SerializedValue fincons
+  ) throws SQLException, NoSuchSimulationDatasetException
+  {
+    try (final var insertFinconsAction = new InsertFinconsAction(connection)) {
+      insertFinconsAction.apply(datasetId, fincons);
+    }
+  }
+
   private static void insertSimulationTopics(
       Connection connection,
       long datasetId,
@@ -558,11 +569,12 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final SimulationResults results) {
+    public void succeedWith(final SimulationResults results, final SerializedValue fincons) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results, SimulationStateRecord.success());
         deleteSimulationExtent(connection, datasetId);
+        insertFincons(connection, datasetId, fincons);
         transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);

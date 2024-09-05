@@ -19,10 +19,16 @@ public final class Plan {
   private final Timestamp endTimestamp;
   private final Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
   private final Map<String, SerializedValue> configuration;
+  public final InitialConditions initialConditions;
 
   // Simulation start and end times can be freely updated
   public Timestamp simulationStartTimestamp;
   public Timestamp simulationEndTimestamp;
+
+  public sealed interface InitialConditions {
+    record FromArguments(Map<String, SerializedValue> configuration) implements InitialConditions {}
+    record FromFincons(SerializedValue fincons) implements InitialConditions {}
+  }
 
   public Plan(
       final String name,
@@ -37,6 +43,7 @@ public final class Plan {
         startTimestamp,
         endTimestamp,
         activityDirectives,
+        null,
         null,
         startTimestamp,
         endTimestamp);
@@ -56,6 +63,7 @@ public final class Plan {
         endTimestamp,
         activityDirectives,
         simulationConfig,
+        null,
         startTimestamp,
         endTimestamp);
   }
@@ -67,6 +75,7 @@ public final class Plan {
       final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
       final Map<String, SerializedValue> configuration,
+      final InitialConditions initialConditions,
       final Timestamp simulationStartTimestamp,
       final Timestamp simulationEndTimestamp
   ) {
@@ -78,6 +87,7 @@ public final class Plan {
     this.configuration = (configuration != null) ? new HashMap<>(configuration) : new HashMap<>();
     this.simulationStartTimestamp = simulationStartTimestamp;
     this.simulationEndTimestamp = simulationEndTimestamp;
+    this.initialConditions = initialConditions;
   }
 
   public Plan(final Plan other) {
@@ -89,6 +99,7 @@ public final class Plan {
     this.simulationEndTimestamp = other.simulationEndTimestamp;
     this.activityDirectives = new HashMap<>(other.activityDirectives);
     this.configuration = new HashMap<>(other.configuration);
+    this.initialConditions = other.initialConditions;
   }
 
   /**

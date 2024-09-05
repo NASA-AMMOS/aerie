@@ -286,11 +286,11 @@ public class CheckpointSimulationDriver {
 
         final var status = engine.step(simulationDuration);
         switch (status) {
-          case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
-          case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
-          case SimulationEngine.Status.Nominal nominal:
-            elapsedTime = nominal.elapsedTime();
-            resourceManager.acceptUpdates(elapsedTime, nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
+          case SimulationEngine.Status.CompleteNoJobs s: break engineLoop;
+          case SimulationEngine.Status.CompleteAtDuration s: break engineLoop;
+          case SimulationEngine.Status.InProgress s:
+            elapsedTime = s.elapsedTime();
+            resourceManager.acceptUpdates(elapsedTime, s.realResourceUpdates(), s.dynamicResourceUpdates());
             toCheckForDependencyScheduling.putAll(scheduleActivities(
                 getSuccessorsToSchedule(engine, toCheckForDependencyScheduling),
                 schedule,
@@ -382,7 +382,7 @@ public class CheckpointSimulationDriver {
             executor ->
                 Task.run(scheduler -> scheduler.emit(directiveIdToSchedule, activityTopic))
                     .andThen(task.create(executor)),
-            new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId()));
+            new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId(), "CheckpointSimulationDriver::scheduleActivities"));
         activityToTask.put(directiveIdToSchedule, taskId);
         if (resolved.containsKey(directiveIdToSchedule)) {
           toCheckForDependencyScheduling.put(directiveIdToSchedule, taskId);

@@ -118,7 +118,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final SimulationResults results) {
+    public void succeedWith(final SimulationResults results, final SerializedValue fincons) {
       if (!(this.state instanceof ResultsProtocol.State.Incomplete)) {
         throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
             this.state.getClass().getCanonicalName()));

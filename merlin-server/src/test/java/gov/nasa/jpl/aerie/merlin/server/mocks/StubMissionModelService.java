@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -194,7 +195,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public SimulationResults runSimulation(
+  public Pair<SimulationResults, SerializedValue> runSimulation(
       final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
@@ -204,7 +205,7 @@ public final class StubMissionModelService implements MissionModelService {
       throw new NoSuchMissionModelException(plan.missionModelId());
     }
 
-    return SUCCESSFUL_SIMULATION_RESULTS;
+    return Pair.of(SUCCESSFUL_SIMULATION_RESULTS, SerializedValue.NULL);
   }
 
   @Override

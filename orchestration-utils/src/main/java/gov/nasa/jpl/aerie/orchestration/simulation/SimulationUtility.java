@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,7 +141,8 @@ public class SimulationUtility implements AutoCloseable {
             plan.duration(),
             canceledListener,
             extentConsumer,
-            rmgr);
+            rmgr,
+            plan.initialConditions instanceof Plan.InitialConditions.FromFincons c ? Optional.of(c.fincons()) : Optional.empty()).getLeft();
       }
     };
 

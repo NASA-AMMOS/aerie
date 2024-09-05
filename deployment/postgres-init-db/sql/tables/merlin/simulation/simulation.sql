@@ -5,6 +5,7 @@ create table merlin.simulation (
   simulation_template_id integer null,
   plan_id integer not null,
   arguments merlin.argument_set not null,
+  prequel integer null,
 
   simulation_start_time timestamptz not null,
   simulation_end_time timestamptz not null,

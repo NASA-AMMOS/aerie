@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskEntryPoint;
-import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
@@ -28,15 +27,13 @@ import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 
-import javax.json.Json;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -73,10 +70,10 @@ public final class SimulationDriver {
         planDuration,
         simulationCanceled,
         $ -> {},
-        new InMemorySimulationResourceManager());
+        new InMemorySimulationResourceManager(), Optional.empty()).getLeft();
   }
 
-  public static <Model> SimulationResults simulate(
+  public static <Model> Pair<SimulationResults, SerializedValue> simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant simulationStartTime,
@@ -85,17 +82,22 @@ public final class SimulationDriver {
       final Duration planDuration,
       final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer,
-      final SimulationResourceManager resourceManager
+      final SimulationResourceManager resourceManager,
+      final Optional<SerializedValue> incons
   ) {
     var timeline = new TemporalEventSource();
     final var executor = Executors.newVirtualThreadPerTaskExecutor();
 
-    final String inconsFile = "fincons.json";
-    InitialConditions initialConditions = readInitialConditionsFromFile(inconsFile, missionModel, timeline, executor);
+    InitialConditions initialConditions;
+    if (incons.isPresent()) {
+      initialConditions = hydrateInitialConditions(missionModel, timeline, executor, incons.get());
+    } else {
+      initialConditions = new InitialConditions(new LiveCells(timeline, missionModel.getInitialCells()), List.of());
+    }
 
     try (final var engine = new SimulationEngine(initialConditions.cells(), executor)) {
       for (final var task : initialConditions.tasks()) {
-        engine.scheduleTask(ZERO, task, null); // TODO figure out how to propagate entrypoints for previous tasks, especially child directives
+        engine.scheduleTask(ZERO, task.getLeft(), task.getRight()); // TODO figure out how to propagate entrypoints for previous tasks, especially child directives
       }
 
       /* The current real time. */
@@ -139,10 +141,10 @@ public final class SimulationDriver {
           if(simulationCanceled.get()) break;
           final var status = engine.step(simulationDuration);
           switch (status) {
-            case SimulationEngine.Status.NoJobs noJobs: break engineLoop;
-            case SimulationEngine.Status.AtDuration atDuration: break engineLoop;
-            case SimulationEngine.Status.Nominal nominal:
-              resourceManager.acceptUpdates(nominal.elapsedTime(), nominal.realResourceUpdates(), nominal.dynamicResourceUpdates());
+            case SimulationEngine.Status.CompleteNoJobs s: break engineLoop;
+            case SimulationEngine.Status.CompleteAtDuration s: break engineLoop;
+            case SimulationEngine.Status.InProgress s:
+              resourceManager.acceptUpdates(s.elapsedTime(), s.realResourceUpdates(), s.dynamicResourceUpdates());
               break;
           }
           simulationExtentConsumer.accept(engine.getElapsedTime());
@@ -172,73 +174,61 @@ public final class SimulationDriver {
         serializedCells.add(cell.get().serialize());
       }
       final var serializedTasks = new ArrayList<SerializedValue>();
+      final var spanInfo = engine.computeSpanInfo(activityTopic, missionModel.getTopics(), engine.timeline);
 
-      // Task needs:
-      // - entry point
-      // - reads
-      // The entry point is either:
-      //   - An activity directive
-      //   - An activity directive with a path to a particular anonymous subtask. Enumerate calls and spawns. E.g:
-      //           Parent()->2->1 is the first child of the second child of Parent
-      // The list of reads is linear and contains parent and child reads combined???
-      //    Can we dedupe? Later...
-      // Number of steps
+      final var tasksSaved = new LinkedHashSet<TaskId>();
+      final var tasksNeeded = new LinkedHashSet<>(engine.tasks.keySet());
 
-      try {
-        // get unfinished tasks
-        // for each unfinished task, get its entrypoint
+      var missingTasks = setDifference(tasksNeeded, tasksSaved);
 
-        final var spanInfo = engine.computeSpanInfo(activityTopic, missionModel.getTopics(), engine.timeline);
-
-        final var tasksSaved = new LinkedHashSet<TaskId>();
-        final var tasksNeeded = new LinkedHashSet<>(engine.tasks.keySet());
-
-        var missingTasks = setDifference(tasksNeeded, tasksSaved);
-
-        while (!missingTasks.isEmpty()) {
-          for (final var task : missingTasks) {
-            tasksSaved.add(task);
-            final var spanId = engine.taskSpan.get(task);
-            final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
-            final Optional<TaskEntryPoint.ParentReference> parent;
-            if (engine.entrypoints.containsKey(task)) {
-              final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
-              if (entrypoint instanceof TaskEntryPoint.Subtask e) {
-                parent = Optional.of(e.parent$());
-              } else {
-                parent = Optional.empty();
-              }
+      while (!missingTasks.isEmpty()) {
+        for (final var task : missingTasks) {
+          tasksSaved.add(task);
+          final var spanId = engine.taskSpan.get(task);
+          final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
+          final Optional<TaskEntryPoint.ParentReference> parent;
+          if (engine.entrypoints.containsKey(task)) {
+            final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
+            if (entrypoint instanceof TaskEntryPoint.Subtask e) {
+              parent = Optional.of(e.parent$());
             } else {
               parent = Optional.empty();
             }
-            TaskEntryPoint entrypoint;
-            if (spanInfo.isActivity(spanId) && spanInfo.isActivity(task)) {
-              entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
-            } else {
-              entrypoint = engine.entrypoints.get(task);
-              tasksNeeded.add(engine.taskParent.get(task));
-              if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId());
-            }
-            serializedTasks.add(serializeTask(engine, task, entrypoint));
+          } else {
+            parent = Optional.empty();
           }
-          missingTasks = setDifference(tasksNeeded, tasksSaved);
+          TaskEntryPoint entrypoint;
+          if (spanInfo.isActivity(spanId) && spanInfo.isActivity(task)) {
+            entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
+          } else {
+            entrypoint = engine.entrypoints.get(task);
+            tasksNeeded.add(engine.taskParent.get(task));
+            if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId(), "SimulationDriver serializing tasks");
+          }
+          serializedTasks.add(serializeTask(engine, task, entrypoint));
         }
-
-        Files.write(Path.of(inconsFile), List.of(new SerializedValueJsonParser().unparse(SerializedValue.of(Map.of(
-            "cells", SerializedValue.of(serializedCells),
-            "tasks", SerializedValue.of(serializedTasks)
-        ))).toString()), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+        missingTasks = setDifference(tasksNeeded, tasksSaved);
       }
 
-      final var topics = missionModel.getTopics();
-      return engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
-    }
-  }
+      final SerializedValue fincons = SerializedValue.of(Map.of(
+          "cells", SerializedValue.of(serializedCells),
+          "tasks", SerializedValue.of(serializedTasks)
+      ));
 
-  private static <T> boolean isSubset(Set<T> a, Set<T> b) {
-    return setDifference(a, b).isEmpty();
+      final var topics = missionModel.getTopics();
+      final var results = engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
+
+      final var format =
+          new DateTimeFormatterBuilder()
+              .appendPattern("uuuu-DDD'T'HH:mm:ss")
+              .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
+              .toFormatter();
+
+      results.simulatedActivities.put(
+          new ActivityInstanceId(1000L),
+          new ActivityInstance("parent", Map.of(), LocalDateTime.parse("2024-252T10:10:10.169", format).atZone(ZoneOffset.UTC).toInstant(), Duration.HOUR.times(24 * 84), null, List.of(), Optional.empty(), SerializedValue.of(Map.of())));
+      return Pair.of(results, fincons);
+    }
   }
 
   private static <T> Set<T> setDifference(Set<T> a, Set<T> b) {
@@ -251,6 +241,7 @@ public final class SimulationDriver {
     final var lastStepTime = engine.lastStepTime.get(task);
     final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
     final var numSteps = engine.taskSteps.get(task);
+    final var finished = engine.tasks.get(task) == null;
     final var serializedEntryPoint = switch (entrypoint) {
       case TaskEntryPoint.Directive e -> SerializedValue.of(Map.of(
           "id",
@@ -288,18 +279,21 @@ public final class SimulationDriver {
           "id",
           SerializedValue.of(e.id()),
           "type",
-          SerializedValue.of("system")
+          SerializedValue.of("system"),
+          "comment",
+          SerializedValue.of(e.comment())
       ));
     };
     return SerializedValue.of(Map.of(
         "entrypoint", serializedEntryPoint,
         "reads", SerializedValue.of(readLog),
         "steps", numSteps == null ? SerializedValue.NULL : SerializedValue.of(numSteps),
-        "lastStepTime", lastStepTime == null ? SerializedValue.NULL : SerializedValue.of(lastStepTime.minus(engine.getElapsedTime()).in(MICROSECONDS))  // expected to be negative
+        "lastStepTime", lastStepTime == null ? SerializedValue.NULL : SerializedValue.of(lastStepTime.minus(engine.getElapsedTime()).in(MICROSECONDS)),  // expected to be negative
+        "finished", SerializedValue.of(finished)
     ));
   }
 
-  private record InitialConditions(LiveCells cells, List<TaskFactory<?>> tasks) {}
+  private record InitialConditions(LiveCells cells, List<Pair<TaskFactory<?>, TaskEntryPoint>> tasks) {}
 
   record MyTask<T>(MutableObject<TaskFactory<T>> task, long steps, List<SerializedValue> readLog, Duration lastStepTime, TaskEntryPoint entrypoint, List<MyTask<?>> childrenToRestart) {
     <F> void setTaskFactory(TaskFactory<F> taskFactory) {
@@ -307,20 +301,15 @@ public final class SimulationDriver {
     }
   }
 
-  private static <Model> InitialConditions readInitialConditionsFromFile(
-      final String inconsFile,
+  private static <Model> InitialConditions hydrateInitialConditions(
       final MissionModel<Model> missionModel,
       final TemporalEventSource timeline,
-      final ExecutorService executor)
+      final ExecutorService executor,
+      final SerializedValue incons)
   {
     final LiveCells cells;
 
-    if (!new File(inconsFile).exists()) {
-      return new InitialConditions(new LiveCells(timeline, missionModel.getInitialCells()), List.of());
-    }
-
     cells = new LiveCells(timeline);
-    final var incons = readJsonFromFile(inconsFile);
     final var serializedCells = incons.asMap().get().get("cells").asList().get();
     final var queries = missionModel.getInitialCells().queries();
 
@@ -398,7 +387,7 @@ public final class SimulationDriver {
 
     final InitialConditions result = new InitialConditions(cells, new ArrayList<>());
     for (final var task : roots) {
-      result.tasks().add(instantiateTask(task, cells, executor));
+      result.tasks().add(Pair.of(instantiateTask(task, cells, executor), task.entrypoint()));
     }
     return result;
   }
@@ -411,6 +400,8 @@ public final class SimulationDriver {
 
     final var childrenToSpawn = new ArrayList<TaskFactory<?>>();
 
+    final var toEmit = new ArrayList<Pair<Object, Topic>>();
+
     final var scheduler = new Scheduler() {
       @Override
       public <State> State get(final CellId<State> cellId) {
@@ -422,7 +413,6 @@ public final class SimulationDriver {
 
       @Override
       public <Event> void emit(final Event event, final Topic<Event> topic) {
-
       }
 
       @Override
@@ -461,17 +451,6 @@ public final class SimulationDriver {
       }
       return finalStatus;
     });
-  }
-
-  private static SerializedValue readJsonFromFile(String inconsFile) {
-    try {
-      return new SerializedValueJsonParser().parse(
-          Json
-              .createReader(new StringReader(Files.readString(Path.of(inconsFile))))
-              .readValue()).getSuccessOrThrow();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   private static <State> void putCell(
@@ -533,7 +512,7 @@ public final class SimulationDriver {
           resolved,
           missionModel,
           activityTopic
-      ), new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId()));
+      ), new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId(), "SimulationDriver::scheduleActivities"));
     }
   }
 

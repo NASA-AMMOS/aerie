@@ -7,10 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,7 +63,7 @@ public class SimulationDuplicationTest {
         Duration.HOUR,
         () -> false,
         $ -> {},
-        new InMemorySimulationResourceManager());
+        new InMemorySimulationResourceManager(), Optional.empty()).getLeft();
     assertEquals(expected, results);
     final var newResults = simulateWithCheckpoints(store.getCachedEngines(mockConfiguration()).get(0), List.of(), store);
     assertEquals(expected, newResults);

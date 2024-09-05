@@ -12,6 +12,7 @@ public record SimulationRecord(
     long planId,
     Optional<Long> simulationTemplateId,
     Map<String, SerializedValue> arguments,
+    Optional<Long> prequel,
     Timestamp simulationStartTime,
     Timestamp simulationEndTime
     ) {}

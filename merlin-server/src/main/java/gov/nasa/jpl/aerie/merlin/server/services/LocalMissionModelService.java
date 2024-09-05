@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.types.Plan;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
@@ -25,6 +26,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -285,17 +290,30 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(
+  public Pair<SimulationResults, SerializedValue> runSimulation(
       final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
       final SimulationResourceManager resourceManager)
   throws NoSuchMissionModelException
   {
-    final var config = plan.simulationConfiguration();
-    if (config.isEmpty()) {
+    if (plan.initialConditions instanceof Plan.InitialConditions.FromArguments c && c.configuration().isEmpty()) {
       log.warn(
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
+    }
+
+//    final String inconsFile = "fincons.json";
+    final Optional<SerializedValue> incons;
+//    if (new File(inconsFile).exists()) {
+//      incons = Optional.of(readJsonFromFile(inconsFile));
+//    } else {
+//      incons = Optional.empty();
+//    }
+
+    if (plan.initialConditions instanceof Plan.InitialConditions.FromFincons c) {
+      incons = Optional.of(c.fincons());
+    } else {
+      incons = Optional.empty();
     }
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
@@ -303,7 +321,7 @@ public final class LocalMissionModelService implements MissionModelService {
         loadAndInstantiateMissionModel(
             plan.missionModelId(),
             plan.planStartInstant(),
-            SerializedValue.of(config)),
+            plan.initialConditions instanceof Plan.InitialConditions.FromArguments c ? SerializedValue.of(c.configuration()) : SerializedValue.of(Map.of())),
         plan.activityDirectives(),
         plan.simulationStartInstant(),
         plan.simulationDuration(),
@@ -311,7 +329,30 @@ public final class LocalMissionModelService implements MissionModelService {
         plan.duration(),
         canceledListener,
         simulationExtentConsumer,
-        resourceManager);
+        resourceManager,
+        incons);
+
+//    final var simulationResults = response.getLeft();
+//    final var fincons = response.getRight();
+//
+//    try {
+//      Files.write(Path.of(inconsFile), List.of(new SerializedValueJsonParser().unparse(fincons).toString()), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+//    } catch (IOException e) {
+//      throw new RuntimeException(e);
+//    }
+//
+//    return simulationResults;
+  }
+
+  private static SerializedValue readJsonFromFile(String inconsFile) {
+    try {
+      return new SerializedValueJsonParser().parse(
+          Json
+              .createReader(new StringReader(Files.readString(Path.of(inconsFile))))
+              .readValue()).getSuccessOrThrow();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

@@ -16,7 +16,7 @@ public sealed interface TaskEntryPoint {
       return Optional.empty();
     }
   }
-  record SystemTask(String id) implements TaskEntryPoint {
+  record SystemTask(String id, String comment) implements TaskEntryPoint {
     @Override
     public Optional<ParentReference> parent() {
       return Optional.empty();

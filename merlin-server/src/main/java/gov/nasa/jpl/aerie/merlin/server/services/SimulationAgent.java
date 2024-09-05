@@ -4,11 +4,13 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.types.Plan;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import java.util.Map;
@@ -50,6 +52,7 @@ public record SimulationAgent (
     }
 
     final SimulationResults results;
+    final SerializedValue fincons;
     try {
       // Validate plan activity construction
       final var failures = this.missionModelService.validateActivityInstantiations(
@@ -71,11 +74,13 @@ public record SimulationAgent (
           Duration.ZERO,
           simulationProgressPollPeriod)
       ) {
-        results = this.missionModelService.runSimulation(
-           plan,
-            extentListener::updateValue,
-            canceledListener,
-            resourceManager);
+        final var response = this.missionModelService.runSimulation(
+          plan,
+          extentListener::updateValue,
+          canceledListener,
+          resourceManager);
+        results = response.getLeft();
+        fincons = response.getRight();
       }
     } catch (SimulationException ex) {
       final var errorMsgBuilder = Json.createObjectBuilder()
@@ -109,7 +114,7 @@ public record SimulationAgent (
     if(canceledListener.get()) {
       writer.reportIncompleteResults(results);
     } else {
-      writer.succeedWith(results);
+      writer.succeedWith(results, fincons);
     }
   }
 }

@@ -208,9 +208,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public sealed interface Status {
-    record NoJobs() implements Status {}
-    record AtDuration() implements Status{}
-    record Nominal(
+    record CompleteNoJobs() implements Status {}
+    record CompleteAtDuration() implements Status{}
+    record InProgress(
         Duration elapsedTime,
         Map<String, Pair<ValueSchema, RealDynamics>> realResourceUpdates,
         Map<String, Pair<ValueSchema, SerializedValue>> dynamicResourceUpdates
@@ -226,7 +226,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var nextTime = this.peekNextTime().orElse(Duration.MAX_VALUE);
     if (nextTime.longerThan(simulationDuration)) {
       elapsedTime = Duration.max(elapsedTime, simulationDuration); // avoid lowering elapsed time
-      return new Status.AtDuration();
+      return new Status.CompleteAtDuration();
     }
 
     final var batch = this.extractNextJobs(simulationDuration);
@@ -238,7 +238,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
-    if (batch.jobs().isEmpty()) return new Status.NoJobs();
+    if (batch.jobs().isEmpty()) return new Status.CompleteNoJobs();
 
     // Run the jobs in this batch.
     final var results = this.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
@@ -267,7 +267,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    return new Status.Nominal(elapsedTime, realResourceUpdates, dynamicResourceUpdates);
+    return new Status.InProgress(elapsedTime, realResourceUpdates, dynamicResourceUpdates);
   }
 
   private static <Dynamics> RealDynamics extractRealDynamics(final ResourceUpdates.ResourceUpdate<Dynamics> update) {
@@ -648,7 +648,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     public boolean isActivity(final SpanId id) {
-      return this.input.containsKey(id) || this.output.containsKey(id);
+      return this.input.containsKey(id);// || this.output.containsKey(id);
     }
 
     public boolean isActivity(final TaskId id) {
