@@ -10,8 +10,6 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /*package-local*/ final class GetSchedulingGoalAction implements AutoCloseable {
@@ -44,7 +42,7 @@ import java.util.Optional;
     return Optional.of(new GoalRecord(
           goalId,
           name,
-          type.equals("JAR") ? new GoalType.JAR(Path.of(path), "" /* TODO this is a property of the specification, not the goal */) : new GoalType.EDSL(definition),
+          type.equals("JAR") ? new GoalType.JAR(Path.of(path), "" /* TODO this is a property of the specification, not the goal */) : new GoalType.EDSL(new GoalSource(definition)),
           true // TODO this is not a property of the goal, but rather of the specification
       ));
   }

@@ -55,7 +55,7 @@ import java.util.Optional;
       goals.add(new GoalRecord(
             new GoalId(id, revision, Optional.of(goalInvocationId)),
             name,
-            type.equals("JAR") ? new GoalType.JAR(Path.of(path), args) : new GoalType.EDSL(definition),
+            type.equals("JAR") ? new GoalType.JAR(Path.of(path), args) : new GoalType.EDSL(new GoalSource(definition)),
             simulateAfter
       ));
     }
