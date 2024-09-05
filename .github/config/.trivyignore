@@ -1,0 +1,11 @@
+# List of CVEs to ignore in our security scans in Publish workflow
+# see https://aquasecurity.github.io/trivy/v0.53/docs/configuration/filtering/#trivyignore
+
+# These were determined to be false positives caused by the `gosu` library
+# which is installed by the postgres docker container and does not use the entirety of the Go stdlib
+# for details see:
+# - https://github.com/tianon/gosu/blob/master/SECURITY.md
+# - https://github.com/NASA-AMMOS/aerie/pull/1546
+CVE-2023-24538
+CVE-2023-24540
+CVE-2024-24790
