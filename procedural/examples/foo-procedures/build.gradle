@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
   id 'java'
-  id 'io.github.goooler.shadow' version '8.1.7'
+  id 'com.gradleup.shadow' version '8.3.0'
 }
 
 java {
@@ -69,10 +69,6 @@ tasks.create("generateSchedulingProcedureJarTasks") {
         attributes 'Main-Class': getMainClassFromGeneratedFile(file)
       }
       minimize()
-      dependencies {
-        //  exclude project(':procedural:timeline')
-        //  exclude dependency(":kotlin.*")
-      }
     }
   }
 }
