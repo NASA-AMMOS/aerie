@@ -62,7 +62,7 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
      *
      * If either object is an activity, it will record the directive or instance id.
      */
-    @JvmStatic fun <V: IntervalLike<V>, W: IntervalLike<W>> mutex(left: GeneralOps<V, *>, right: GeneralOps<W, *>) =
+    @JvmStatic fun <V: IntervalLike<V>, W: IntervalLike<W>> whenSimultaneous(left: GeneralOps<V, *>, right: GeneralOps<W, *>) =
         left.unsafeMap2(::Violations, right) { l, r, i -> Violation(
             i,
             null,
