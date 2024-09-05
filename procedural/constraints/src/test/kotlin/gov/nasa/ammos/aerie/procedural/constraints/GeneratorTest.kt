@@ -20,6 +20,8 @@ class GeneratorTest: GeneratorConstraint() {
       .violateOn(false)
   }
 
+  override fun message() = "Plant must be greater than 0"
+
   @Test
   fun testGenerator() {
     val plan = NotImplementedPlan()

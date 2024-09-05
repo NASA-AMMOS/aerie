@@ -15,4 +15,12 @@ interface Constraint {
    * @param simResults the [SimulationResults] that the result will be collected with
    */
   fun run(plan: Plan, simResults: SimulationResults): Violations
+
+  /**
+   * Default violation message to be displayed to user.
+   *
+   * Can be overridden on a violation-by-violation basis by manually specifying
+   * it in the [Violation] object.
+   */
+  fun message(): String? = null
 }

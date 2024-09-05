@@ -47,6 +47,7 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
         tl.unsafeMap(::Violations, BoundsTransformer.IDENTITY, false) {
           Violation(
               it.interval,
+              null,
               listOfNotNull(it.getActivityId())
           )
         }
@@ -64,6 +65,7 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
     @JvmStatic fun <V: IntervalLike<V>, W: IntervalLike<W>> mutex(left: GeneralOps<V, *>, right: GeneralOps<W, *>) =
         left.unsafeMap2(::Violations, right) { l, r, i -> Violation(
             i,
+            null,
             listOfNotNull(
                 l.getActivityId(),
                 r.getActivityId()

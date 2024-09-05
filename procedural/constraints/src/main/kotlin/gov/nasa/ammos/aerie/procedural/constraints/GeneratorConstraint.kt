@@ -20,47 +20,53 @@ abstract class GeneratorConstraint: Constraint {
   private var violations = mutableListOf<Violation>()
 
   /** Finalizes one or more violations. */
-  protected fun violate(vararg v: Violation) {
+  @JvmOverloads protected fun violate(vararg v: Violation, message: String? = null) {
     violate(v.toList())
   }
 
   /** Finalizes a list of violations. */
-  protected fun violate(l: List<Violation>) {
-    violations.addAll(l)
+  @JvmOverloads protected fun violate(l: List<Violation>, message: String? = null) {
+    violations.addAll(l.map {
+      if (it.message == null) Violation(
+        it.interval,
+        message,
+        it.ids
+      ) else it
+    })
   }
 
   /** Collects a [Violations] timeline and finalizes the result. */
-  protected fun violate(tl: Violations) {
+  @JvmOverloads protected fun violate(tl: Violations, message: String? = null) {
     violate(tl.collect())
   }
 
   /** Creates a [Violations] object that violates when this profile equals a given value. */
-  protected fun <V: Any> SerialConstantOps<V, *>.violateOn(v: V) = violate(Violations.on(this, v))
+  @JvmOverloads protected fun <V: Any> SerialConstantOps<V, *>.violateOn(v: V, message: String? = null) = violate(Violations.on(this, v), message)
 
   /** Creates a [Violations] object that violates when this profile equals a given value. */
-  protected fun Real.violateOn(n: Number) = violate(Violations.on(this, n))
+  @JvmOverloads protected fun Real.violateOn(n: Number, message: String? = null) = violate(Violations.on(this, n), message)
 
   /**
    * Creates a [Violations] object that violates on every object in the timeline.
    *
    * If the object is an activity, it will record the directive or instance id.
    */
-  protected fun <I: IntervalLike<I>> ParallelOps<I, *>.violateOnAll() {
-    violate(Violations.onAll(this))
+  @JvmOverloads protected fun <I: IntervalLike<I>> ParallelOps<I, *>.violateOnAll(message: String? = null) {
+    violate(Violations.onAll(this), message)
   }
 
   /** Creates a [Violations] object that violates inside each interval. */
-  protected fun Windows.violateInside() = violate(Violations.inside(this))
+  @JvmOverloads protected fun Windows.violateInside(message: String? = null) = violate(Violations.inside(this), message)
   /** Creates a [Violations] object that violates outside each interval. */
-  protected fun Windows.violateOutside() = violate(Violations.outside(this))
+  @JvmOverloads protected fun Windows.violateOutside(message: String? = null) = violate(Violations.outside(this), message)
 
   /**
    * Creates a [Violations] object from two timelines, that violates whenever they have overlap.
    *
    * If either object is an activity, it will record the directive or instance id.
    */
-  protected fun <V: IntervalLike<V>, W: IntervalLike<W>> GeneralOps<V, *>.mutexViolations(other: GeneralOps<W, *>) {
-    violate(Violations.mutex(this, other))
+  @JvmOverloads protected fun <V: IntervalLike<V>, W: IntervalLike<W>> GeneralOps<V, *>.violateWhenSimultaneous(other: GeneralOps<W, *>, message: String? = null) {
+    violate(Violations.whenSimultaneous(this, other), message)
   }
 
   /**
