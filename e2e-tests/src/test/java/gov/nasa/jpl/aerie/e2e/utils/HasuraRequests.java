@@ -700,7 +700,7 @@ public class HasuraRequests implements AutoCloseable {
     final var resp =  makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
         .getJsonObject("insert_scheduling_specification_goals_one");
 
-    return new GoalInvocationId(resp.getInt("goal_id"), resp.getInt("goal_invocation_id"));
+    return GoalInvocationId.fromJSON(resp);
   }
 
   public GoalInvocationId createSchedulingSpecGoal(
@@ -738,7 +738,7 @@ public class HasuraRequests implements AutoCloseable {
     final var resp =  makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
             .getJsonObject("insert_scheduling_specification_goals_one");
 
-    return new GoalInvocationId(resp.getInt("goal_id"), resp.getInt("goal_invocation_id"));
+    return GoalInvocationId.fromJSON(resp);
   }
 
   public int updateGoalDefinition(int goalId, String definition) throws IOException {
