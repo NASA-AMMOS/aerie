@@ -2198,7 +2198,7 @@ public class SchedulingEdslIntegrationTests {
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
     for (final var goal : goals) {
-      goalsByPriority.add(new GoalRecord(goal.goalId(), "test goal", new GoalType.EDSL(goal.definition()), goal.simulateAfter()));
+      goalsByPriority.add(new GoalRecord(goal.goalId(), "test goal", new GoalType.EDSL(new GoalSource(goal.definition())), goal.simulateAfter()));
     }
     final var specificationService = new SpecificationService(new MockSpecificationRepository(Map.of(new SpecificationId(1L), new Specification(
         new SpecificationId(1L),
