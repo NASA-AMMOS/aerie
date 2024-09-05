@@ -21,8 +21,8 @@ import java.util.Optional;
       c.goal_invocation_id,
       c.activity_id
     from scheduler.scheduling_goal_analysis_created_activities as c
-    join scheduler.scheduling_goal_analysis as a using (goal_invocation_id)
-    where c.analysis_id = ? and a.analysis_id = ?
+    join scheduler.scheduling_goal_analysis as a using (analysis_id, goal_invocation_id)
+    where c.analysis_id = ?;
     """;
 
   private final PreparedStatement statement;
