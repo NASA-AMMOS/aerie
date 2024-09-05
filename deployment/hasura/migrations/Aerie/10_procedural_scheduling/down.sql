@@ -40,7 +40,7 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop constraint satisfying_activities_primary_key,
   drop constraint satisfying_activities_references_scheduling_goal_analysis,
 
-  -- temp set as nullable so we can insert, made not null by PK constraint below
+  -- temp set as nullable so we can insert, made explictly not null below
   add column goal_id integer null,
   add column goal_revision integer null;
 
