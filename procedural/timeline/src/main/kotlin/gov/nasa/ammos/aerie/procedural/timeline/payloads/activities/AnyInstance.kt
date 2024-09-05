@@ -12,14 +12,14 @@ data class AnyInstance(
     /**
      * Converts a [SerializedValue] object containing activity arguments and computed attributes to an [AnyInstance] object.
      */
-    fun deserialize(attributes: SerializedValue): AnyInstance {
+    fun deserializer() = { attributes: SerializedValue ->
       /***/ class InstanceDeserializeError(message: String): Error(message)
 
       val arguments = attributes.asMap().getOrNull()!!["arguments"]?.asMap()?.getOrNull()
           ?: throw InstanceDeserializeError("Could not get arguments from attributes: $attributes")
       val computedAttributes = attributes.asMap().getOrNull()!!["computedAttributes"]
           ?: throw InstanceDeserializeError("Could not get computed attributes from attributes: $attributes")
-      return AnyInstance(arguments, computedAttributes)
+      AnyInstance(arguments, computedAttributes)
     }
   }
 }

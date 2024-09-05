@@ -119,6 +119,8 @@ data class Booleans(private val timeline: Timeline<Segment<Boolean>, Booleans>):
      * Converts a list of serialized value segments into a [Booleans] profile;
      * for use with [gov.nasa.ammos.aerie.procedural.timeline.plan.Plan.resource].
      */
-    @JvmStatic fun deserialize(list: List<Segment<SerializedValue>>) = Booleans(list.map { it.withNewValue(it.value.asBoolean().get()) })
+    @JvmStatic fun deserializer() = { list: List<Segment<SerializedValue>> ->
+      Booleans(list.map { it.withNewValue(it.value.asBoolean().get()) })
+    }
   }
 }

@@ -31,7 +31,7 @@ interface SimulationResults {
    */
   fun <A: Any> instances(type: String?, deserializer: (SerializedValue) -> A): Instances<A>
   /** Queries activity instances, filtered by type, deserializing them as [AnyInstance]. **/
-  fun instances(type: String) = instances(type, AnyInstance::deserialize)
+  fun instances(type: String) = instances(type, AnyInstance.deserializer())
   /** Queries all activity instances, deserializing them as [AnyInstance]. **/
-  fun instances() = instances(null, AnyInstance::deserialize)
+  fun instances() = instances(null, AnyInstance.deserializer())
 }

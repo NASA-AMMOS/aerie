@@ -52,9 +52,11 @@ data class Strings(private val timeline: Timeline<Segment<String>, Strings>):
      * Converts a list of serialized value segments into a [Strings] profile;
      * for use with [gov.nasa.ammos.aerie.procedural.timeline.plan.Plan.resource].
      */
-    @JvmStatic fun deserialize(list: List<Segment<SerializedValue>>) = Strings(list.map { seg ->
-      val string = seg.value.asString().orElseThrow { Exception("value was not a string: $seg") }
-      seg.withNewValue(string)
-    })
+    @JvmStatic fun deserializer() = { list: List<Segment<SerializedValue>> ->
+      Strings(list.map { seg ->
+        val string = seg.value.asString().orElseThrow { Exception("value was not a string: $seg") }
+        seg.withNewValue(string)
+      })
+    }
   }
 }

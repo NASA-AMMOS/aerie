@@ -21,7 +21,7 @@ data class Constants<V: Any>(private val timeline: Timeline<Segment<V>, Constant
     /**
      * Returns a deserializer, for use with [gov.nasa.ammos.aerie.procedural.timeline.plan.Plan.resource].
      */
-    @JvmStatic fun <V: Any> deserialize(mapper: (Segment<SerializedValue>) -> V): (List<Segment<SerializedValue>>) -> Constants<V> = {
+    @JvmStatic fun <V: Any> deserializer(mapper: (Segment<SerializedValue>) -> V): (List<Segment<SerializedValue>>) -> Constants<V> = {
         l: List<Segment<SerializedValue>> ->
       Constants(l.map { segment -> segment.mapValue(mapper) })
     }

@@ -49,7 +49,7 @@ public record StayWellFed(double bitePeriodHours) implements Goal {
     // I'm using producer as a substitute for a mission phase variable.
     // This goal will only apply during the Dole mission phase. :)
     final var dolePhase = simResults
-        .resource("/producer", Strings::deserialize)
+        .resource("/producer", Strings.deserializer())
         .highlightEqualTo("Dole")
         .cache();
 
@@ -91,7 +91,7 @@ public record StayWellFed(double bitePeriodHours) implements Goal {
     // So we iteratively find the first time /fruit drops below zero
     // and add a grow banana fix it. We then mock the effect of grow banana
     // by adding one to /fruit, rather than resimulating, and do it again.
-    var fruit = simResults.resource("/fruit", Real::deserialize).cache();
+    var fruit = simResults.resource("/fruit", Real.deserializer()).cache();
 
     var ranOutAt = fruit.lessThan(0).filterByWindows(dolePhase, true).risingEdges().highlightTrue().collect();
     while (!ranOutAt.isEmpty()) {

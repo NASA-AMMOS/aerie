@@ -11,6 +11,6 @@ data class AnyDirective(
   fun serialize(): SerializedValue = SerializedValue.of(arguments)
   /***/ companion object {
     /** Converts a [SerializedValue] object containing activity arguments into an [AnyDirective] object. */
-    @JvmStatic fun deserialize(attributes: SerializedValue) = AnyDirective(attributes.asMap().getOrNull()!!)
+    @JvmStatic fun deserializer() = { attributes: SerializedValue -> AnyDirective(attributes.asMap().getOrNull()!!) }
   }
 }

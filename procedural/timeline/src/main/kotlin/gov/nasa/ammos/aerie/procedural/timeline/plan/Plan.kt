@@ -28,7 +28,7 @@ interface Plan {
    */
   fun <A: Any> directives(type: String?, deserializer: (SerializedValue) -> A): Directives<A>
   /** Queries activity directives, filtered by type, deserializing them as [AnyDirective]. **/
-  fun directives(type: String) = directives(type, AnyDirective::deserialize)
+  fun directives(type: String) = directives(type, AnyDirective.deserializer())
   /** Queries all activity directives, deserializing them as [AnyDirective]. **/
-  fun directives() = directives(null, AnyDirective::deserialize)
+  fun directives() = directives(null, AnyDirective.deserializer())
 }
