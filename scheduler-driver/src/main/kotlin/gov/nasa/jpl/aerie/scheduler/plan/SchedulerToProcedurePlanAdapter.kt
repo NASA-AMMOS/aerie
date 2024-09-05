@@ -1,19 +1,18 @@
 package gov.nasa.jpl.aerie.scheduler.plan
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
-import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
-import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart.Anchor.AnchorPoint.Companion.anchorToStart
+import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
+import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon
 import java.time.Instant
-import gov.nasa.jpl.aerie.scheduler.model.Plan as SchedulerPlan
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan as TimelinePlan
+import gov.nasa.jpl.aerie.scheduler.model.Plan as SchedulerPlan
 
 data class SchedulerToProcedurePlanAdapter(
     private val schedulerPlan: SchedulerPlan,

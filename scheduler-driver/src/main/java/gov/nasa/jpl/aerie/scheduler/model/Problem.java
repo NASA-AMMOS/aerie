@@ -134,7 +134,7 @@ public class Problem {
    * @return the initial seed plan that schedulers may start from
    */
   public Plan getInitialPlan() {
-    return initialPlan;
+    return initialPlan.duplicate();
   }
 
   /**
@@ -148,7 +148,7 @@ public class Problem {
   ) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
-        plan,
+        getInitialPlan(),
         simulationResults,
         SimulationResultsConverter.convertToConstraintModelResults(simulationResults)
     ));

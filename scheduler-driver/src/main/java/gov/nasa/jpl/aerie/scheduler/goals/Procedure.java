@@ -15,14 +15,13 @@ import gov.nasa.jpl.aerie.scheduler.plan.SchedulerToProcedurePlanAdapter;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.ConflictSatisfaction;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivityDirective;
+import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivity;
 
 public class Procedure extends Goal {
   private final Path jarPath;
@@ -58,16 +57,6 @@ public class Procedure extends Goal {
         lookupActivityType::apply
     );
 
-    /*
-     TODO
-
-     Comments from Joel:
-     - Part of the intent of editablePlan was to be able to re-use it across procedures.
-       - Could be done by initializing EditablePlanImpl with simulation results
-
-     Duration construction and arithmetic can be less awkward
-     */
-
     procedureMapper.deserialize(this.args).run(editablePlan);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
@@ -75,7 +64,7 @@ public class Procedure extends Goal {
     }
     for (final var edit : editablePlan.getTotalDiff()) {
       if (edit instanceof Edit.Create c) {
-        newActivities.add(toSchedulingActivityDirective(c.getDirective(), lookupActivityType::apply, true));
+        newActivities.add(toSchedulingActivity(c.getDirective(), lookupActivityType::apply, true));
       } else {
         throw new IllegalStateException("Unexpected value: " + edit);
       }

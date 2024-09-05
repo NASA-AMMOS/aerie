@@ -312,23 +312,8 @@ public class CheckpointSimulationFacade implements SimulationFacade {
   ) throws SimulationException, SchedulingInterruptedException {
     if (this.initialSimulationResults != null) {
       final var inputPlan = scheduleFromPlan(plan, schedulerModel);
-      final HashMap<ActivityDirectiveId, ActivityDirective> planActuallySimulated = new HashMap<>();
-      final var initialPlan = this.initialSimulationResults.plan().getActivitiesById();
-      var allActivitiesFound = true;
-      for (final var activityInstance: this.initialSimulationResults.constraintsResults().activities) {
-        if (activityInstance.directiveId().isPresent()) {
-          final var directiveId = activityInstance.directiveId().get();
-          final var directive = initialPlan.get(directiveId);
-          if (directive != null) {
-            planActuallySimulated.put(activityInstance.directiveId().get(), schedulingActToActivityDir(directive, schedulerModel));
-          } else {
-            allActivitiesFound = false;
-          }
-        }
-      }
-      if (allActivitiesFound && inputPlan.equals(new PlanSimCorrespondence(planActuallySimulated))) {
-        return initialSimulationResults;
-      }
+      final var initialPlan = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
+      if (inputPlan.equals(initialPlan)) return initialSimulationResults;
     }
     final var resultsInput = simulateNoResults(plan, until);
     final var driverResults = resultsInput.simulationResultsComputerInputs().computeResults(resourceNames);

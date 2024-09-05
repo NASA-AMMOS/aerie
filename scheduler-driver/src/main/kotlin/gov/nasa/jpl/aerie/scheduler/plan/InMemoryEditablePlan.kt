@@ -54,7 +54,7 @@ data class InMemoryEditablePlan(
     val resolved = directive.resolve(id, parent)
     uncommittedChanges.add(Edit.Create(resolved))
     resolved.validateArguments(lookupActivityType)
-    plan.add(resolved.toSchedulingActivityDirective(lookupActivityType, true))
+    plan.add(resolved.toSchedulingActivity(lookupActivityType, true))
     return id
   }
 
@@ -70,7 +70,7 @@ data class InMemoryEditablePlan(
     for (edit in result) {
       when (edit) {
         is Edit.Create -> {
-          plan.remove(edit.directive.toSchedulingActivityDirective(lookupActivityType, true))
+          plan.remove(edit.directive.toSchedulingActivity(lookupActivityType, true))
         }
       }
     }
@@ -93,7 +93,7 @@ data class InMemoryEditablePlan(
       lookupActivityType(type).specType.inputType.validateArguments(inner.arguments)
     }
 
-    @JvmStatic fun Directive<AnyDirective>.toSchedulingActivityDirective(lookupActivityType: (String) -> ActivityType, isNew: Boolean) = SchedulingActivity(
+    @JvmStatic fun Directive<AnyDirective>.toSchedulingActivity(lookupActivityType: (String) -> ActivityType, isNew: Boolean) = SchedulingActivity(
         id,
         lookupActivityType(type),
         when (val s = start) {

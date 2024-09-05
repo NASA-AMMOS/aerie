@@ -47,8 +47,6 @@ public class SchedulingTests {
   private int modelId;
   private int planId;
   private int schedulingSpecId;
-  private int directiveId1;
-  private int directiveId2;
 
   // Cross-Test Constants
   private final String planStartTimestamp = "2023-01-01T00:00:00+00:00";
@@ -133,8 +131,6 @@ public class SchedulingTests {
         planStartTimestamp);
     schedulingSpecId = hasura.getSchedulingSpecId(planId);
     // Unset directiveId vars
-    directiveId1 = -1;
-    directiveId2 = -1;
   }
 
   @AfterEach
@@ -147,8 +143,8 @@ public class SchedulingTests {
 
   private void insertActivities() throws IOException {
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
-    directiveId1 = hasura.insertActivityDirective(planId, "GrowBanana", "1h", JsonValue.EMPTY_JSON_OBJECT);
-    directiveId2 = hasura.insertActivityDirective(planId, "GrowBanana", "3h", Json.createObjectBuilder()
+    hasura.insertActivityDirective(planId, "GrowBanana", "1h", JsonValue.EMPTY_JSON_OBJECT);
+    hasura.insertActivityDirective(planId, "GrowBanana", "3h", Json.createObjectBuilder()
                                                                    .add("growingDuration", 7200000000L) // 2h
                                                                    .build());
     hasura.updatePlanRevisionSchedulingSpec(planId);
@@ -606,30 +602,6 @@ public class SchedulingTests {
           "24h",
           plantType,
           List.of(new ProfileSegment("0h", false, Json.createValue(400))));
-
-      hasura.insertActivityInstance(
-          datasetId,
-          directiveId1,
-          "GrowBanana",
-          "1h",
-          "1h",
-          Json.createObjectBuilder()
-              .add("quantity", 1)
-              .add("growingDuration", 3600000000L)
-              .build()
-      );
-
-      hasura.insertActivityInstance(
-          datasetId,
-          directiveId2,
-          "GrowBanana",
-          "3h",
-          "2h",
-          Json.createObjectBuilder()
-              .add("quantity", 1)
-              .add("growingDuration", 7200000000L)
-              .build()
-      );
 
       // Insert Goal
       final int plantGoal = hasura.createSchedulingSpecGoal(
