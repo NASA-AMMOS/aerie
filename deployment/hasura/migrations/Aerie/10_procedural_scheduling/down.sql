@@ -121,6 +121,9 @@ alter table scheduler.scheduling_goal_analysis
 
   drop column goal_invocation_id;
 
+comment on table scheduler.scheduling_goal_analysis is e''
+  'The analysis of single goal from a scheduling run.';
+
 -- restore scheduling_specification_goals
 -- delete data for new PK
 -- i.e. find where (spec_id, goal_id) is not unique
