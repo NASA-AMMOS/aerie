@@ -10,7 +10,8 @@ comment on column scheduler.scheduling_specification_goals.goal_invocation_id is
 
 -- update goal_analysis PK
 alter table scheduler.scheduling_goal_analysis
-  add column goal_invocation_id integer null, -- temp set as nullable so we can insert, made not null by PK constraint below
+  -- temp set as nullable so we can insert, made explictly not null below
+  add column goal_invocation_id integer null,
 
   drop constraint scheduling_goal_analysis_primary_key;
 
@@ -39,7 +40,7 @@ alter table scheduler.scheduling_goal_analysis
 -- update created_activities PK
 alter table scheduler.scheduling_goal_analysis_created_activities
   drop constraint created_activities_primary_key,
-  -- temp set as nullable so we can insert, made not null by PK constraint below
+  -- temp set as nullable so we can insert, made explictly not null below
   add column goal_invocation_id integer null;
 
 comment on column scheduler.scheduling_goal_analysis_created_activities.goal_invocation_id is e''
@@ -72,7 +73,7 @@ alter table scheduler.scheduling_goal_analysis_created_activities
 -- update satisfing_activities PK
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop constraint satisfying_activities_primary_key,
-  -- temp set as nullable so we can insert, made not null by PK constraint below
+  -- temp set as nullable so we can insert, made explictly not null below
   add column goal_invocation_id integer null;
 
 comment on column scheduler.scheduling_goal_analysis_satisfying_activities.goal_invocation_id is e''
