@@ -98,8 +98,8 @@ public final class SimulationEngine implements AutoCloseable {
   private HashMap<ResourceId, Set<Topic<?>>> referencedTopics = new HashMap<>();
   /** Separates generation of resource profile results from other parts of the simulation */
   /** The history of when tasks read topics/cells */
-  private final HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
-  private final TreeMap<SubInstantDuration, HashSet<TaskId>> removedCellReadHistory = new TreeMap<>();
+  private HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
+  private TreeMap<SubInstantDuration, HashSet<TaskId>> removedCellReadHistory = new TreeMap<>();
 
   private final MissionModel<?> missionModel;
 
@@ -116,10 +116,10 @@ public final class SimulationEngine implements AutoCloseable {
 
   public SpanInfo spanInfo = new SpanInfo(this);
 
-  private Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>();
-  private final Set<SimulatedActivityId> removedActivities = new HashSet<>();
-  private Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
-  private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+  private Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new LinkedHashMap<>();
+  private Set<SimulatedActivityId> removedActivities = new LinkedHashSet<>();
+  private Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities = new LinkedHashMap<>();
+  private List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
   private HashMap<String, SimulatedActivityId> taskToSimulatedActivityId = null;
@@ -128,27 +128,27 @@ public final class SimulationEngine implements AutoCloseable {
   private HashMap<SpanId, ActivityDirectiveId> activityDirectiveIds = null;
 
   /** When tasks become stale */
-  private final Map<TaskId, SubInstantDuration> staleTasks = new HashMap<>();
-  private final Map<TaskId, Event> staleEvents = new HashMap<>();
-  private final Map<TaskId, Integer> staleCausalEventIndex = new HashMap<>();
+  private Map<TaskId, SubInstantDuration> staleTasks = new LinkedHashMap<>();
+  private Map<TaskId, Event> staleEvents = new LinkedHashMap<>();
+  private Map<TaskId, Integer> staleCausalEventIndex = new LinkedHashMap<>();
 
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<?>> tasks;
   /** Remember the TaskFactory for each task so that we can re-run it */
-  private final Map<TaskId, TaskFactory<?>> taskFactories = new HashMap<>();
-  private final Map<TaskFactory<?>, TaskId> taskIdsForFactories = new HashMap<>();
+  private Map<TaskId, TaskFactory<?>> taskFactories = new HashMap<>();
+  private Map<TaskFactory<?>, TaskId> taskIdsForFactories = new HashMap<>();
   /** Remember which tasks were daemon-spawned */
-  private final Set<TaskId> daemonTasks = new HashSet<>();
+  private Set<TaskId> daemonTasks = new LinkedHashSet<>();
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions;
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, Resource<?>> resources;
 
   /** The task that spawned a given task (if any). */
-  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
+  private Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
-  private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
+  private Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -172,20 +172,20 @@ public final class SimulationEngine implements AutoCloseable {
   private Duration elapsedTime;
 
   public SimulationEngine(
-      LiveCells initialCells,
       Instant startTime,
       MissionModel<?> missionModel,
       SimulationEngine oldEngine) {
     this.startTime = startTime;
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
-    timeline = new TemporalEventSource();
-    referenceTimeline = new TemporalEventSource(
-        null, missionModel, oldEngine == null ? null : oldEngine.timeline);
+    this.timeline = new TemporalEventSource(null, missionModel,
+                                            oldEngine == null ? null : oldEngine.timeline);
     if (oldEngine != null) {
+      this.referenceTimeline = oldEngine.referenceTimeline;
       oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
       this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells()); // HACK: good for in-memory but with DB or difft mission model configuration,...
     } else {
+      this.referenceTimeline = new TemporalEventSource();
       this.cells = new LiveCells(timeline, missionModel.getInitialCells());
     }
     this.timeline.liveCells = this.cells;
@@ -243,8 +243,35 @@ public final class SimulationEngine implements AutoCloseable {
     }
     oldEngine = other.oldEngine;
     startTime = other.startTime;
+    stepIndexAtTime = other.stepIndexAtTime;
     missionModel = other.missionModel;
-    this.spanInfo = new SpanInfo(other.spanInfo, this);
+    referencedTopics = new HashMap<>(other.referencedTopics);
+    cellReadHistory = new HashMap<>(other.cellReadHistory);
+    removedCellReadHistory = new TreeMap<>(other.removedCellReadHistory);
+    scheduledDirectives = other.scheduledDirectives == null ? null : new LinkedHashMap<>(other.scheduledDirectives);
+    directivesDiff = other.directivesDiff == null ? null : new LinkedHashMap<>(other.directivesDiff);
+    spanInfo = new SpanInfo(other.spanInfo, this);
+    simulatedActivities = new LinkedHashMap<>(other.simulatedActivities);
+    removedActivities = new LinkedHashSet<>(other.removedActivities);
+    unfinishedActivities = new LinkedHashMap<>(other.unfinishedActivities);
+    topics = new ArrayList<>(other.topics);
+    simulationResults = other.simulationResults;
+    taskToSimulatedActivityId = other.taskToSimulatedActivityId == null ? null : new HashMap<>(other.taskToSimulatedActivityId);
+    activityParents = other.activityParents == null ? null : new HashMap<>(other.activityParents);
+    activityChildren = other.activityChildren == null ? null : new HashMap<>(other.activityChildren);
+    activityDirectiveIds = other.activityDirectiveIds == null ? null : new HashMap<>(other.activityDirectiveIds);
+    staleTasks = new LinkedHashMap<>(other.staleTasks);
+    staleEvents = new LinkedHashMap<>(other.staleEvents);
+    staleCausalEventIndex = new LinkedHashMap<>(other.staleCausalEventIndex);
+    taskFactories = new LinkedHashMap<>(other.taskFactories);
+    daemonTasks = other.daemonTasks;
+    taskParent = new HashMap<>(other.taskParent);
+    taskChildren = new HashMap<>(other.taskChildren);
+    taskToSpanMap = new HashMap<>(other.taskToSpanMap);
+    spanToSimulatedActivityId = other.spanToSimulatedActivityId == null ? null :
+        new HashMap<>(other.spanToSimulatedActivityId);
+    directiveToSimulatedActivityId = new HashMap<>(other.directiveToSimulatedActivityId);
+
   }
 
   private void startDaemons(Duration time) {
@@ -347,11 +374,7 @@ public final class SimulationEngine implements AutoCloseable {
 //    elapsedTime = batch.offsetFromStart();
 //    timeline.add(delta);
 
-    // Increment real time, if necessary.
-    nextTime = SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, Integer.MAX_VALUE));
-    setCurTime(nextTime);
-    stepIndexAtTime = nextTime.index();
-    elapsedTime = Duration.max(elapsedTime, nextTime.duration());  // avoid lowering elapsed time
+    elapsedTime = Duration.min(maximumTime, Duration.max(elapsedTime, nextTime.duration()));  // avoid lowering elapsed time
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
 
@@ -372,6 +395,10 @@ public final class SimulationEngine implements AutoCloseable {
     if (!hasJobsScheduledThrough(maximumTime) && oldEngine == null) {
       return new Status.NoJobs();
     }
+    // Increment real time, if necessary.
+    nextTime = SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, Integer.MAX_VALUE));
+    setCurTime(nextTime);
+    stepIndexAtTime = nextTime.index();
 
     Set<Topic<?>> invalidatedTopics = new HashSet<>();
     final var realResourceUpdates = new HashMap<String, Pair<ValueSchema, RealDynamics>>();
@@ -1704,7 +1731,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Map<String, Map<ActivityDirectiveId, ActivityDirective>> diffDirectives(Map<ActivityDirectiveId, ActivityDirective> newDirectives) {
-    Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = new HashMap<>();
+    Map<String, Map<ActivityDirectiveId, ActivityDirective>> diff = new LinkedHashMap<>();
     final var oldDirectives = scheduledDirectives;
     diff.put("added", newDirectives.entrySet().stream().filter(e -> !oldDirectives.containsKey(e.getKey())).collect(
         Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
@@ -1976,8 +2003,8 @@ public final class SimulationEngine implements AutoCloseable {
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
     final var spanToSimulatedActivityId = spanToSimulatedActivities(spanInfo);
 
-    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+    final var simulatedActivities = new LinkedHashMap<SimulatedActivityId, SimulatedActivity>();
+    final var unfinishedActivities = new LinkedHashMap<SimulatedActivityId, UnfinishedActivity>();
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
@@ -1999,7 +2026,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToSimulatedActivityId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
+            (activityParents.containsKey(span) || directiveId == null) ? Optional.empty() : Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
@@ -2014,7 +2041,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToSimulatedActivityId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
+            (activityParents.containsKey(span) || directiveId == null) ? Optional.empty() : Optional.of(directiveId)
         ));
       }
     });

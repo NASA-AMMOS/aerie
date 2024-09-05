@@ -43,7 +43,7 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(1), new ActivityDirective(Duration.HOUR, "ActivityType1", Map.of(), null, true),
             new ActivityDirectiveId(2), new ActivityDirective(Duration.HOUR, "ActivityType2", Map.of(), null, true)
         ),
-        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
+        new SimulationEngine(Instant.EPOCH,model,null),
         null,
         model,
         new InMemorySimulationResourceManager()
@@ -58,7 +58,7 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(3), new ActivityDirective(Duration.HOUR, "ActivityType3", Map.of(), null, true),
             new ActivityDirectiveId(4), new ActivityDirective(Duration.HOUR, "ActivityType4", Map.of(), null, true)
         ),
-        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
+        new SimulationEngine(Instant.EPOCH,model,null),
         null,
         model,
         new InMemorySimulationResourceManager()
@@ -73,7 +73,7 @@ public class InMemoryCachedEngineStoreTest {
             new ActivityDirectiveId(5), new ActivityDirective(Duration.HOUR, "ActivityType5", Map.of(), null, true),
             new ActivityDirectiveId(6), new ActivityDirective(Duration.HOUR, "ActivityType6", Map.of(), null, true)
         ),
-        new SimulationEngine(model.getInitialCells(),Instant.EPOCH,model,null),
+        new SimulationEngine(Instant.EPOCH,model,null),
         null,
         model,
         new InMemorySimulationResourceManager()

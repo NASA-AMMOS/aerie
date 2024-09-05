@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -76,7 +77,7 @@ public final class SimulationDriver<Model> {
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
 
-    this.engine = new SimulationEngine(missionModel.getInitialCells(), startTime, missionModel, oldEngine);
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
 
     engine.init(rerunning);
 
@@ -174,7 +175,7 @@ public final class SimulationDriver<Model> {
       if (debug) System.out.println("SimulationDriver.simulate(" + schedule + ")");
 
       if (engine.scheduledDirectives == null) {
-        engine.scheduledDirectives = new HashMap<>(schedule);
+        engine.scheduledDirectives = new LinkedHashMap<>(schedule);
       }
 
       /* The current real time. */
