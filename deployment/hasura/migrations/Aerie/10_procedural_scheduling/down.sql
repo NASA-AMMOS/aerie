@@ -71,16 +71,10 @@ set goal_id = ga.goal_id, goal_revision = ga.goal_revision
 from scheduler.scheduling_goal_analysis ga
 where (ca.analysis_id, ca.goal_invocation_id) = (ga.analysis_id, ga.goal_invocation_id);
 
--- explictly restore non-nullability before PKing
 alter table scheduler.scheduling_goal_analysis_satisfying_activities
+  -- explictly restore non-nullability before PKing
   alter column goal_id set not null,
-  alter column goal_revision set not null;
-
-alter table scheduler.scheduling_goal_analysis_created_activities
-  alter column goal_id set not null,
-  alter column goal_revision set not null;
-
-alter table scheduler.scheduling_goal_analysis_satisfying_activities
+  alter column goal_revision set not null,
   add constraint satisfying_activities_primary_key
     primary key (analysis_id, goal_id, goal_revision, activity_id),
 
@@ -93,6 +87,10 @@ alter table scheduler.scheduling_goal_analysis_satisfying_activities
   drop column goal_invocation_id;
 
 alter table scheduler.scheduling_goal_analysis_created_activities
+  -- explictly restore non-nullability before PKing
+  alter column goal_id set not null,
+  alter column goal_revision set not null,
+
   add constraint created_activities_primary_key
     primary key (analysis_id, goal_id, goal_revision, activity_id),
 
