@@ -47,6 +47,8 @@ public class SchedulingTests {
   private int modelId;
   private int planId;
   private int schedulingSpecId;
+  private int directiveId1;
+  private int directiveId2;
 
   // Cross-Test Constants
   private final String planStartTimestamp = "2023-01-01T00:00:00+00:00";
@@ -130,6 +132,9 @@ public class SchedulingTests {
         "24:00:00",
         planStartTimestamp);
     schedulingSpecId = hasura.getSchedulingSpecId(planId);
+    // Unset directiveId vars
+    directiveId1 = -1;
+    directiveId2 = -1;
   }
 
   @AfterEach
@@ -139,8 +144,6 @@ public class SchedulingTests {
     hasura.deleteMissionModel(modelId);
   }
 
-  private int directiveId1 = -1;
-  private int directiveId2 = -1;
 
   private void insertActivities() throws IOException {
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
