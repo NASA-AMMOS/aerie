@@ -2,13 +2,8 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
-import gov.nasa.jpl.aerie.contrib.metadata.Unit;
-import gov.nasa.jpl.aerie.contrib.models.ValidationResult;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.waitUntil;
 
@@ -32,3 +27,25 @@ public final class ToggleFlagWhenProducerChanges {
     );
   }
 }
+
+//record Command(String name, Map<String, Object> parameters);
+//
+//new Command("SET_GLOBAL", List.of(Pair.of("globalName", String.class), Pair.of("value", Object.class));
+//
+//
+//// Range checks etc?
+//triggerOnStart("SET_GLOBAL", args, mission => {
+//  mission.globals.get(args.get("globalName")).set(args.get("value"));
+//});
+//
+//triggerOnStart("SET_GLOBAL", args, mission => {
+//  mission.globals.get(args.get("globalName")).set(args.get("value"));
+//});
+//
+//triggerOnStart("SET_GLOBAL", args, mission => {
+//  mission.globals.get(args.get("globalName")).set(args.get("value"));
+//});
+//
+//triggerOnStart(DoEdl) {
+//  // Power model
+//}

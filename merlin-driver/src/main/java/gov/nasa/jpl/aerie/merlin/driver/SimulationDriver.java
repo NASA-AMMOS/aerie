@@ -413,6 +413,7 @@ public final class SimulationDriver {
 
       @Override
       public <Event> void emit(final Event event, final Topic<Event> topic) {
+
       }
 
       @Override

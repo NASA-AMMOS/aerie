@@ -119,3 +119,13 @@ We do not want to deal with rerunning the rerunner - i.e. we want to propagate t
 - [ ] Zooming in to an area at the end of the plan should include all unfinished spans
 - [ ] Display warning if incons time doesn't line up, or if dataset doesn't exist
 - [ ] Help a user select the best incons
+
+- [ ] Demonstrate that this still works with python
+
+
+### Design of command modeling
+
+Don't generate classes for every single command
+Triggers are useful, but not necessarily to replace the run method
+
+
