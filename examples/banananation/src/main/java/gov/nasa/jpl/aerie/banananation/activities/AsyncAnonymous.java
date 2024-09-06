@@ -36,10 +36,5 @@ public record AsyncAnonymous(Duration duration, String newProducerValue) {
       delay(duration);
       mission.producer.set(newProducerValue);
     });
-
-
-    for (comamnd : sequence) {
-      call(new Command(...));
-    }
   }
 }

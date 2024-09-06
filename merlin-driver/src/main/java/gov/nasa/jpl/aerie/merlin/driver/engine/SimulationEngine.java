@@ -93,7 +93,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<TaskId, Duration> unstartedTasks;
 
   /** The set of all spans of work contributed to by modeled tasks. */
-  private final Map<SpanId, Span> spans;
+  public final Map<SpanId, Span> spans;
   /** A count of the direct contributors to each span, including child spans and tasks. */
   private final Map<SpanId, MutableInt> spanContributorCount;
 

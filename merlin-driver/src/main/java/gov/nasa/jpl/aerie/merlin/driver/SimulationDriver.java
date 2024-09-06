@@ -24,6 +24,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.types.ActivityDirective;
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -199,7 +200,7 @@ public final class SimulationDriver {
           }
           TaskEntryPoint entrypoint;
           if (spanInfo.isActivity(spanId) && spanInfo.isActivity(task)) {
-            entrypoint = new TaskEntryPoint.Directive(entrypointId, spanInfo.input().get(spanId), parent);
+            entrypoint = new TaskEntryPoint.Directive(entrypointId, simulationStartTime.plus(engine.spans.get(spanId).startOffset().in(MICROSECONDS), ChronoUnit.MICROS), spanInfo.input().get(spanId), parent);
           } else {
             entrypoint = engine.entrypoints.get(task);
             tasksNeeded.add(engine.taskParent.get(task));
@@ -218,15 +219,30 @@ public final class SimulationDriver {
       final var topics = missionModel.getTopics();
       final var results = engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
 
-      final var format =
-          new DateTimeFormatterBuilder()
-              .appendPattern("uuuu-DDD'T'HH:mm:ss")
-              .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
-              .toFormatter();
+      for (final var task : initialConditions.tasks()) {
+        switch(task.getRight()) {
+          case TaskEntryPoint.Daemon s -> {
+          }
+          case TaskEntryPoint.Directive s -> {
+            results.simulatedActivities.put(
+                new ActivityInstanceId(1000L),
+                new ActivityInstance(s.directive().getTypeName(),
+                                     s.directive().getArguments(),
+                                     s.startTime(),
+                                     Duration.HOUR.times(24 * 84),
+                                     null,
+                                     List.of(),
+                                     Optional.empty(),
+                                     SerializedValue.of(Map.of())));
+          }
+          case TaskEntryPoint.Subtask s -> {
+          }
+          case TaskEntryPoint.SystemTask s -> {
+          }
+        }
+      }
 
-      results.simulatedActivities.put(
-          new ActivityInstanceId(1000L),
-          new ActivityInstance("parent", Map.of(), LocalDateTime.parse("2024-252T10:10:10.169", format).atZone(ZoneOffset.UTC).toInstant(), Duration.HOUR.times(24 * 84), null, List.of(), Optional.empty(), SerializedValue.of(Map.of())));
+
       return Pair.of(results, fincons);
     }
   }
@@ -257,7 +273,9 @@ public final class SimulationDriver {
               "type",
               SerializedValue.of(e.directive().getTypeName()),
               "args",
-              SerializedValue.of(e.directive().getArguments())))
+              SerializedValue.of(e.directive().getArguments()))),
+          "startTime",
+          SerializedValue.of(new Timestamp(e.startTime()).toString())
       ));
       case TaskEntryPoint.Daemon e -> SerializedValue.of(Map.of(
           "id",
@@ -329,6 +347,7 @@ public final class SimulationDriver {
       switch (entrypoint.get("type").asString().get()) {
         case "directive" -> {
           final var directive = entrypoint.get("directive").asMap().get();
+          final var startTime = Timestamp.fromString(entrypoint.get("startTime").asString().get()).toInstant();
           final var type = directive.get("type").asString().get();
           final var args = directive.get("args").asMap().get();
           final var taskFactory = deserializeActivity(missionModel, new SerializedActivity(type, args));
@@ -343,7 +362,7 @@ public final class SimulationDriver {
           final Duration lastStepTime = Duration.of(
               serializedTask.asMap().get().get("lastStepTime").asInt().get(),
               MICROSECONDS);
-          tasks.put(id, new MyTask<>(new MutableObject<>(taskFactory), steps, readLog, lastStepTime, new TaskEntryPoint.Directive(id, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
+          tasks.put(id, new MyTask<>(new MutableObject<>(taskFactory), steps, readLog, lastStepTime, new TaskEntryPoint.Directive(id, startTime, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
         }
 
         case "subtask" -> {
