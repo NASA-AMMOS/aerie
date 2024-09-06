@@ -26,7 +26,5 @@ public record SampleProcedure(int quantity) implements Goal {
       currentTime = currentTime.plus(step);
     }
     plan.commit();
-//    var results = plan.simulate(new SimulateOptions());
-//    var size = results.instances().collect().size();
   }
 }
