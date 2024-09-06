@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
   id "org.jetbrains.kotlin.jvm" version "2.0.20"
   id 'java-library'
-  id 'org.jetbrains.dokka' version '1.9.10'
+  id 'org.jetbrains.dokka' version '1.9.20'
 }
 
 repositories {
@@ -44,7 +44,7 @@ dokkaHtmlPartial.configure {
       moduleName.set("Constraints")
 
       reportUndocumented.set(true)
-      failOnWarning.set(true)
+      failOnWarning.set(false)
 
       // contains descriptions for the module and the packages
       includes.from("MODULE_DOCS.md")

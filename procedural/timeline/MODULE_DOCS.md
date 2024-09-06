@@ -106,3 +106,6 @@ Tools for querying simulation results, activity directives, and general informat
 # Package gov.nasa.ammos.aerie.procedural.timeline.util
 Common tools used by operations and timeline constructors to sanitize and process lists.
 
+# Package gov.nasa.ammos.aerie.procedural.timeline.util.duration
+Kotlin operator overloads for ergonomic Duration operations.
+
