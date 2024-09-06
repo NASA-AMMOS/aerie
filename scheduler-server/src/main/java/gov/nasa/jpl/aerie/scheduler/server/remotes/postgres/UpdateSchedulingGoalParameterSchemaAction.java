@@ -3,20 +3,16 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import org.intellij.lang.annotations.Language;
 
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Optional;
 
 /*package-local*/ final class UpdateSchedulingGoalParameterSchemaAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       update scheduler.scheduling_goal_definition gd
-      set parameter_schema=?::jsonb 
+      set parameter_schema=?::jsonb
       where gd.goal_id = ? and gd.revision = ?;
       """;
 

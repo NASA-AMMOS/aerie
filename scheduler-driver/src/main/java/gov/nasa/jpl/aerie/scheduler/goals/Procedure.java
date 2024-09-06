@@ -19,15 +19,16 @@ import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.scheduler.plan.InMemoryEditablePlan.toSchedulingActivity;
 
 public class Procedure extends Goal {
   private final Path jarPath;
-  private final SerializedValue args;
+  private final Map<String, SerializedValue> args;
 
-  public Procedure(final PlanningHorizon planningHorizon, Path jarPath, SerializedValue args, boolean simulateAfter) {
+  public Procedure(final PlanningHorizon planningHorizon, Path jarPath, Map<String, SerializedValue> args, boolean simulateAfter) {
     this.simulateAfter = simulateAfter;
     this.planHorizon = planningHorizon;
     this.jarPath = jarPath;
@@ -57,7 +58,7 @@ public class Procedure extends Goal {
         lookupActivityType::apply
     );
 
-    procedureMapper.deserialize(this.args).run(editablePlan);
+    procedureMapper.deserialize(SerializedValue.of(this.args)).run(editablePlan);
 
     if (!editablePlan.getUncommittedChanges().isEmpty()) {
       throw new IllegalStateException("procedural goal %s had changes that were not committed or rolled back".formatted(jarPath.getFileName()));

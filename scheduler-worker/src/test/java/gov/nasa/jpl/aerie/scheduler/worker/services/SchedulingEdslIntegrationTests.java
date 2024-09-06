@@ -43,7 +43,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalInvocationRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
@@ -2195,10 +2195,10 @@ public class SchedulingEdslIntegrationTests {
     mockMerlinService.setPlanningHorizon(planningHorizon);
     externalProfiles.ifPresent(mockMerlinService::setExternalDataset);
     final var planId = new PlanId(1L);
-    final var goalsByPriority = new ArrayList<GoalRecord>();
+    final var goalsByPriority = new ArrayList<GoalInvocationRecord>();
 
     for (final var goal : goals) {
-      goalsByPriority.add(new GoalRecord(goal.goalId(), "test goal", new GoalType.EDSL(new GoalSource(goal.definition())), goal.simulateAfter()));
+      goalsByPriority.add(new GoalInvocationRecord(goal.goalId(), "test goal", new GoalType.EDSL(new GoalSource(goal.definition())), Map.of(), goal.simulateAfter()));
     }
     final var specificationService = new SpecificationService(new MockSpecificationRepository(Map.of(new SpecificationId(1L), new Specification(
         new SpecificationId(1L),

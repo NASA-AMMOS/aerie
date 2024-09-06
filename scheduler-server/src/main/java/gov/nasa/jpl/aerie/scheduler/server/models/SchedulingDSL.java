@@ -302,7 +302,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record Procedure(
         Path jarPath,
-        SerializedValue arguments
+        Map<String, SerializedValue> arguments
     ) implements GoalSpecifier {}
   }
 

@@ -15,6 +15,6 @@ public record Specification(
     Timestamp horizonEndTimestamp,
     Map<String, SerializedValue> simulationArguments,
     boolean analysisOnly,
-    List<GoalRecord> goalsByPriority,
+    List<GoalInvocationRecord> goalsByPriority,
     List<SchedulingConditionRecord> schedulingConditions
 ) {}

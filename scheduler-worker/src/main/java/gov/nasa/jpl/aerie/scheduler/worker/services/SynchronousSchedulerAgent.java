@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.worker.services;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,12 +20,10 @@ import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
-import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -47,13 +44,12 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalInvocationRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
@@ -79,9 +75,6 @@ import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.json.Json;
-import javax.json.stream.JsonParsingException;
 
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
@@ -194,7 +187,7 @@ public record SynchronousSchedulerAgent(
 
         final var orderedGoals = new ArrayList<Goal>();
         final var goals = new HashMap<Goal, GoalId>();
-        final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
+        final var compiledGoals = new ArrayList<Pair<GoalInvocationRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
           switch (goalRecord.type()) {
@@ -216,12 +209,7 @@ public record SynchronousSchedulerAgent(
               }
             }
             case GoalType.JAR jar -> {
-              try {
-                final var serializedValue = parseJson(jar.args(), new SerializedValueJsonParser());
-                compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(modelJarsDir.resolve(jar.path()), serializedValue)));
-              } catch (InvalidJsonException | InvalidEntityException e) {
-                throw new RuntimeException(e);
-              }
+              compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(modelJarsDir.resolve(jar.path()), goalRecord.args())));
             }
           }
         }
@@ -660,17 +648,5 @@ public record SynchronousSchedulerAgent(
         }
       }
     return new ScheduleResults(goalResults);
-  }
-
-  private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser)
-  throws InvalidJsonException, InvalidEntityException
-  {
-    try (final var reader = Json.createReader(new StringReader(jsonStr))) {
-      final var requestJson = reader.readValue();
-      final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(reason -> new InvalidEntityException(List.of(reason)));
-    } catch (JsonParsingException e) {
-      throw new InvalidJsonException(e);
-    }
   }
 }

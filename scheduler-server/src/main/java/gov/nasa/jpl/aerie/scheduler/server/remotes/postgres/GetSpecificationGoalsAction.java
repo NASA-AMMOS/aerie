@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalInvocationRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import org.intellij.lang.annotations.Language;
@@ -13,6 +16,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.parseJson;
 
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
@@ -37,30 +42,36 @@ import java.util.Optional;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<GoalRecord> get(final long specificationId) throws SQLException {
+  public List<GoalInvocationRecord> get(final long specificationId) throws SQLException {
     this.statement.setLong(1, specificationId);
     final var resultSet = this.statement.executeQuery();
 
-    final var goals = new ArrayList<GoalRecord>();
-    while (resultSet.next()) {
-      final var id = resultSet.getLong("goal_id");
-      final var goalInvocationId = resultSet.getLong("goal_invocation_id");
-      final var revision = resultSet.getLong("revision");
-      final var name = resultSet.getString("name");
-      final var definition = resultSet.getString("definition");
-      final var simulateAfter = resultSet.getBoolean("simulate_after");
-      final var type = resultSet.getString("type");
-      final var path = resultSet.getString("path");
-      final var args = resultSet.getString("arguments");
-      goals.add(new GoalRecord(
+    try {
+
+      final var goals = new ArrayList<GoalInvocationRecord>();
+      while (resultSet.next()) {
+        final var id = resultSet.getLong("goal_id");
+        final var goalInvocationId = resultSet.getLong("goal_invocation_id");
+        final var revision = resultSet.getLong("revision");
+        final var name = resultSet.getString("name");
+        final var definition = resultSet.getString("definition");
+        final var simulateAfter = resultSet.getBoolean("simulate_after");
+        final var type = resultSet.getString("type");
+        final var path = resultSet.getString("path");
+        final var args = parseJson(resultSet.getString("arguments"), new SerializedValueJsonParser());
+
+        goals.add(new GoalInvocationRecord(
             new GoalId(id, revision, Optional.of(goalInvocationId)),
             name,
-            type.equals("JAR") ? new GoalType.JAR(Path.of(path), args) : new GoalType.EDSL(new GoalSource(definition)),
+            type.equals("JAR") ? new GoalType.JAR(Path.of(path)) : new GoalType.EDSL(new GoalSource(definition)),
+            args.asMap().get(),
             simulateAfter
-      ));
+        ));
+      }
+      return goals;
+    } catch (InvalidJsonException | InvalidEntityException e) {
+      throw new RuntimeException(e);
     }
-
-    return goals;
   }
 
   @Override
