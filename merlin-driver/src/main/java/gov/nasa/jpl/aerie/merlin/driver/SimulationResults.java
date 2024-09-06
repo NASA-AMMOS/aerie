@@ -64,7 +64,7 @@ public final class SimulationResults {
     if (!(o instanceof SimulationResults that)) return false;
 
     return startTime.equals(that.startTime)
-           && duration.isEqualTo(that.duration)
+           && duration.equals(that.duration)
            && realProfiles.equals(that.realProfiles)
            && discreteProfiles.equals(that.discreteProfiles)
            && simulatedActivities.equals(that.simulatedActivities)

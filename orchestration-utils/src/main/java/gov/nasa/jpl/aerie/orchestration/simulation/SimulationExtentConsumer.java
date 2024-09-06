@@ -21,7 +21,7 @@ public class SimulationExtentConsumer implements Consumer<Duration>, AutoCloseab
       @Override
       public void run() {
         // Only print if simulation time has progressed.
-        if(!lastAcceptedDuration.isEqualTo(lastReportedDuration)) {
+        if(!lastAcceptedDuration.equals(lastReportedDuration)) {
           System.out.println("Current simulation time: " + lastAcceptedDuration);
           lastReportedDuration = lastAcceptedDuration;
         }

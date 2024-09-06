@@ -111,7 +111,7 @@ public class IntervalAlgebra {
    */
   public static boolean startBeforeStart(Interval x, Interval y) {
     return x.start.shorterThan(y.start) ||
-           (x.start.isEqualTo(y.start) && (x.includesStart() && !y.includesStart()));
+           (x.start.equals(y.start) && (x.includesStart() && !y.includesStart()));
   }
 
   /**
@@ -123,7 +123,7 @@ public class IntervalAlgebra {
    */
   public static boolean endBeforeStart(Interval x, Interval y) {
     return x.end.shorterThan(y.start) ||
-           (x.end.isEqualTo(y.start) && (!x.includesEnd() || !y.includesStart()));
+           (x.end.equals(y.start) && (!x.includesEnd() || !y.includesStart()));
   }
 
   /**
@@ -135,7 +135,7 @@ public class IntervalAlgebra {
    */
   public static boolean endBeforeEnd(Interval x, Interval y) {
     return x.end.shorterThan(y.end) ||
-           (x.end.isEqualTo(y.end) && (!x.includesEnd() && y.includesEnd()));
+           (x.end.equals(y.end) && (!x.includesEnd() && y.includesEnd()));
   }
 
   /**
@@ -265,7 +265,7 @@ public class IntervalAlgebra {
   static boolean endsStrictlyBefore(Interval x, Interval y) {
     if (x.isEmpty() || y.isEmpty()) return false;
     return x.end.shorterThan(y.start) ||
-           (x.end.isEqualTo(y.start) && (!x.includesEnd() && !y.includesStart()));
+           (x.end.equals(y.start) && (!x.includesEnd() && !y.includesStart()));
   }
 
   /**
@@ -277,7 +277,7 @@ public class IntervalAlgebra {
    */
   static boolean meets(Interval x, Interval y) {
     if (x.isEmpty() || y.isEmpty()) return false;
-    return x.end.isEqualTo(y.start) && (x.endInclusivity != y.startInclusivity);
+    return x.end.equals(y.start) && (x.endInclusivity != y.startInclusivity);
   }
 
   /**

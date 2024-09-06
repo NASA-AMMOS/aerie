@@ -115,7 +115,7 @@ public class PrioritySolver implements Solver {
     @Override
     public boolean alreadyVisited(final Duration x) {
       for(final var event:events){
-        if(event.getLeft().x().isEqualTo(x)) return true;
+        if(event.getLeft().x().equals(x)) return true;
       }
       return false;
     }
@@ -758,7 +758,7 @@ public class PrioritySolver implements Solver {
                   + "). Missing cardinality: "
                   + cardinalityLeft
                   + ", duration: "
-                  + (durationLeft.isEqualTo(ZERO) ? "N/A" : durationLeft));
+                  + (durationLeft.equals(ZERO) ? "N/A" : durationLeft));
       final var newActivity = getBestNewActivity(missingActivityTemplateConflict);
       assert newActivity != null;
       //add the activities to the output plan

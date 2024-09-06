@@ -485,7 +485,7 @@ public class SchedulingEdslIntegrationTests {
     assertEquals(1, goalResult.satisfyingActivities().size());
     final var activityCreated = results.updatedPlan
         .stream()
-        .filter(a -> a.startOffset().isEqualTo(Duration.MINUTES.times(55)))
+        .filter(a -> a.startOffset().equals(Duration.MINUTES.times(55)))
         .collect(Collectors.toSet());
     assertEquals(1, activityCreated.size());
     assertEquals(new SerializedValue.StringValue("Company"), activityCreated.iterator().next().serializedActivity().getArguments().get("producer"));
@@ -1073,7 +1073,7 @@ public class SchedulingEdslIntegrationTests {
     assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
 
     // Checking both activities start at the same time
-    assertTrue(durativeActivity.startOffset().isEqualTo(growBanana.startOffset()));
+    assertTrue(durativeActivity.startOffset().equals(growBanana.startOffset()));
 
     // Checking both activities end at the same time
     final var activitytype = results.plan.getActivitiesByType().keySet().stream().filter(w->w.getName().equals("DurationParameterActivity")).findFirst().get();
@@ -1130,7 +1130,7 @@ public class SchedulingEdslIntegrationTests {
     assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
 
     // Checking start of peelBanana corresponds to end of growBanana
-    assertTrue(peelBanana.startOffset().isEqualTo(growBanana.startOffset().plus(growBananaDuration)));
+    assertTrue(peelBanana.startOffset().equals(growBanana.startOffset().plus(growBananaDuration)));
   }
 
   /**
@@ -1350,7 +1350,7 @@ public class SchedulingEdslIntegrationTests {
     final var activitytype = results.plan.getActivitiesByType().keySet().stream().filter(w->w.getName().equals("DurationParameterActivity")).findFirst();
     if (activitytype.isEmpty())
       fail("Could not find Coexistence Goal activity type");
-    assertTrue(durationParameterActivity.startOffset().plus(results.plan.getActivitiesByType().get(activitytype.get()).get(0).duration()).isEqualTo(growBanana.startOffset().plus(growBananaDuration)));
+    assertTrue(durationParameterActivity.startOffset().plus(results.plan.getActivitiesByType().get(activitytype.get()).get(0).duration()).equals(growBanana.startOffset().plus(growBananaDuration)));
   }
 
   /**

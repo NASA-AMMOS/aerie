@@ -268,7 +268,7 @@ public final class Resources {
     if (interval.shorterThan(ZERO)) {
       throw new IllegalArgumentException("Cannot shift resource by negative interval: " + interval);
     }
-    if (interval.isEqualTo(ZERO)) {
+    if (interval.equals(ZERO)) {
       return resource;
     }
     var cell = resource(initialDynamics);

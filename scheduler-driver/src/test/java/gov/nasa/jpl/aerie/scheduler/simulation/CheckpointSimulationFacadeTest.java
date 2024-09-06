@@ -67,7 +67,7 @@ public class CheckpointSimulationFacadeTest {
     final var plan = makePlanA012(activityTypes);
     newSimulationFacade.simulateNoResults(plan, t2hr);
     //we are stopping at 2hr, at the start of the last activity so it will not have a duration in the plan
-    assertNull(plan.getActivities().stream().filter(a -> a.startOffset().isEqualTo(t2hr)).findFirst().get().duration());
+    assertNull(plan.getActivities().stream().filter(a -> a.startOffset().equals(t2hr)).findFirst().get().duration());
   }
 
   /**

@@ -106,7 +106,7 @@ public class CheckpointSimulationDriver {
   }
 
   public static Function<SimulationState, Boolean> checkpointAtEnd(Function<SimulationState, Boolean> stoppingCondition) {
-    return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.isEqualTo(MAX_VALUE);
+    return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.equals(MAX_VALUE);
   }
 
   private static Map<ActivityDirectiveId, Duration> getMinimumStartTimes(
@@ -374,7 +374,7 @@ public class CheckpointSimulationDriver {
         }
         Duration computedStartTime = offset;
         if (predecessor != null) {
-          computedStartTime = (curTime.isEqualTo(Duration.MIN_VALUE) ? Duration.ZERO : curTime).plus(offset);
+          computedStartTime = (curTime.equals(Duration.MIN_VALUE) ? Duration.ZERO : curTime).plus(offset);
         }
         final var taskId = engine.scheduleTask(
             computedStartTime,

@@ -602,11 +602,6 @@ public record Duration(long micros) implements Comparable<Duration> {
     return this.micros == 0;
   }
 
-  public boolean isEqualTo(final Duration other) {
-    if(other == null) return false;
-    return this.micros == other.micros;
-  }
-
   public static Duration parseISO8601(final String iso8601String) {
     final var javaDuration = java.time.Duration.parse(iso8601String);
     return microseconds(javaDuration.getSeconds() * 1000000L + javaDuration.getNano() / 1000L);
