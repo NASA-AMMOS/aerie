@@ -3,6 +3,7 @@ package gov.nasa.ammos.aerie.procedural.timeline.ops
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.*
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Universal
+import gov.nasa.ammos.aerie.procedural.timeline.collections.Windows
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Numbers
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Booleans
 import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceNoOp
@@ -21,6 +22,9 @@ import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOps<T, THIS>, CoalesceNoOp<T, THIS> {
 
   override fun isAlwaysSorted() = false
+
+  /** [(DOC)][highlightAll] Highlights all objects in the timeline in a new [Windows] timeline. */
+  fun highlightAll() = unsafeMap(::Windows, BoundsTransformer.IDENTITY, true) { it.interval }
 
   /** [(DOC)][merge] Combines two timelines together by overlaying them. Does not perform any transformation. */
   infix fun merge(other: GeneralOps<T, *>) = unsafeOperate { opts ->
