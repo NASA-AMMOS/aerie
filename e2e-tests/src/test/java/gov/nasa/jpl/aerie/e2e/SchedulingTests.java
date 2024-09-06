@@ -140,7 +140,6 @@ public class SchedulingTests {
     hasura.deleteMissionModel(modelId);
   }
 
-
   private void insertActivities() throws IOException {
     // Duration argument is specified on one but not the other to verify that the scheduler can pick up on effective args
     hasura.insertActivityDirective(planId, "GrowBanana", "1h", JsonValue.EMPTY_JSON_OBJECT);
