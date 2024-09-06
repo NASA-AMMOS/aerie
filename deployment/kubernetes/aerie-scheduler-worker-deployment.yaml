@@ -38,8 +38,6 @@ spec:
               value: /usr/src/app/merlin_file_store
             - name: SCHEDULER_OUTPUT_MODE
               value: UpdateInputPlanWithNewActivities
-            - name: SCHEDULER_RULES_JAR
-              value: /usr/src/app/merlin_file_store/scheduler_rules.jar
             - name: AERIE_DB_PORT
               value: "5432"
             - name: AERIE_DB_HOST
