@@ -15,7 +15,9 @@ import java.util.Optional;
 
 /*package-local*/ final class UpdateSchedulingGoalParameterSchemaAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      update scheduler.scheduling_goal_definition gd set parameter_schema=?::jsonb where gd.goal_id = ? and gd.revision = ?;
+      update scheduler.scheduling_goal_definition gd
+      set parameter_schema=?::jsonb 
+      where gd.goal_id = ? and gd.revision = ?;
       """;
 
   private final PreparedStatement statement;
