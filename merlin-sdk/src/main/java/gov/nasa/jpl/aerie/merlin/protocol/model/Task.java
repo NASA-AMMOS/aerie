@@ -65,7 +65,7 @@ public interface Task<Output> {
             return new TaskStatus.AwaitingCondition<>(s.condition(), s.continuation().andThen(task2));
           }
           case TaskStatus.CallingTask<?> s -> {
-            return new TaskStatus.CallingTask<>(s.childSpan(), s.child(), s.continuation().andThen(task2));
+            return TaskStatus.calling(s.childSpan(), s.child(), s.continuation().andThen(task2));
           }
           case TaskStatus.Delayed<?> s -> {
             return new TaskStatus.Delayed<>(s.delay(), s.continuation().andThen(task2));
@@ -76,6 +76,34 @@ public interface Task<Output> {
       @Override
       public Task<Output> duplicate(final Executor executor) {
         return Task.this.duplicate(executor).andThen(task2.duplicate(executor));
+      }
+    };
+  }
+
+  default Task<Output> andThen(Function<Output, Task<Output>> f) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<Output> step(final Scheduler scheduler) {
+        switch (Task.this.step(scheduler)) {
+          case TaskStatus.Completed<Output> s -> {
+            final var task2 = f.apply(s.returnValue());
+            return task2.step(scheduler);
+          }
+          case TaskStatus.AwaitingCondition<Output> s -> {
+            return new TaskStatus.AwaitingCondition<>(s.condition(), s.continuation().andThen(f));
+          }
+          case TaskStatus.CallingTask<Output> s -> {
+            return TaskStatus.calling(s.childSpan(), s.child(), s.continuation().andThen(f));
+          }
+          case TaskStatus.Delayed<Output> s -> {
+            return new TaskStatus.Delayed<>(s.delay(), s.continuation().andThen(f));
+          }
+        }
+      }
+
+      @Override
+      public Task<Output> duplicate(final Executor executor) {
+        return Task.this.duplicate(executor).andThen(f);
       }
     };
   }
@@ -92,7 +120,7 @@ public interface Task<Output> {
             return new TaskStatus.AwaitingCondition<>(s.condition(), s.continuation().dropOutput());
           }
           case TaskStatus.CallingTask<?> s -> {
-            return new TaskStatus.CallingTask<>(s.childSpan(), s.child(), s.continuation().dropOutput());
+            return TaskStatus.calling(s.childSpan(), s.child(), s.continuation().dropOutput());
           }
           case TaskStatus.Delayed<?> s -> {
             return new TaskStatus.Delayed<>(s.delay(), s.continuation().dropOutput());

@@ -36,9 +36,17 @@ public final class DecomposingActivity {
 
     @EffectModel
     public void run(final Mission mission) {
+      mission.plant.get();
+      mission.plant.add(1);
       call(mission, new GrandchildActivity(1));
+      mission.plant.get();
+      mission.plant.add(1);
       delay(15*24, HOURS);
+      mission.plant.get();
+      mission.plant.add(1);
       call(mission, new GrandchildActivity(2));
+      mission.plant.get();
+      mission.plant.add(1);
     }
   }
 

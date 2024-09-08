@@ -1,14 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
@@ -28,8 +31,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -39,6 +45,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -55,6 +62,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static gov.nasa.jpl.aerie.merlin.driver.SimulationDriver.deserializeActivity;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -115,7 +126,7 @@ public final class SimulationEngine implements AutoCloseable {
     timeline = new TemporalEventSource();
     referenceTimeline = new TemporalEventSource();
     cells = new LiveCells(timeline, initialCells);
-    elapsedTime = Duration.ZERO;
+    elapsedTime = ZERO;
 
     scheduledJobs = new JobSchedule<>();
     waitingTasks = new LinkedHashMap<>();
@@ -194,7 +205,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Start daemon task(s) immediately, before anything else happens.
-    this.scheduleTask(Duration.ZERO, daemons, new TaskEntryPoint.Daemon(TaskEntryPoint.freshId()));
+    this.scheduleTask(ZERO, daemons, new TaskEntryPoint.Daemon(TaskEntryPoint.freshId()));
     {
       final var batch = this.extractNextJobs(Duration.MAX_VALUE);
       final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -203,6 +214,207 @@ public final class SimulationEngine implements AutoCloseable {
       }
       if (results.error.isPresent()) {
         throw results.error.get();
+      }
+    }
+  }
+
+  public <Model> void hydrateInitialConditions(
+      final MissionModel<Model> missionModel,
+      final ExecutorService executor,
+      final SerializedValue incons, final LiveCells cells)
+  {
+    final var tasks = new LinkedHashMap<String, SimulationDriver.MyTask<?>>();
+    for (final var serializedTask : incons.asMap().get().get("tasks").asList().get()) {
+      final var entrypoint = serializedTask.asMap().get().get("entrypoint").asMap().get();
+
+      final var id = entrypoint.get("id").asString().get();
+
+      switch (entrypoint.get("type").asString().get()) {
+        case "directive" -> {
+          final var directive = entrypoint.get("directive").asMap().get();
+          final var startTime = Timestamp.fromString(entrypoint.get("startTime").asString().get()).toInstant();
+          final var type = directive.get("type").asString().get();
+          final var args = directive.get("args").asMap().get();
+          final var taskFactory = deserializeActivity(missionModel, new SerializedActivity(type, args));
+          final var steps = serializedTask.asMap().get().get("steps").asInt().get();
+          final var numChildren = serializedTask.asMap().get().get("children").asInt().get();
+          final Optional<TaskEntryPoint.ParentReference> parentReference;
+          if (!entrypoint.get("parentId").isNull()) {
+            parentReference = Optional.of(new TaskEntryPoint.ParentReference(entrypoint.get("parentId").asString().get(), entrypoint.get("childNumber").asInt().get()));
+          } else {
+            parentReference = Optional.empty();
+          }
+          final List<SerializedValue> readLog = serializedTask.asMap().get().get("reads").asList().get();
+          final Duration lastStepTime = Duration.of(
+              serializedTask.asMap().get().get("lastStepTime").asInt().get(),
+              MICROSECONDS);
+          tasks.put(id, new SimulationDriver.MyTask<>(new MutableObject<>(taskFactory), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Directive(id, startTime, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
+        }
+
+        case "subtask" -> {
+          final var parentId = entrypoint.get("parentId").asString().get();
+          final var childNumber = entrypoint.get("childNumber").asInt().get();
+          final var parentReference = new TaskEntryPoint.ParentReference(parentId, childNumber);
+          final var steps = serializedTask.asMap().get().get("steps").asInt().get();
+          final var numChildren = serializedTask.asMap().get().get("children").asInt().get();
+          final List<SerializedValue> readLog = serializedTask.asMap().get().get("reads").asList().get();
+          final Duration lastStepTime = Duration.of(
+              serializedTask.asMap().get().get("lastStepTime").asInt().get(),
+              MICROSECONDS);
+          tasks.put(id, new SimulationDriver.MyTask<>(new MutableObject<>(null), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Subtask(id, parentReference), new ArrayList<>()));
+        }
+
+        case "system" -> {
+        }
+
+        case "daemon" -> {
+          // TODO
+        }
+      }
+    }
+
+    var rootIds = new LinkedHashSet<>(tasks.keySet());
+    for (final var entry : tasks.entrySet()) {
+      final var task = entry.getValue();
+      if (task.entrypoint().parent().isPresent()) {
+        final var parent = tasks.get(task.entrypoint().parent().get().id());
+        if (parent != null) {
+          parent.childrenToRestart().add(task);
+          rootIds.remove(entry.getKey());
+        }
+        if (task.task().getValue() == null) {
+          rootIds.remove(entry.getKey()); // Cannot restart this task
+        }
+      }
+    }
+
+    final var roots = new ArrayList<SimulationDriver.MyTask<?>>();
+    for (final var taskId : rootIds) {
+      roots.add(tasks.get(taskId));
+    }
+
+    final Set<Topic<?>> topics = new LinkedHashSet<>();
+    for (final SerializableTopic<?> topic$ : missionModel.getTopics()) {
+      if (topic$.name().startsWith("ActivityType.Input.") || topic$.name().startsWith("ActivityType.Output.")) {
+        topics.add(topic$.topic());
+      }
+    }
+
+    for (final var task : roots) {
+      instantiateTask(Optional.empty(), Optional.empty(), task, cells, executor, topics);
+    }
+  }
+
+  private <T> void instantiateTask(Optional<TaskId> caller, Optional<SpanId> parentSpan, SimulationDriver.MyTask<T> readyTask, final LiveCells cells, ExecutorService executor, Set<Topic<?>> topics) {
+    // Make a TaskId for this task. For convenience, let's reuse the id from the incons
+    final var taskId = new TaskId(readyTask.entrypoint().id());
+    final var span = SpanId.generate();
+    this.spans.put(span, new Span(parentSpan, ZERO, Optional.empty()));
+    parentSpan.ifPresent($ -> this.spanContributorCount.get($).increment());
+    this.spanContributorCount.put(span, new MutableInt(1));
+    this.taskSpan.put(taskId, span); // TODO should it always be fresh? Probably not
+
+    final var readIterator = readyTask.readLog().iterator();
+    final var childCounter = new MutableLong(0);
+
+    final var fakeScheduler = new Scheduler() {
+      @Override
+      public <State> State get(final CellId<State> cellId) {
+        final var query = ((EngineCellId<?, State>) cellId);
+        // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
+        //  if the same state is requested multiple times in a row.
+        return cells.getCell(query.query()).get().deserialize(readIterator.next()).getState();
+      }
+
+      @Override
+      public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
+        if (topics.contains(topic)) {
+          // Actually emit the event
+          SimulationEngine.this.timeline.add(EventGraph.atom(Event.create(topic, event, span, taskId)));
+        }
+      }
+
+      @Override
+      public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {
+        for (final var waitingChild : readyTask.childrenToRestart()) {
+          if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
+            waitingChild.setTaskFactory(task);
+
+            taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
+            instantiateTask(caller, Optional.of(span), waitingChild, cells, executor, topics);
+
+            final var callerBlockCount = SimulationEngine.this.blockedTasks.get(taskId);
+            if (callerBlockCount != null) callerBlockCount.increment();
+          }
+        }
+        childCounter.increment();
+      }
+    };
+    TaskStatus<T> status = null;
+    Task<T> task$ = readyTask.task().getValue().create(executor);
+    for (var i = 0; i < readyTask.steps(); i++) {
+      status = task$.step(fakeScheduler);
+      switch (status) {
+        case TaskStatus.CallingTask<T> s -> {
+          for (final var waitingChild : readyTask.childrenToRestart()) {
+            if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
+              waitingChild.setTaskFactory(s.child());
+              taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
+              this.blockedTasks.put(taskId, new MutableInt(1)); // TODO this counter is probably wrong. Check spawn case
+              instantiateTask(Optional.of(taskId), Optional.of(span), waitingChild, cells, executor, topics);
+            }
+          }
+          childCounter.increment();
+        }
+        case TaskStatus.AwaitingCondition<T> s -> {
+          task$ = s.continuation();
+        }
+        case TaskStatus.Completed<T> s -> {
+          SimulationEngine.this.spanContributorCount.get(span).decrement();
+        }
+        case TaskStatus.Delayed<T> s -> {
+          task$ = s.continuation();
+        }
+      }
+    }
+
+    this.entrypoints.put(taskId, readyTask.entrypoint());
+    this.lastStepTime.put(taskId, readyTask.lastStepTime());
+    this.readLog.put(taskId, new ArrayList<>(readyTask.readLog()));
+    this.taskSteps.put(taskId, (int) readyTask.steps());
+    this.childCount.put(taskId, (int) readyTask.numChildren());
+    this.taskSpan.put(taskId, span);
+
+    final var progress = new ExecutionState<>(span, caller, task$);
+
+    switch (status) {
+      case TaskStatus.Completed<T> s -> {
+        // This task is finished; nothing to do
+      }
+
+      case TaskStatus.Delayed<T> s -> {
+        if (s.delay().isNegative()) {
+          throw new IllegalArgumentException("Attempted to restart a task that should have stepped in the past");
+        }
+
+        this.tasks.put(taskId, progress.continueWith(s.continuation()));
+        this.scheduledJobs.schedule(JobId.forTask(taskId), SubInstant.Tasks.at(s.delay().plus(readyTask.lastStepTime())));
+        this.tasks.put(taskId, progress);
+      }
+
+      case TaskStatus.CallingTask<T> s -> {
+        // INVARIANT: If the above stepping code hits a CallingTask for an unfinished activity, that must be its final status
+        // All the work for this case was done above.
+        this.tasks.put(taskId, progress);
+      }
+
+      case TaskStatus.AwaitingCondition<T> s -> {
+        final var condition = ConditionId.generate();
+        this.conditions.put(condition, s.condition());
+        this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(ZERO)); // TODO Can we skip triggering the condition at time 0?
+
+        this.waitingTasks.put(condition, taskId);
+        this.tasks.put(taskId, progress.continueWith(s.continuation()));
       }
     }
   }
@@ -529,12 +741,10 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Spawn the child task.
         final var childTask = TaskId.generate();
-        if (entrypoints.get(task) != null) {
-          entrypoints.put(childTask,
-                          new TaskEntryPoint.Subtask(
-                              TaskEntryPoint.freshId(),
-                              new TaskEntryPoint.ParentReference(entrypoints.get(task).id(), childCount.get(task))));
-        }
+        entrypoints.put(childTask, new TaskEntryPoint.Subtask(
+            TaskEntryPoint.freshId(),
+            new TaskEntryPoint.ParentReference(entrypoints.get(task).id(), childCount.get(task))));
+
         childCount.put(childTask, 0);
         childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
         taskParent.put(childTask, task);
@@ -767,7 +977,7 @@ public final class SimulationEngine implements AutoCloseable {
     return new DirectiveDetail(
         directiveSpanId.map(spanInfo::getDirective),
         // remove null activities from the stack trace and reverse order
-        activityStackTrace.stream().filter(a -> a != null).collect(Collectors.toList()).reversed());
+        activityStackTrace.stream().filter(Objects::nonNull).collect(Collectors.toList()).reversed());
   }
 
   public record SimulationActivityExtract(
@@ -917,7 +1127,7 @@ public final class SimulationEngine implements AutoCloseable {
       final HashMap<SpanId, ActivityInstanceId> spanToActivities,
       final HashMap<SerializableTopic<?>, Integer> serializableTopicToId) {
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<EventRecord>>>();
-    var time = Duration.ZERO;
+    var time = ZERO;
     for (var point : combinedTimeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
@@ -1106,7 +1316,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** A handle for processing requests and effects from a modeled task. */
-  private final class EngineScheduler implements Scheduler {
+  public final class EngineScheduler implements Scheduler {
     private final Duration currentTime;
     private final SpanId span;
     private final TaskId taskId;
@@ -1152,6 +1362,10 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public void spawn(final InSpan inSpan, final TaskFactory<?> state) {
+      spawn(inSpan, state, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
+    }
+
+    public void spawn(final InSpan inSpan, final TaskFactory<?> state, final TaskEntryPoint entrypoint) {
       // Prepare a span for the child task
       final var childSpan = switch (inSpan) {
         case Parent -> this.span;
@@ -1165,10 +1379,11 @@ public final class SimulationEngine implements AutoCloseable {
       };
 
       final var childTask = TaskId.generate();
-      if (entrypoints.get(taskId) != null) entrypoints.put(childTask, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
+
+      entrypoints.put(childTask, entrypoint);
       childCount.put(childTask, 0);
-      taskParent.put(childTask, taskId);
       childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
+      taskParent.put(childTask, taskId);
 
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
       SimulationEngine.this.tasks.put(
@@ -1181,6 +1396,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.frame.signal(JobId.forTask(childTask));
 
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
+    }
+
+    public SimulationEngine engine() {
+      return SimulationEngine.this;
     }
   }
 

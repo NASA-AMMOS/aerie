@@ -86,7 +86,9 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
 
 ### Bootstrapping
 - [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
-- [ ] Demonstrate spans that continue from a previous plan
+- [x] Demonstrate spans that continue from a previous plan
+- [ ] Demonstrate that child spans are correctly associated with parent spans
+- [ ] Demonstrate that events are correctly associated with spans that continued from the previous plan
 
 Two primary cases:
 - A restarted task finishes during this simulation
@@ -100,6 +102,7 @@ We do not want to deal with rerunning the rerunner - i.e. we want to propagate t
 
 - [x] Allow user to select EITHER simconfig OR incons from a given simulation.
 
+- [ ] Demonstrate computed attributes
 - [ ] Demonstrate poking in new values
 - [ ] Demonstrate conditionally omitting activities from being restarted
 - [ ] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it?
