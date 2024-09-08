@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 public record CachedSimulationEngine(
       Duration endsAt,
@@ -29,7 +30,7 @@ public record CachedSimulationEngine(
     // Specify a topic on which tasks can log the activity they're associated with.
     final var activityTopic = new Topic<ActivityDirectiveId>();
     try {
-      engine.init(missionModel.getResources(), missionModel.getDaemon());
+      engine.init(missionModel.getResources(), Optional.of(missionModel.getDaemon()));
 
       return new CachedSimulationEngine(
           Duration.MIN_VALUE,

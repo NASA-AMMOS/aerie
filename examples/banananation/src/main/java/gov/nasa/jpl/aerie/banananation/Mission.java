@@ -16,9 +16,12 @@ import spice.basic.SpiceErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 
 import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.discreteResource;
 import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.realResource;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.spawn;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.waitUntil;
 
 public final class Mission {
   public final Accumulator fruit;
@@ -53,6 +56,16 @@ public final class Mission {
     } catch (final SpiceErrorException ex) {
       throw new Error(ex);
     }
+
+    spawn(() -> {
+      var stepCount = 0;
+      while (true) {
+        final var currentPlant = this.plant.get();
+        waitUntil(this.plant.is(currentPlant).not());
+        this.peel.add(stepCount - this.peel.get());
+        stepCount += 1;
+      }
+    });
   }
 
   private static int countLines(final Path path) {

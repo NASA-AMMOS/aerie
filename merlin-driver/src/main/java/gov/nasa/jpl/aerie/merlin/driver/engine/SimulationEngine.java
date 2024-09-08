@@ -192,7 +192,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
-  public void init(Map<String, Resource<?>> resources, TaskFactory<Unit> daemons) throws Throwable {
+  public void init(Map<String, Resource<?>> resources, Optional<TaskFactory<Unit>> daemons) throws Throwable {
     // Begin tracking all resources.
     for (final var entry : resources.entrySet()) {
       final var name = entry.getKey();
@@ -201,26 +201,36 @@ public final class SimulationEngine implements AutoCloseable {
       this.trackResource(name, resource, elapsedTime);
     }
 
-    // Start daemon task(s) immediately, before anything else happens.
-    this.scheduleTask(ZERO, daemons, new TaskEntryPoint.Daemon(TaskEntryPoint.freshId()));
-    {
-      final var batch = this.extractNextJobs(Duration.MAX_VALUE);
-      final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-      for (final var commit : results.commits()) {
-        timeline.add(commit);
+    if (daemons.isPresent()) {
+      // Start daemon task(s) immediately, before anything else happens.
+      this.scheduleTask(ZERO, daemons.get(), new TaskEntryPoint.Daemon(TaskEntryPoint.freshId()));
+      {
+        final var batch = this.extractNextJobs(Duration.MAX_VALUE);
+        final var results = this.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        for (final var commit : results.commits()) {
+          timeline.add(commit);
+        }
+        if (results.error.isPresent()) {
+          throw results.error.get();
+        }
       }
-      if (results.error.isPresent()) {
-        throw results.error.get();
-      }
+    }
+  }
+
+  private record MyTask<T>(MutableObject<TaskFactory<T>> task, long steps, long numChildren, List<SerializedValue> readLog, Duration lastStepTime, TaskEntryPoint entrypoint, List<MyTask<?>> childrenToRestart) {
+    public <F> void setTaskFactory(TaskFactory<F> taskFactory) {
+      this.task.setValue((TaskFactory<T>) taskFactory);
     }
   }
 
   public <Model> void hydrateInitialConditions(
       final MissionModel<Model> missionModel,
       final ExecutorService executor,
-      final SerializedValue incons, final LiveCells cells, final Instant simulationStartTime)
-  {
-    final var tasks = new LinkedHashMap<String, SimulationDriver.MyTask<?>>();
+      final SerializedValue incons,
+      final LiveCells cells,
+      final Instant simulationStartTime
+  ) {
+    final var tasks = new LinkedHashMap<String, MyTask<?>>();
     for (final var serializedTask : incons.asMap().get().get("tasks").asList().get()) {
       final var entrypoint = serializedTask.asMap().get().get("entrypoint").asMap().get();
 
@@ -245,7 +255,7 @@ public final class SimulationEngine implements AutoCloseable {
           final Duration lastStepTime = Duration.of(
               serializedTask.asMap().get().get("lastStepTime").asInt().get(),
               MICROSECONDS);
-          tasks.put(id, new SimulationDriver.MyTask<>(new MutableObject<>(taskFactory), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Directive(id, startTime, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
+          tasks.put(id, new MyTask<>(new MutableObject<>(taskFactory), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Directive(id, startTime, new SerializedActivity(type, args), parentReference), new ArrayList<>()));
         }
 
         case "subtask" -> {
@@ -258,14 +268,20 @@ public final class SimulationEngine implements AutoCloseable {
           final Duration lastStepTime = Duration.of(
               serializedTask.asMap().get().get("lastStepTime").asInt().get(),
               MICROSECONDS);
-          tasks.put(id, new SimulationDriver.MyTask<>(new MutableObject<>(null), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Subtask(id, parentReference), new ArrayList<>()));
+          tasks.put(id, new MyTask<>(new MutableObject<>(null), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Subtask(id, parentReference), new ArrayList<>()));
         }
 
         case "system" -> {
         }
 
         case "daemon" -> {
-          // TODO
+          final var steps = serializedTask.asMap().get().get("steps").asInt().get();
+          final var numChildren = serializedTask.asMap().get().get("children").asInt().get();
+          final List<SerializedValue> readLog = serializedTask.asMap().get().get("reads").asList().get();
+          final Duration lastStepTime = Duration.of(
+              serializedTask.asMap().get().get("lastStepTime").asInt().get(),
+              MICROSECONDS);
+          tasks.put(id, new MyTask<>(new MutableObject<>(missionModel.getDaemon()), steps, numChildren, readLog, lastStepTime, new TaskEntryPoint.Daemon(id), new ArrayList<>()));
         }
       }
     }
@@ -285,7 +301,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    final var roots = new ArrayList<SimulationDriver.MyTask<?>>();
+    final var roots = new ArrayList<MyTask<?>>();
     for (final var taskId : rootIds) {
       roots.add(tasks.get(taskId));
     }
@@ -302,7 +318,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  private <T> void instantiateTask(Optional<TaskId> caller, Optional<SpanId> parentSpan, SimulationDriver.MyTask<T> readyTask, final LiveCells cells, ExecutorService executor, Set<Topic<?>> topics, Instant simulationStartTime) {
+  private <T> void instantiateTask(Optional<TaskId> caller, Optional<SpanId> parentSpan, MyTask<T> readyTask, final LiveCells cells, ExecutorService executor, Set<Topic<?>> topics, Instant simulationStartTime) {
     // Make a TaskId for this task. For convenience, let's reuse the id from the incons
     final var taskId = new TaskId(readyTask.entrypoint().id());
     final var span = SpanId.generate();
@@ -369,7 +385,18 @@ public final class SimulationEngine implements AutoCloseable {
           task$ = s.continuation();
         }
         case TaskStatus.Completed<T> s -> {
-          SimulationEngine.this.spanContributorCount.get(span).decrement();
+          var span$ = span;
+          while (true) {
+            if (this.spanContributorCount.get(span$).decrementAndGet() > 0) break;
+            this.spanContributorCount.remove(span$);
+
+            this.spans.compute(span$, (_id, $) -> $.close(ZERO));
+
+            final var span$$ = this.spans.get(span$).parent;
+            if (span$$.isEmpty()) break;
+
+            span$ = span$$.get();
+          }
         }
         case TaskStatus.Delayed<T> s -> {
           task$ = s.continuation();
@@ -694,6 +721,9 @@ public final class SimulationEngine implements AutoCloseable {
         // TERMINATION: The span hierarchy is a finite tree, so eventually we find a parentless span.
         var span = scheduler.span;
         while (true) {
+          if (this.spanContributorCount.get(span) == null) {
+            throw new IllegalStateException();
+          }
           if (this.spanContributorCount.get(span).decrementAndGet() > 0) break;
           this.spanContributorCount.remove(span);
 

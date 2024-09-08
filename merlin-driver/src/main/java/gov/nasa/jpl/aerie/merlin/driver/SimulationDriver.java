@@ -91,7 +91,11 @@ public final class SimulationDriver {
       final var activityTopic = new Topic<ActivityDirectiveId>();
 
       try {
-        engine.init(missionModel.getResources(), missionModel.getDaemon());
+        if (incons.isEmpty()) {
+          engine.init(missionModel.getResources(), Optional.of(missionModel.getDaemon()));
+        } else {
+          engine.init(missionModel.getResources(), Optional.empty());
+        }
 
         // Get all activities as close as possible to absolute time
         // Schedule all activities.
@@ -215,48 +219,6 @@ public final class SimulationDriver {
       final var topics = missionModel.getTopics();
       final var results = engine.computeResults(simulationStartTime, activityTopic, topics, resourceManager);
 
-//      var nextId = results.simulatedActivities.keySet().stream().map(ActivityInstanceId::id).max(Comparator.comparingLong($ -> $)).orElse(0L) + 1;
-//
-//      if (incons.isPresent()) {
-//        for (final var serializedTask : incons.get().asMap().get().get("tasks").asList().get()) {
-//          final var entrypoint = serializedTask.asMap().get().get("entrypoint").asMap().get();
-//          if (entrypoint.get("type").asString().get().equals("directive")) {
-//            final Duration duration = task.getRight().getValue() == null ? null : Duration
-//                .of(
-//                    s
-//                        .startTime()
-//                        .until(
-//                            simulationStartTime,
-//                            ChronoUnit.MICROS),
-//                    MICROSECONDS)
-//                .plus(task.getRight().getValue());
-//
-//            if (duration == null) {
-//              results.unfinishedActivities.put(
-//                  new ActivityInstanceId(nextId++),
-//                  new UnfinishedActivity(
-//                      s.directive().getTypeName(),
-//                      s.directive().getArguments(),
-//                      s.startTime(),
-//                      null,
-//                      List.of(),
-//                      Optional.empty()));
-//            } else {
-//              results.simulatedActivities.put(
-//                  new ActivityInstanceId(nextId++),
-//                  new ActivityInstance(
-//                      s.directive().getTypeName(),
-//                      s.directive().getArguments(),
-//                      s.startTime(),
-//                      duration,
-//                      null,
-//                      List.of(),
-//                      Optional.empty(),
-//                      SerializedValue.of(Map.of())));
-//            }
-//          }
-//        }
-//      }
       return Pair.of(results, fincons);
     }
   }
@@ -358,32 +320,13 @@ public final class SimulationDriver {
     ));
   }
 
-  public record TaskInfo(TaskFactory<?> taskFactory, TaskEntryPoint entrypoint) {}
-
-  public record InitialConditions(LiveCells cells, List<TaskInfo> rootTasks, List<Pair<TaskEntryPoint, MutableObject<Duration>>> subtasks) {
-    List<Pair<TaskEntryPoint, MutableObject<Duration>>> allTasks() {
-      final var result = new ArrayList<Pair<TaskEntryPoint, MutableObject<Duration>>>();
-      for (final var root : rootTasks) {
-        result.add(Pair.of(root.entrypoint, new MutableObject<>()));
-      }
-      result.addAll(subtasks);
-      return result;
-    }
-  }
-
-  public record MyTask<T>(MutableObject<TaskFactory<T>> task, long steps, long numChildren, List<SerializedValue> readLog, Duration lastStepTime, TaskEntryPoint entrypoint, List<MyTask<?>> childrenToRestart) {
-    public <F> void setTaskFactory(TaskFactory<F> taskFactory) {
-      this.task.setValue((TaskFactory<T>) taskFactory);
-    }
-  }
-
   // This method is used as a helper method for executing unit tests
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine(missionModel.getInitialCells())) {
       // Track resources and kick off daemon tasks
       try {
-        engine.init(missionModel.getResources(), missionModel.getDaemon());
+        engine.init(missionModel.getResources(), Optional.of(missionModel.getDaemon()));
       } catch (Throwable t) {
         throw new RuntimeException("Exception thrown while starting daemon tasks", t);
       }
