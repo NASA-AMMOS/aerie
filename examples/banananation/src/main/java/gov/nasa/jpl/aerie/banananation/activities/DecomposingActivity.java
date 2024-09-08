@@ -35,7 +35,7 @@ public final class DecomposingActivity {
     }
 
     @EffectModel
-    public void run(final Mission mission) {
+    public int run(final Mission mission) {
       mission.plant.get();
       mission.plant.add(1);
       call(mission, new GrandchildActivity(1));
@@ -47,6 +47,7 @@ public final class DecomposingActivity {
       call(mission, new GrandchildActivity(2));
       mission.plant.get();
       mission.plant.add(1);
+      return mission.plant.get();
     }
   }
 

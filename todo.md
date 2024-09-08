@@ -85,18 +85,16 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
 - [x] Demonstrate restarting anonymous subtasks
 
 ### Bootstrapping
-- [ ] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
+- [x] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
 - [x] Demonstrate spans that continue from a previous plan
-- [ ] Demonstrate that child spans are correctly associated with parent spans
-- [ ] Demonstrate that events are correctly associated with spans that continued from the previous plan
+- [x] Demonstrate that child spans are correctly associated with parent spans
+- [x] Demonstrate that events are correctly associated with spans that continued from the previous plan
 
 Two primary cases:
 - A restarted task finishes during this simulation
 - A restarted task is still unfinished at the end of simulation
 
 We do not want to deal with rerunning the rerunner - i.e. we want to propagate the original entrypoint only.
-
-
 
 ### Rest
 
