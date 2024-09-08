@@ -16,7 +16,7 @@ import spice.basic.SpiceErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.discreteResource;
 import static gov.nasa.jpl.aerie.contrib.metadata.UnitRegistrar.realResource;
@@ -31,8 +31,25 @@ public final class Mission {
   public final Counter<Integer> plant;
   public final Register<String> producer;
   public final Register<Integer> dataLineCount;
+  public final Optional<Register<Integer>> numCell;
+  public final Optional<Register<String>> stringCell;
 
   public Mission(final Registrar registrar, final Configuration config) {
+
+    if (config.includeNumCell()) {
+      this.numCell = Optional.of(Register.forImmutable(0));
+      registrar.topic("numCell", this.numCell.get().ref, new IntegerValueMapper());
+    } else {
+      this.numCell = Optional.empty();
+    }
+
+    if (config.includeStringCell()) {
+      this.stringCell = Optional.of(Register.forImmutable(""));
+      registrar.topic("stringCell", this.stringCell.get().ref, new StringValueMapper());
+    } else {
+      this.stringCell = Optional.empty();
+    }
+
     this.fruit = new Accumulator(config.initialConditions().fruit(), 0.0);
     this.peel = AdditiveRegister.create(config.initialConditions().peel());
     this.flag = Register.forImmutable(config.initialConditions().flag(), new EnumValueMapper<>(Flag.class));
@@ -64,6 +81,21 @@ public final class Mission {
         waitUntil(this.plant.is(currentPlant).not());
         this.peel.add(stepCount - this.peel.get());
         stepCount += 1;
+      }
+    });
+
+    spawn(() -> {
+      while (true) {
+        final var currentPlant = this.plant.get();
+        waitUntil(this.plant.is(currentPlant).not());
+        if (config.includeNumCell()) {
+          final var numCell = this.numCell.get();
+          numCell.set(numCell.get() + 1);
+        }
+        if (config.includeStringCell()) {
+          final var stringCell = this.stringCell.get();
+          stringCell.set(stringCell.get());
+        }
       }
     });
   }

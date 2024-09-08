@@ -59,7 +59,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Timestamp endTime = simulation.simulationEndTime();
       final var arguments = new HashMap<String, SerializedValue>();
 
-      if (simulation.simulationTemplateId().isPresent()) {
+      if (simulation.prequel().isPresent()) {
+        final var prequelRecord = getSimulationDatasetRecord(connection, simulation.prequel().get());
+        arguments.putAll(prequelRecord.get().arguments());
+      } else if (simulation.simulationTemplateId().isPresent()) {
           try (final var getSimulationTemplate = new GetSimulationTemplateAction(connection)) {
             final var templateOptional = getSimulationTemplate.get(simulation.simulationTemplateId().get());
             if (templateOptional.isEmpty()) {
@@ -73,7 +76,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         throw new RuntimeException("Simulation bounds are not fully defined. Unable to simulate.");
       }
 
-      arguments.putAll(simulation.arguments());
+      if (simulation.prequel().isEmpty()) {
+        arguments.putAll(simulation.arguments());
+      }
 
       final var dataset = createSimulationDataset(
           connection,

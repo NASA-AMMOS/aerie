@@ -72,7 +72,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           canceled,
           simulationStart,
           simulationEnd,
-          simulationDatasetId
+          simulationDatasetId,
+          arguments
       );
     }
   }

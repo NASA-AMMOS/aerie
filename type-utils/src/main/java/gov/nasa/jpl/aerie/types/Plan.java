@@ -27,7 +27,7 @@ public final class Plan {
 
   public sealed interface InitialConditions {
     record FromArguments(Map<String, SerializedValue> configuration) implements InitialConditions {}
-    record FromFincons(SerializedValue fincons) implements InitialConditions {}
+    record FromFincons(SerializedValue fincons, Map<String, SerializedValue> originalArguments) implements InitialConditions {}
   }
 
   public Plan(

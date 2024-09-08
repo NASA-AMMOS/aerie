@@ -1,13 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
 import gov.nasa.jpl.aerie.types.Timestamp;
 import org.intellij.lang.annotations.Language;
 
+import javax.json.Json;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 
 /*package-local*/ final class LookupSimulationDatasetAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
@@ -33,7 +38,8 @@ import java.util.Optional;
           d.canceled as canceled,
           to_char(d.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
           to_char(d.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time,
-          d.id as id
+          d.id as id,
+          d.arguments as arguments
       from merlin.simulation_dataset as d
       left join revisions as r
         on d.simulation_id = r.sim_id
@@ -63,6 +69,8 @@ import java.util.Optional;
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) return Optional.empty();
 
+      // MD: TODO I think this query can return multiple values. Is that okay?
+
       final Status status;
       try {
         status = Status.fromString(results.getString(2));
@@ -77,6 +85,7 @@ import java.util.Optional;
       final var simulationEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
       final var simulationDatasetId = results.getLong("id");
       final var state = new SimulationStateRecord(status, reason);
+      final var arguments = parseSerializedValue(results.getString("arguments")).asMap().get();
 
       return Optional.of(
           new SimulationDatasetRecord(
@@ -86,9 +95,23 @@ import java.util.Optional;
               canceled,
               simulationStartTime,
               simulationEndTime,
-              simulationDatasetId));
+              simulationDatasetId,
+              arguments));
     }
   }
+
+  private static SerializedValue parseSerializedValue(final String value) {
+    final SerializedValue serializedValue;
+    try (
+        final var serializedValueReader = Json.createReader(new StringReader(value))
+    ) {
+      serializedValue = serializedValueP
+          .parse(serializedValueReader.readValue())
+          .getSuccessOrThrow();
+    }
+    return serializedValue;
+  }
+
 
   @Override
   public void close() throws SQLException {

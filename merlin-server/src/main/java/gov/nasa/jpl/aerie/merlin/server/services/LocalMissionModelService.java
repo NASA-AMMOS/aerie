@@ -209,7 +209,7 @@ public final class LocalMissionModelService implements MissionModelService {
         // The return value is intentionally ignored - we are only interested in failures
         final var specType = Optional
         .ofNullable(registry.directiveTypes().get(act.getTypeName()))
-        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(act.getTypeName()));
+        .orElseThrow(() -> new NoSuchActivityTypeException(act.getTypeName()));
         specType.getInputType().getEffectiveArguments(act.getArguments());
       } catch (final NoSuchActivityTypeException ex) {
         failures.put(id, new ActivityInstantiationFailure.NoSuchActivityType(ex));
@@ -321,7 +321,10 @@ public final class LocalMissionModelService implements MissionModelService {
         loadAndInstantiateMissionModel(
             plan.missionModelId(),
             plan.planStartInstant(),
-            plan.initialConditions instanceof Plan.InitialConditions.FromArguments c ? SerializedValue.of(c.configuration()) : SerializedValue.of(Map.of())),
+            switch (plan.initialConditions) {
+              case Plan.InitialConditions.FromArguments c -> SerializedValue.of(c.configuration());
+              case Plan.InitialConditions.FromFincons c -> SerializedValue.of(c.originalArguments());
+            }),
         plan.activityDirectives(),
         plan.simulationStartInstant(),
         plan.simulationDuration(),

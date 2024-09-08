@@ -335,8 +335,10 @@ public final class SimulationEngine implements AutoCloseable {
       @Override
       public <State> State get(final CellId<State> cellId) {
         final var query = ((EngineCellId<?, State>) cellId);
-        // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
-        //  if the same state is requested multiple times in a row.
+        final var cell = cells.getCell(query.query());
+        if (cell.isEmpty()) {
+          throw new IllegalStateException();
+        }
         return cells.getCell(query.query()).get().deserialize(readIterator.next()).getState();
       }
 

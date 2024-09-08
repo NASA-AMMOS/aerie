@@ -194,18 +194,8 @@ public final class SimulationDriver {
             if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId(), "SimulationDriver serializing tasks");
           }
 
-          final List<SerializedValue> oldReadLog = new ArrayList<>();
-          if (incons.isPresent()) {
-            for (final var serializedTask : incons.get().asMap().get().get("tasks").asList().get()) {
-              if (entrypointId.equals(serializedTask.asMap().get().get("entrypoint").asMap().get().get("id").asString().get())) {
-                oldReadLog.addAll(serializedTask.asMap().get().get("reads").asList().get());
-                break;
-              }
-            }
-          }
-
           if (!(entrypoint instanceof TaskEntryPoint.SystemTask)) {
-            serializedTasks.add(serializeTask(engine, task, entrypoint, oldReadLog));
+            serializedTasks.add(serializeTask(engine, task, entrypoint));
           }
         }
         missingTasks = setDifference(tasksNeeded, tasksSaved);
@@ -256,7 +246,7 @@ public final class SimulationDriver {
     return aCopy;
   }
 
-  private static SerializedValue serializeTask(SimulationEngine engine, TaskId task, TaskEntryPoint entrypoint, List<SerializedValue> oldReadLog) {
+  private static SerializedValue serializeTask(SimulationEngine engine, TaskId task, TaskEntryPoint entrypoint) {
     final var lastStepTime = engine.lastStepTime.get(task);
     final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
     final var numSteps = engine.taskSteps.get(task);
@@ -307,12 +297,9 @@ public final class SimulationDriver {
       ));
     };
 
-    final var combinedReadLog = new ArrayList<>(oldReadLog);
-    combinedReadLog.addAll(readLog);
-
     return SerializedValue.of(Map.of(
         "entrypoint", serializedEntryPoint,
-        "reads", SerializedValue.of(combinedReadLog),
+        "reads", SerializedValue.of(readLog),
         "steps", numSteps == null ? SerializedValue.NULL : SerializedValue.of(numSteps),
         "children", numSteps == null ? SerializedValue.NULL : SerializedValue.of(numChildren),
         "lastStepTime", lastStepTime == null ? SerializedValue.NULL : SerializedValue.of(lastStepTime.minus(engine.getElapsedTime()).in(MICROSECONDS)),  // expected to be negative

@@ -3,9 +3,9 @@
 
 - [x] Proof of concept: Save serialized cells to file
 - [x] Proof of concept: Restore cells from file
-- [ ] Properly manage files
+- [x] Properly manage files (by storing them in the database)
 - [ ] Design test case for save-and-restore without any tasks or activities
-- [ ] Formulate plan for deserializing tasks
+- [x] Formulate plan for deserializing tasks
 - [ ] Design test case for save-and-restore with tasks or activities
 
 ## Problem statement
@@ -97,10 +97,9 @@ Two primary cases:
 We do not want to deal with rerunning the rerunner - i.e. we want to propagate the original entrypoint only.
 
 ### Rest
-
 - [x] Allow user to select EITHER simconfig OR incons from a given simulation.
 
-- [ ] Demonstrate computed attributes
+- [x] Demonstrate computed attributes
 - [ ] Demonstrate poking in new values
 - [ ] Demonstrate conditionally omitting activities from being restarted
 - [ ] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it?
@@ -110,14 +109,14 @@ We do not want to deal with rerunning the rerunner - i.e. we want to propagate t
 - [ ] Make sure that tasks that have finished (but are merely awaiting spawned children) do not retain a longer than necessary readLog
       and do not get stepped up past the start of their last unfinished non-directive child. However they DO need to be maintained in order
       to restart their children
-- [ ] Consider the implications of the extra step, and whether we could/should try to avoid it
+- [ ] Consider the implications of re-evaluating a condition at the beginning of the new plan, and whether we could/should try to avoid it
 - [ ] Analyze runtime and memory costs, calculate theoretical minimum necessary, see how far we are from that, and suggest user strategies for mitigating worst case, and show observability that user could leverage to find worst offenders and fix them
 - [ ] Stress test (large number of cells, large cells, large number of tasks, tasks with many reads, deeply nested tasks)
 
-... we actually want the sim config from the original simulation, so that we call the mission model constructor with the same args. Bleh.
+- [x] Read the sim config from the original simulation, so that we call the mission model constructor with the same args
 
-- [ ] Right arrow on unfinished spans, as well as spans that go past the edge of the viewport
-- [ ] Zooming in to an area at the end of the plan should include all unfinished spans
+- [x] Right arrow on unfinished spans, as well as spans that go past the edge of the viewport
+- [x] Zooming in to an area at the end of the plan should include all unfinished spans
 - [ ] Display warning if incons time doesn't line up, or if dataset doesn't exist
 - [ ] Help a user select the best incons
 

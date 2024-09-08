@@ -1,12 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.types.Timestamp;
 import org.intellij.lang.annotations.Language;
 
+import javax.json.Json;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 
 public class GetSimulationDatasetByIdAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
@@ -17,7 +22,8 @@ public class GetSimulationDatasetByIdAction implements AutoCloseable {
           d.canceled as canceled,
           to_char(d.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
           to_char(d.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time,
-          d.dataset_id as dataset_id
+          d.dataset_id as dataset_id,
+          d.arguments as arguments
       from merlin.simulation_dataset as d
       where
         d.id = ?
@@ -51,6 +57,7 @@ public class GetSimulationDatasetByIdAction implements AutoCloseable {
       final var simStartTime = Timestamp.fromString(results.getString("simulation_start_time"));
       final var simEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
       final var datasetId = results.getLong("dataset_id");
+      final var arguments = parseSerializedValue(results.getString("arguments")).asMap().get();
 
       return Optional.of(
           new SimulationDatasetRecord(
@@ -60,9 +67,23 @@ public class GetSimulationDatasetByIdAction implements AutoCloseable {
               canceled,
               simStartTime,
               simEndTime,
-              simulationDatasetId));
+              simulationDatasetId,
+              arguments));
     }
   }
+
+  private static SerializedValue parseSerializedValue(final String value) {
+    final SerializedValue serializedValue;
+    try (
+        final var serializedValueReader = Json.createReader(new StringReader(value))
+    ) {
+      serializedValue = serializedValueP
+          .parse(serializedValueReader.readValue())
+          .getSuccessOrThrow();
+    }
+    return serializedValue;
+  }
+
 
   @Override
   public void close() throws SQLException {

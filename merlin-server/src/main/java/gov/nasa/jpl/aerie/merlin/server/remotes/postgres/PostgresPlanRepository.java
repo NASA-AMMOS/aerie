@@ -89,7 +89,8 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       Plan.InitialConditions incons;
       if (simulationRecord.prequel().isPresent()) {
-        incons = new Plan.InitialConditions.FromFincons(getFincons(connection, simulationRecord.prequel().get()));
+        final var fincons = getFincons(connection, simulationRecord.prequel().get());
+        incons = new Plan.InitialConditions.FromFincons(fincons.getLeft(), fincons.getRight());
       } else {
         incons = new Plan.InitialConditions.FromArguments(arguments);
       }
@@ -334,7 +335,7 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private SerializedValue getFincons(
+  private Pair<SerializedValue, Map<String, SerializedValue>> getFincons(
       final Connection connection,
       final long datasetId
   ) throws SQLException {
