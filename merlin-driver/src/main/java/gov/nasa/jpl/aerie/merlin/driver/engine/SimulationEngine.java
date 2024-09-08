@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
@@ -89,13 +88,43 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<ResourceId, Resource<?>> resources;
 
   /** Keeps track of entry points for all in-progress tasks */
-  public final Map<TaskId, TaskEntryPoint> entrypoints;
-  public final Map<TaskId, Duration> lastStepTime;
-  public final Map<TaskId, List<SerializedValue>> readLog;
-  public final Map<TaskId, Integer> taskSteps;
-  public final Map<TaskId, Integer> childCount;
-  public final Map<TaskId, TaskId> taskParent;
-  public final Map<TaskId, SpanId> taskSpan;
+  public record FinconsBookkeeping(Map<TaskId, TaskEntryPoint> entrypoints,
+    Map<TaskId, Duration> lastStepTime,
+    Map<TaskId, List<SerializedValue>> readLog,
+    Map<TaskId, Integer> taskSteps,
+    Map<TaskId, Integer> childCount,
+    Map<TaskId, TaskId> taskParent,
+    Map<TaskId, SpanId> taskSpan) {
+    public FinconsBookkeeping() {
+      this(
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>(),
+          new LinkedHashMap<>()
+      );
+    }
+
+    FinconsBookkeeping duplicate() {
+      final var readLogCopy = new LinkedHashMap<TaskId, List<SerializedValue>>();
+      for (final var log : readLog.entrySet()) {
+        readLogCopy.put(log.getKey(), new ArrayList<>(log.getValue()));
+      }
+      return new FinconsBookkeeping(
+          new LinkedHashMap<>(entrypoints),
+          new LinkedHashMap<>(lastStepTime),
+          readLogCopy,
+          new LinkedHashMap<>(taskSteps),
+          new LinkedHashMap<>(childCount),
+          new LinkedHashMap<>(taskParent),
+          new LinkedHashMap<>(taskSpan)
+      );
+    }
+  }
+
+  public final FinconsBookkeeping fincons;
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -136,13 +165,7 @@ public final class SimulationEngine implements AutoCloseable {
     unstartedTasks = new LinkedHashMap<>();
     spans = new LinkedHashMap<>();
     spanContributorCount = new LinkedHashMap<>();
-    entrypoints = new LinkedHashMap<>();
-    lastStepTime = new LinkedHashMap<>();
-    readLog = new LinkedHashMap<>();
-    taskSteps = new LinkedHashMap<>();
-    childCount = new LinkedHashMap<>();
-    taskParent = new LinkedHashMap<>();
-    taskSpan = new LinkedHashMap<>();
+    fincons = new FinconsBookkeeping();
     executor = Executors.newVirtualThreadPerTaskExecutor();
   }
 
@@ -179,16 +202,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var entry : other.spanContributorCount.entrySet()) {
       spanContributorCount.put(entry.getKey(), new MutableInt(entry.getValue().getValue()));
     }
-    lastStepTime = new LinkedHashMap<>(other.lastStepTime);
-    readLog = new LinkedHashMap<>();
-    for (final var entry : other.readLog.entrySet()) {
-      readLog.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-    }
-    taskSteps = new LinkedHashMap<>(other.taskSteps);
-    childCount = new LinkedHashMap<>(other.childCount);
-    taskParent = new LinkedHashMap<>(other.taskParent);
-    taskSpan = new LinkedHashMap<>(other.taskSpan);
-    entrypoints = other.entrypoints;
+    fincons = other.fincons.duplicate();
   }
 
   /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
@@ -326,7 +340,7 @@ public final class SimulationEngine implements AutoCloseable {
         simulationStartTime, ChronoUnit.MICROS), MICROSECONDS) : ZERO, Optional.empty()));
     parentSpan.ifPresent($ -> this.spanContributorCount.get($).increment());
     this.spanContributorCount.put(span, new MutableInt(1));
-    this.taskSpan.put(taskId, span); // TODO should it always be fresh? Probably not
+    this.fincons.taskSpan.put(taskId, span); // TODO should it always be fresh? Probably not
 
     final var readIterator = readyTask.readLog().iterator();
     final var childCounter = new MutableLong(0);
@@ -356,7 +370,7 @@ public final class SimulationEngine implements AutoCloseable {
           if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
             waitingChild.setTaskFactory(task);
 
-            taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
+            fincons.taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
             instantiateTask(caller, Optional.of(span), waitingChild, cells, executor, topics, simulationStartTime);
 
             final var callerBlockCount = SimulationEngine.this.blockedTasks.get(taskId);
@@ -375,7 +389,7 @@ public final class SimulationEngine implements AutoCloseable {
           for (final var waitingChild : readyTask.childrenToRestart()) {
             if (childCounter.getValue().equals(waitingChild.entrypoint().parent().get().childNumber())) {
               waitingChild.setTaskFactory(s.child());
-              taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
+              fincons.taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
               this.blockedTasks.put(taskId, new MutableInt(1)); // TODO this counter is probably wrong. Check spawn case
               instantiateTask(Optional.of(taskId), Optional.of(span), waitingChild, cells, executor, topics,
                               simulationStartTime);
@@ -406,12 +420,12 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    this.entrypoints.put(taskId, readyTask.entrypoint());
-    this.lastStepTime.put(taskId, readyTask.lastStepTime());
-    this.readLog.put(taskId, new ArrayList<>(readyTask.readLog()));
-    this.taskSteps.put(taskId, (int) readyTask.steps());
-    this.childCount.put(taskId, (int) readyTask.numChildren());
-    this.taskSpan.put(taskId, span);
+    this.fincons.entrypoints.put(taskId, readyTask.entrypoint());
+    this.fincons.lastStepTime.put(taskId, readyTask.lastStepTime());
+    this.fincons.readLog.put(taskId, new ArrayList<>(readyTask.readLog()));
+    this.fincons.taskSteps.put(taskId, (int) readyTask.steps());
+    this.fincons.childCount.put(taskId, (int) readyTask.numChildren());
+    this.fincons.taskSpan.put(taskId, span);
 
     final var progress = new ExecutionState<>(span, caller, task$);
 
@@ -537,14 +551,14 @@ public final class SimulationEngine implements AutoCloseable {
     final var task = TaskId.generate();
     this.spanContributorCount.put(span, new MutableInt(1));
     this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor)));
-    this.taskSpan.put(task, span);
+    this.fincons.taskSpan.put(task, span);
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     this.unstartedTasks.put(task, startTime);
 
-    this.entrypoints.put(task, entrypoint);
-    this.taskSteps.put(task, 0);
-    this.childCount.put(task, 0);
+    this.fincons.entrypoints.put(task, entrypoint);
+    this.fincons.taskSteps.put(task, 0);
+    this.fincons.childCount.put(task, 0);
 
     return span;
   }
@@ -688,9 +702,9 @@ public final class SimulationEngine implements AutoCloseable {
   throws SpanException {
     if (this.closed) throw new IllegalStateException("Cannot step task on closed simulation engine");
     this.unstartedTasks.remove(task);
-    this.lastStepTime.put(task, currentTime);
-    this.taskSteps.putIfAbsent(task, 0);
-    this.taskSteps.put(task, this.taskSteps.get(task) + 1);
+    this.fincons.lastStepTime.put(task, currentTime);
+    this.fincons.taskSteps.putIfAbsent(task, 0);
+    this.fincons.taskSteps.put(task, this.fincons.taskSteps.get(task) + 1);
     // The handler for the next status of the task is responsible
     //   for putting an updated state back into the task set.
     var state = this.tasks.remove(task);
@@ -772,13 +786,13 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Spawn the child task.
         final var childTask = TaskId.generate();
-        entrypoints.put(childTask, new TaskEntryPoint.Subtask(
+        fincons.entrypoints.put(childTask, new TaskEntryPoint.Subtask(
             TaskEntryPoint.freshId(),
-            new TaskEntryPoint.ParentReference(entrypoints.get(task).id(), childCount.get(task))));
+            new TaskEntryPoint.ParentReference(fincons.entrypoints.get(task).id(), fincons.childCount.get(task))));
 
-        childCount.put(childTask, 0);
-        childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
-        taskParent.put(childTask, task);
+        fincons.childCount.put(childTask, 0);
+        fincons.childCount.computeIfPresent(task, (taskId, oldCount) -> oldCount + 1);
+        fincons.taskParent.put(childTask, task);
 
         SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
         SimulationEngine.this.tasks.put(
@@ -787,7 +801,7 @@ public final class SimulationEngine implements AutoCloseable {
                 childSpan,
                 Optional.of(task),
                 s.child().create(this.executor)));
-        taskSpan.put(childTask, childSpan);
+        fincons.taskSpan.put(childTask, childSpan);
         frame.signal(JobId.forTask(childTask));
 
         // Arrange for the parent task to resume.... later.
@@ -1378,7 +1392,7 @@ public final class SimulationEngine implements AutoCloseable {
       //  if the same state is requested multiple times in a row.
       final var state$ = this.frame.getState(query.query());
 
-      readLog.computeIfAbsent(taskId, $ -> new ArrayList<>()).add(this.frame.serialize(query.query()));
+      fincons.readLog.computeIfAbsent(taskId, $ -> new ArrayList<>()).add(this.frame.serialize(query.query()));
 
       return state$.orElseThrow(IllegalArgumentException::new);
     }
@@ -1393,7 +1407,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public void spawn(final InSpan inSpan, final TaskFactory<?> state) {
-      spawn(inSpan, state, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(entrypoints.get(taskId).id(), childCount.get(taskId))));
+      spawn(inSpan, state, new TaskEntryPoint.Subtask(TaskEntryPoint.freshId(), new TaskEntryPoint.ParentReference(fincons.entrypoints.get(taskId).id(), fincons.childCount.get(taskId))));
     }
 
     public void spawn(final InSpan inSpan, final TaskFactory<?> state, final TaskEntryPoint entrypoint) {
@@ -1411,10 +1425,10 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var childTask = TaskId.generate();
 
-      entrypoints.put(childTask, entrypoint);
-      childCount.put(childTask, 0);
-      childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
-      taskParent.put(childTask, taskId);
+      fincons.entrypoints.put(childTask, entrypoint);
+      fincons.childCount.put(childTask, 0);
+      fincons.childCount.computeIfPresent(taskId, (taskId, oldCount) -> oldCount + 1);
+      fincons.taskParent.put(childTask, taskId);
 
       SimulationEngine.this.spanContributorCount.get(this.span).increment();
       SimulationEngine.this.tasks.put(
@@ -1423,7 +1437,7 @@ public final class SimulationEngine implements AutoCloseable {
               childSpan,
               this.caller,
               state.create(SimulationEngine.this.executor)));
-      taskSpan.put(childTask, childSpan);
+      fincons.taskSpan.put(childTask, childSpan);
       this.frame.signal(JobId.forTask(childTask));
 
       this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());

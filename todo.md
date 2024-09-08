@@ -77,12 +77,13 @@ Whenever going from plan 2 to plan 1, manually delete `fincons.json` via the ope
   - [x] Performed a read
     - [x] Save
     - [x] Resume
-- [ ] Demonstrate restarting Daemon tasks
+- [x] Demonstrate restarting Daemon tasks
 - [x] Replace subtasks with directives where possible (still needs a little fixing to make reliable)
 - [x] Demonstrate multi-step task
 - [x] Demonstrate restarting directive subtasks
 
 - [x] Demonstrate restarting anonymous subtasks
+- [x] Demonstrate computed attributes
 
 ### Bootstrapping
 - [x] Propagate across multiple simulations (i.e. populate readLog etc for long running tasks)
@@ -98,30 +99,32 @@ We do not want to deal with rerunning the rerunner - i.e. we want to propagate t
 
 ### Rest
 - [x] Allow user to select EITHER simconfig OR incons from a given simulation.
+- [x] Read the sim config from the original simulation, so that we call the mission model constructor with the same args
+  - [x] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it? (chose to forbid it)
 
-- [x] Demonstrate computed attributes
+### Modifying incons
 - [ ] Demonstrate poking in new values
 - [ ] Demonstrate conditionally omitting activities from being restarted
-- [ ] Consider what to do if sim config affects what cells are allocated - can we either be robust to this, or forbid it?
-- [ ] Investigate approaches to minimizing size - maybe gzip?
-- [ ] Demonstrate anchors?
-- [ ] Demonstrate handover period (i.e. overlap instead of startB = endA)
-- [ ] Make sure that tasks that have finished (but are merely awaiting spawned children) do not retain a longer than necessary readLog
-      and do not get stepped up past the start of their last unfinished non-directive child. However they DO need to be maintained in order
-      to restart their children
-- [ ] Consider the implications of re-evaluating a condition at the beginning of the new plan, and whether we could/should try to avoid it
-- [ ] Analyze runtime and memory costs, calculate theoretical minimum necessary, see how far we are from that, and suggest user strategies for mitigating worst case, and show observability that user could leverage to find worst offenders and fix them
-- [ ] Stress test (large number of cells, large cells, large number of tasks, tasks with many reads, deeply nested tasks)
 
-- [x] Read the sim config from the original simulation, so that we call the mission model constructor with the same args
-
+## User Experience
 - [x] Right arrow on unfinished spans, as well as spans that go past the edge of the viewport
 - [x] Zooming in to an area at the end of the plan should include all unfinished spans
 - [ ] Display warning if incons time doesn't line up, or if dataset doesn't exist
 - [ ] Help a user select the best incons
 
-- [ ] Demonstrate that this still works with python
+### Performance
+- [ ] Analyze runtime and memory costs, calculate theoretical minimum necessary, see how far we are from that, and suggest user strategies for mitigating worst case, and show observability that user could leverage to find worst offenders and fix them
+- [ ] Stress test (large number of cells, large cells, large number of tasks, tasks with many reads, deeply nested tasks)
+- [ ] Investigate approaches to minimizing size - maybe gzip?
+- [ ] Make sure that tasks that have finished (but are merely awaiting spawned children) do not retain a longer than necessary readLog
+  and do not get stepped up past the start of their last unfinished non-directive child. However they DO need to be maintained in order
+  to restart their children
 
+### Less Critical
+- [ ] Consider the implications of re-evaluating a condition at the beginning of the new plan, and whether we could/should try to avoid it
+- [ ] Demonstrate that this still works with python
+- [ ] Demonstrate anchors?
+- [ ] Demonstrate handover period (i.e. overlap instead of startB = endA)
 
 ### Design of command modeling
 

@@ -172,11 +172,11 @@ public final class SimulationDriver {
       while (!missingTasks.isEmpty()) {
         for (final var task : missingTasks) {
           tasksSaved.add(task);
-          final var spanId = engine.taskSpan.get(task);
-          final String entrypointId = engine.entrypoints.get(task) != null ? engine.entrypoints.get(task).id() : TaskEntryPoint.freshId();
+          final var spanId = engine.fincons.taskSpan().get(task);
+          final String entrypointId = engine.fincons.entrypoints().get(task) != null ? engine.fincons.entrypoints().get(task).id() : TaskEntryPoint.freshId();
           final Optional<TaskEntryPoint.ParentReference> parent;
-          if (engine.entrypoints.containsKey(task)) {
-            final TaskEntryPoint entrypoint = engine.entrypoints.get(task);
+          if (engine.fincons.entrypoints().containsKey(task)) {
+            final TaskEntryPoint entrypoint = engine.fincons.entrypoints().get(task);
             if (entrypoint instanceof TaskEntryPoint.Subtask e) {
               parent = Optional.of(e.parent$());
             } else {
@@ -189,8 +189,8 @@ public final class SimulationDriver {
           if (spanInfo.isActivity(spanId) && spanInfo.isActivity(task)) {
             entrypoint = new TaskEntryPoint.Directive(entrypointId, simulationStartTime.plus(engine.spans.get(spanId).startOffset().in(MICROSECONDS), ChronoUnit.MICROS), spanInfo.input().get(spanId), parent);
           } else {
-            entrypoint = engine.entrypoints.get(task);
-            if (engine.taskParent.get(task) != null) tasksNeeded.add(engine.taskParent.get(task));
+            entrypoint = engine.fincons.entrypoints().get(task);
+            if (engine.fincons.taskParent().get(task) != null) tasksNeeded.add(engine.fincons.taskParent().get(task));
             if (entrypoint == null) entrypoint = new TaskEntryPoint.SystemTask(TaskEntryPoint.freshId(), "SimulationDriver serializing tasks");
           }
 
@@ -247,10 +247,10 @@ public final class SimulationDriver {
   }
 
   private static SerializedValue serializeTask(SimulationEngine engine, TaskId task, TaskEntryPoint entrypoint) {
-    final var lastStepTime = engine.lastStepTime.get(task);
-    final List<SerializedValue> readLog = engine.readLog.containsKey(task) ? engine.readLog.get(task) : List.of();
-    final var numSteps = engine.taskSteps.get(task);
-    final var numChildren = engine.childCount.get(task);
+    final var lastStepTime = engine.fincons.lastStepTime().get(task);
+    final List<SerializedValue> readLog = engine.fincons.readLog().containsKey(task) ? engine.fincons.readLog().get(task) : List.of();
+    final var numSteps = engine.fincons.taskSteps().get(task);
+    final var numChildren = engine.fincons.childCount().get(task);
     final var finished = engine.tasks.get(task) == null;
     final var serializedEntryPoint = switch (entrypoint) {
       case TaskEntryPoint.Directive e -> SerializedValue.of(Map.of(
