@@ -81,7 +81,7 @@ public final class SimulationDriver {
     final LiveCells cells = initCells(missionModel, incons, timeline);
     try (final var engine = new SimulationEngine(cells, executor)) {
       if (incons.isPresent()) {
-        engine.hydrateInitialConditions(missionModel, executor, incons.get(), cells);
+        engine.hydrateInitialConditions(missionModel, executor, incons.get(), cells, simulationStartTime);
       }
 
       /* The current real time. */

@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
@@ -33,7 +32,6 @@ import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -45,7 +43,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -221,7 +218,7 @@ public final class SimulationEngine implements AutoCloseable {
   public <Model> void hydrateInitialConditions(
       final MissionModel<Model> missionModel,
       final ExecutorService executor,
-      final SerializedValue incons, final LiveCells cells)
+      final SerializedValue incons, final LiveCells cells, final Instant simulationStartTime)
   {
     final var tasks = new LinkedHashMap<String, SimulationDriver.MyTask<?>>();
     for (final var serializedTask : incons.asMap().get().get("tasks").asList().get()) {
@@ -301,15 +298,16 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     for (final var task : roots) {
-      instantiateTask(Optional.empty(), Optional.empty(), task, cells, executor, topics);
+      instantiateTask(Optional.empty(), Optional.empty(), task, cells, executor, topics, simulationStartTime);
     }
   }
 
-  private <T> void instantiateTask(Optional<TaskId> caller, Optional<SpanId> parentSpan, SimulationDriver.MyTask<T> readyTask, final LiveCells cells, ExecutorService executor, Set<Topic<?>> topics) {
+  private <T> void instantiateTask(Optional<TaskId> caller, Optional<SpanId> parentSpan, SimulationDriver.MyTask<T> readyTask, final LiveCells cells, ExecutorService executor, Set<Topic<?>> topics, Instant simulationStartTime) {
     // Make a TaskId for this task. For convenience, let's reuse the id from the incons
     final var taskId = new TaskId(readyTask.entrypoint().id());
     final var span = SpanId.generate();
-    this.spans.put(span, new Span(parentSpan, ZERO, Optional.empty()));
+    this.spans.put(span, new Span(parentSpan, readyTask.entrypoint() instanceof TaskEntryPoint.Directive s ? Duration.of(-s.startTime().until(
+        simulationStartTime, ChronoUnit.MICROS), MICROSECONDS) : ZERO, Optional.empty()));
     parentSpan.ifPresent($ -> this.spanContributorCount.get($).increment());
     this.spanContributorCount.put(span, new MutableInt(1));
     this.taskSpan.put(taskId, span); // TODO should it always be fresh? Probably not
@@ -341,7 +339,7 @@ public final class SimulationEngine implements AutoCloseable {
             waitingChild.setTaskFactory(task);
 
             taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
-            instantiateTask(caller, Optional.of(span), waitingChild, cells, executor, topics);
+            instantiateTask(caller, Optional.of(span), waitingChild, cells, executor, topics, simulationStartTime);
 
             final var callerBlockCount = SimulationEngine.this.blockedTasks.get(taskId);
             if (callerBlockCount != null) callerBlockCount.increment();
@@ -361,7 +359,8 @@ public final class SimulationEngine implements AutoCloseable {
               waitingChild.setTaskFactory(s.child());
               taskParent.put(new TaskId(waitingChild.entrypoint().id()), taskId);
               this.blockedTasks.put(taskId, new MutableInt(1)); // TODO this counter is probably wrong. Check spawn case
-              instantiateTask(Optional.of(taskId), Optional.of(span), waitingChild, cells, executor, topics);
+              instantiateTask(Optional.of(taskId), Optional.of(span), waitingChild, cells, executor, topics,
+                              simulationStartTime);
             }
           }
           childCounter.increment();
