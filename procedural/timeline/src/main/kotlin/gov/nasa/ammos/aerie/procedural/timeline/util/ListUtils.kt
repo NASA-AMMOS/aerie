@@ -28,7 +28,16 @@ fun <V: IntervalLike<V>> preprocessList(list: List<V>, shouldCoalesce: (V.(V) ->
 fun <I: IntervalLike<I>> listCollector(list: List<I>, isSorted: Boolean = false, isSerial: Boolean = false) =
   { opts: CollectOptions -> truncateList(list, opts, isSorted, isSerial) }
 
-/** Eagerly truncates a list of timeline objects to known bounds. */
+/**
+ * Eagerly truncates a list of timeline objects to known bounds.
+ *
+ * `exploitSorted` and `isSerial` exist to provide extra information about the list, for performance optimization.
+ *
+ * @param list The list of [IntervalLike] objects to be sorted.
+ * @param opts Collect options, specifies the truncation bounds and behavior.
+ * @param exploitSorted Whether the start times of the intervals are sorted.
+ * @param isSerial Whether the list is "serial", i.e. sorted by start time AND non-overlapping.
+ */
 fun <I: IntervalLike<I>> truncateList(list: List<I>, opts: CollectOptions, exploitSorted: Boolean, isSerial: Boolean): List<I> =
     if (opts.bounds == Interval.MIN_MAX || list.isEmpty()) list
     else if (!exploitSorted) {
