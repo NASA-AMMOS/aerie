@@ -61,7 +61,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.parseJso
         final var args = parseJson(resultSet.getString("arguments"), new SerializedValueJsonParser());
 
         goals.add(new GoalInvocationRecord(
-            new GoalId(id, revision, Optional.of(goalInvocationId)),
+            new GoalId(id, revision, goalInvocationId),
             name,
             type.equals("JAR") ? new GoalType.JAR(Path.of(path)) : new GoalType.EDSL(new GoalSource(definition)),
             args.asMap().get(),

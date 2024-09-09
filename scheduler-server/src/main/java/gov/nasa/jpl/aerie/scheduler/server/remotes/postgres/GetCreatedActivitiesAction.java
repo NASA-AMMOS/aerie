@@ -40,7 +40,7 @@ import java.util.Optional;
       final var goalId = new GoalId(
           resultSet.getLong("goal_id"),
           resultSet.getLong("goal_revision"),
-          Optional.of(resultSet.getLong("goal_invocation_id"))
+          resultSet.getLong("goal_invocation_id")
       );
       final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
