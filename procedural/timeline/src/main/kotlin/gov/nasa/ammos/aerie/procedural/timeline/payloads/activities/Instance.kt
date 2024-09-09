@@ -20,6 +20,12 @@ data class Instance<A: Any>(
    * Will be `null` if this is a child activity.
    */
   @JvmField val directiveId: ActivityDirectiveId?,
+
+  /**
+   * The maybe-null instance id of the instance that spawned this instance.
+   *
+   * Will be `null` if this is not a child activity.
+   */
   @JvmField val parentId: ActivityInstanceId?,
   override val interval: Interval,
 ): Activity<Instance<A>> {
