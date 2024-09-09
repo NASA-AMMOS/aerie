@@ -171,10 +171,8 @@ public final class SchedulingProcedureProcessor implements Processor {
         }
     }
 
-
     // Allow other annotation processors to process the framework annotations.
     return false;
-
   }
 
   @Override
