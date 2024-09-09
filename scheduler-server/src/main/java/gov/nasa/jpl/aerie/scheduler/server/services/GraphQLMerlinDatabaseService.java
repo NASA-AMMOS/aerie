@@ -580,7 +580,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
           .add("start_offset", act.startOffset().toString())
-          .add("anchored_to_start", act.anchorId() == null || act.anchoredToStart());
+          .add("anchored_to_start", act.anchoredToStart());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();
