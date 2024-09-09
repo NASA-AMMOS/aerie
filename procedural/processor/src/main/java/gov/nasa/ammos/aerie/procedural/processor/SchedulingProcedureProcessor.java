@@ -83,7 +83,7 @@ public final class SchedulingProcedureProcessor implements Processor {
       if (packageElement$.getKind() != ElementKind.PACKAGE) throw new RuntimeException("Only packages can be annotated with WithMappers");
       packageElement = (PackageElement) packageElement$;
     }
-    if (packageElement == null) return false; //throw new RuntimeException("Need to annotate a package-info class with WithMappers");
+    if (packageElement == null) return false;
 
     for (final var withMappersAnnotation : getRepeatableAnnotation(packageElement, WithMappers.class)) {
       final var attribute = getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
