@@ -631,7 +631,7 @@ public class HasuraRequests implements AutoCloseable {
             throw new RuntimeException(e);
           }
         }
-        case "complete", "failed" -> {
+        case "failed" -> {
           return response;
         }
         default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
@@ -730,6 +730,18 @@ public class HasuraRequests implements AutoCloseable {
                                     .add("priority", priority);
     final var variables = Json.createObjectBuilder().add("spec_goal", specGoalBuilder).build();
     final var resp =  makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL, variables)
+        .getJsonObject("insert_scheduling_specification_goals_one");
+
+    return GoalInvocationId.fromJSON(resp);
+  }
+
+  public GoalInvocationId insertGoalInvocation(int goalId, int specificationId) throws IOException {
+    final var variables = Json.createObjectBuilder()
+                                    .add("goal_id", goalId)
+                                    .add("specification_id", specificationId)
+                                    .build();
+
+    final var resp = makeRequest(GQL.CREATE_SCHEDULING_SPEC_GOAL_INVOCATION, variables)
         .getJsonObject("insert_scheduling_specification_goals_one");
 
     return GoalInvocationId.fromJSON(resp);

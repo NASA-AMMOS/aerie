@@ -130,7 +130,6 @@ public class SchedulingTests {
         "24:00:00",
         planStartTimestamp);
     schedulingSpecId = hasura.getSchedulingSpecId(planId);
-    // Unset directiveId vars
   }
 
   @AfterEach
@@ -1091,6 +1090,71 @@ public class SchedulingTests {
       assertTrue(activities.stream().anyMatch(
           $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "30:00:00")
       ));
+    }
+
+    /**
+     * Run a spec with two invocations of the same procedure in it
+     */
+    @Test
+    void executeMultipleInvocationsOfSameProcedure() throws IOException {
+      final var args = Json.createObjectBuilder().add("quantity", 2).build();
+      hasura.updateSchedulingSpecGoalArguments(procedureId.invocationId(), args);
+
+      final var secondInvocationId = hasura.insertGoalInvocation(procedureId.goalId(), specId);
+      hasura.updateSchedulingSpecGoalArguments(secondInvocationId.invocationId(), args);
+
+      final var resp = hasura.awaitScheduling(specId);
+
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(4, activities.size());
+    }
+
+    /**
+     * Run a spec with two procedures in it
+     */
+    @Test
+    void executeMultipleProcedures() throws IOException {
+      final var args = Json.createObjectBuilder().add("quantity", 2).build();
+      hasura.updateSchedulingSpecGoalArguments(procedureId.invocationId(), args);
+
+      final var secondProcedure = hasura.createSchedulingSpecProcedure(
+          "Test Scheduling Procedure 2",
+          procedureJarId,
+          specId,
+          1);
+
+      hasura.updateSchedulingSpecGoalArguments(secondProcedure.invocationId(), args);
+
+      final var resp = hasura.awaitScheduling(specId);
+
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(4, activities.size());
+    }
+
+    /**
+     * Run a spec with one EDSL goal and one procedure
+     */
+    @Test
+    void executeEDSLAndProcedure() throws IOException {
+      final var args = Json.createObjectBuilder().add("quantity", 4).build();
+      hasura.updateSchedulingSpecGoalArguments(procedureId.invocationId(), args);
+
+      final int recurrenceGoalId = hasura.createSchedulingSpecGoal(
+          "Recurrence Scheduling Test Goal",
+          recurrenceGoalDefinition,
+          specId,
+          1).goalId();
+
+      final var resp = hasura.awaitScheduling(specId);
+
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(52, activities.size());
     }
   }
 }

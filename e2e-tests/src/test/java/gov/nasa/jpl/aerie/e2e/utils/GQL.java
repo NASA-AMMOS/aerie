@@ -104,6 +104,14 @@ public enum GQL {
         specification_id
       }
     }"""),
+  CREATE_SCHEDULING_SPEC_GOAL_INVOCATION("""
+    mutation CreateSchedulingSpecGoalInvocation($goal_id: Int!, $specification_id: Int!) {
+      insert_scheduling_specification_goals_one(object: {goal_id: $goal_id, specification_id: $specification_id}) {
+        goal_id
+        goal_invocation_id
+        priority
+      }
+    }"""),
   CREATE_USER("""
     mutation createUser($user: users_insert_input!, $allowed_roles: [users_allowed_roles_insert_input!]!) {
       insert_users_one(object: $user) {
