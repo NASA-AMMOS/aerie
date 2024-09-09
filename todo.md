@@ -119,6 +119,7 @@ We do not want to deal with rerunning the rerunner - i.e. we want to propagate t
 - [ ] Make sure that tasks that have finished (but are merely awaiting spawned children) do not retain a longer than necessary readLog
   and do not get stepped up past the start of their last unfinished non-directive child. However they DO need to be maintained in order
   to restart their children
+- [ ] Make it possible for a daemon to cut its history short
 
 ### Less Critical
 - [ ] Consider the implications of re-evaluating a condition at the beginning of the new plan, and whether we could/should try to avoid it
