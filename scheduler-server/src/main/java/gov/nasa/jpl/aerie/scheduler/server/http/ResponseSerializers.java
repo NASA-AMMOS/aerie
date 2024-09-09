@@ -95,7 +95,7 @@ public class ResponseSerializers {
             .entrySet()
             .stream()
             .collect(
-                Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
+                Collectors.toMap(e -> Long.toString(e.getKey().goalInvocationId().get()), Map.Entry::getValue)));
   }
 
   private static JsonValue serializeGoalResult(final ScheduleResults.GoalResult goalResult) {
