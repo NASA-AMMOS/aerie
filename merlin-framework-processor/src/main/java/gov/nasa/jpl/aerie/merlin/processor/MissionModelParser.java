@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.framework.MetadataValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Compound;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -190,7 +191,7 @@ import java.util.stream.Collectors;
     final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
+    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle, Optional.empty()));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -491,7 +492,7 @@ import java.util.stream.Collectors;
     if (durationParameterName.isPresent()) {
       validateControllableDurationParameter(name, parameters, durationParameterName.get());
     }
-
+    final var compoundShouldBeDecomposed = this.getCompoundParametrization(activityTypeElement);
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
     In order to allow for optional/required parameters, the processor
@@ -506,7 +507,7 @@ import java.util.stream.Collectors;
     return new ActivityTypeRecord(
         fullyQualifiedClassName.toString(),
         name,
-        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
+        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, compoundShouldBeDecomposed),
         effectModel);
   }
 
@@ -519,6 +520,15 @@ import java.util.stream.Collectors;
             " is declared as static, but this is not valid for activity parameters");
       }
     }
+  }
+
+  private Optional<Boolean> getCompoundParametrization(final TypeElement activityTypeElement){
+    Optional<Boolean> shouldBeDecomposed = Optional.empty();
+    final var compoundAnnotation = activityTypeElement.getAnnotation(Compound.class);
+    if(compoundAnnotation != null){
+      shouldBeDecomposed = Optional.of(compoundAnnotation.shouldBeDecomposed());
+    }
+    return shouldBeDecomposed;
   }
 
   private void validateControllableDurationParameter(
@@ -738,7 +748,14 @@ import java.util.stream.Collectors;
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration, parameterizedDuration, maximumDuration));
+      return Optional.of(new EffectModelRecord(
+          element.getSimpleName().toString(),
+          executorAnnotation.value(),
+          nonVoidReturnType,
+          durationParameter,
+          fixedDuration,
+          parameterizedDuration,
+          maximumDuration));
     }
 
     return Optional.empty();
