@@ -10,15 +10,12 @@ import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
 import org.apache.commons.math3.complex.Complex;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.function.BiPredicate;
-import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiring.expiring;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.NEVER;
-import static gov.nasa.jpl.aerie.contrib.streamline.core.Expiry.expiry;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.discrete;
@@ -64,7 +61,7 @@ public record Polynomial(double[] coefficients) implements Dynamics<Double, Poly
 
   @Override
   public Polynomial step(Duration t) {
-    return t.isEqualTo(ZERO) ? this : polynomial(shift(coefficients(), t.ratioOver(SECOND)));
+    return t.equals(ZERO) ? this : polynomial(shift(coefficients(), t.ratioOver(SECOND)));
   }
 
   public int degree() {

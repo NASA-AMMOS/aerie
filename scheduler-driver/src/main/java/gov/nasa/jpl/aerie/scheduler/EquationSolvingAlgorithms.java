@@ -96,7 +96,7 @@ public class EquationSolvingAlgorithms {
     private Duration chooseRandomX(final Duration bound1, final Duration bound2){
       var low = bound1;
       var high = bound2;
-      if(low.isEqualTo(high)) return low;
+      if(low.equals(high)) return low;
       if(bound1.longerThan(bound2)) { low = bound2; high = bound1; }
       return Duration.of(
           randomGenerator.nextLong(low.in(Duration.MICROSECONDS), high.in(Duration.MICROSECONDS)),
@@ -281,7 +281,7 @@ public class EquationSolvingAlgorithms {
         x_n_double = x_n_double - (ff_x_nminus1.in(Duration.MICROSECONDS) / localDerivative);
         x_nminus1 = x_n;
         x_n = Duration.of((long) x_n_double, Duration.MICROSECONDS);
-        if (x_n.isEqualTo(x_nminus1)) throw new InfiniteDerivativeException();
+        if (x_n.equals(x_nminus1)) throw new InfiniteDerivativeException();
         final var resultXn = nextValueAt(f, x_n, xLow, xHigh, history, maxNbIterations - nbItPerformed);
         nbItPerformed += resultXn.nbIterationsPerformed();
         ff_x_n = resultXn.result().fx();

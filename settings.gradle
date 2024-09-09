@@ -13,8 +13,14 @@ include 'parsing-utilities'
 include 'permissions'
 
 // Procedural post-simulation libraries
+include 'procedural:processor'
 include 'procedural:timeline'
 include 'procedural:constraints'
+include 'procedural:scheduling'
+include 'procedural:remote'
+
+// Procedural examples
+include 'procedural:examples:foo-procedures'
 
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'

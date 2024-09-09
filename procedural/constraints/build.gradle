@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-  id 'com.github.johnrengelman.shadow' version '8.1.1'
-  id "org.jetbrains.kotlin.jvm" version "1.9.22"
+  id "org.jetbrains.kotlin.jvm" version "2.0.20"
   id 'java-library'
-  id 'org.jetbrains.dokka' version '1.9.10'
+  id 'org.jetbrains.dokka' version '1.9.20'
+  id 'maven-publish'
 }
 
 repositories {
@@ -14,6 +14,8 @@ repositories {
 
 dependencies {
   implementation project(':procedural:timeline')
+  implementation project(':merlin-driver')
+  implementation project(':type-utils')
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -34,6 +36,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 var timelineSource = "${project(":procedural:timeline").projectDir}/src/main/kotlin"
 
 dokkaHtmlPartial.configure {
@@ -43,13 +50,35 @@ dokkaHtmlPartial.configure {
       moduleName.set("Constraints")
 
       reportUndocumented.set(true)
-      failOnWarning.set(true)
+      failOnWarning.set(false)
 
       // contains descriptions for the module and the packages
       includes.from("MODULE_DOCS.md")
 
       sourceRoots.from(timelineSource)
       suppressedFiles.from(timelineSource)
+    }
+  }
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
     }
   }
 }

@@ -49,8 +49,9 @@ import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalInvocationRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -80,7 +81,6 @@ import org.slf4j.LoggerFactory;
  *
  * @param merlinDatabaseService interface for querying plan and mission model details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
- * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
@@ -88,7 +88,6 @@ public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
     MerlinDatabaseService.OwnerRole merlinDatabaseService,
     Path modelJarsDir,
-    Path goalsJarPath,
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService
 )
@@ -99,7 +98,6 @@ public record SynchronousSchedulerAgent(
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinDatabaseService);
     Objects.requireNonNull(modelJarsDir);
-    Objects.requireNonNull(goalsJarPath);
     Objects.requireNonNull(schedulingDSLCompilationService);
   }
 
@@ -189,23 +187,30 @@ public record SynchronousSchedulerAgent(
 
         final var orderedGoals = new ArrayList<Goal>();
         final var goals = new HashMap<Goal, GoalId>();
-        final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
+        final var compiledGoals = new ArrayList<Pair<GoalInvocationRecord, SchedulingDSL.GoalSpecifier>>();
         final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
         for (final var goalRecord : specification.goalsByPriority()) {
-          final var result = compileGoalDefinition(
-              merlinDatabaseService,
-              planMetadata.planId(),
-              goalRecord.definition(),
-              schedulingDSLCompilationService,
-              externalProfiles.resourceTypes());
-          if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
-            compiledGoals.add(Pair.of(goalRecord, r.value()));
-          } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
-            failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
-          } else {
-            throw new Error("Unhandled variant of %s: %s".formatted(
-                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
-                result));
+          switch (goalRecord.type()) {
+            case GoalType.EDSL edsl -> {
+              final var result = compileGoalDefinition(
+                  merlinDatabaseService,
+                  planMetadata.planId(),
+                  edsl.source(),
+                  schedulingDSLCompilationService,
+                  externalProfiles.resourceTypes());
+              if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+                compiledGoals.add(Pair.of(goalRecord, r.value()));
+              } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+                failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
+              } else {
+                throw new Error("Unhandled variant of %s: %s".formatted(
+                    SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+                    result));
+              }
+            }
+            case GoalType.JAR jar -> {
+              compiledGoals.add(Pair.of(goalRecord, new SchedulingDSL.GoalSpecifier.Procedure(modelJarsDir.resolve(jar.path()), goalRecord.args())));
+            }
           }
         }
         if (!failedGoals.isEmpty()) {
@@ -259,7 +264,9 @@ public record SynchronousSchedulerAgent(
             planMetadataAfterChanges,
             uploadIdMap
         );
-      } else if (simulationFacade.getLatestSimulationData().isPresent() && simulationFacade.getLatestSimulationData() != problem.getInitialSimulationResults()) {
+      } else if (simulationFacade.getLatestSimulationData().isPresent()
+                 && problem.getInitialSimulationResults().isPresent()
+                 && simulationFacade.getLatestSimulationData().get() != problem.getInitialSimulationResults().get()) {
         final var latest = simulationFacade.getLatestSimulationData().get();
         datasetId = storeSimulationResults(
             latest,
@@ -343,14 +350,14 @@ public record SynchronousSchedulerAgent(
   private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileGoalDefinition(
       final MerlinDatabaseService.ReaderRole merlinDatabaseService,
       final PlanId planId,
-      final GoalSource goalDefinition,
+      final GoalSource source,
       final SchedulingDSLCompilationService schedulingDSLCompilationService,
       final Collection<ResourceType> additionalResourceTypes)
   {
     return schedulingDSLCompilationService.compileSchedulingGoalDSL(
         merlinDatabaseService,
         planId,
-        goalDefinition.source(),
+        source.source(),
         additionalResourceTypes
     );
   }
@@ -642,5 +649,4 @@ public record SynchronousSchedulerAgent(
       }
     return new ScheduleResults(goalResults);
   }
-
 }

@@ -7,7 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
@@ -63,7 +64,7 @@ public final class SimulationResults {
     if (!(o instanceof SimulationResults that)) return false;
 
     return startTime.equals(that.startTime)
-           && duration.isEqualTo(that.duration)
+           && duration.equals(that.duration)
            && realProfiles.equals(that.realProfiles)
            && discreteProfiles.equals(that.discreteProfiles)
            && simulatedActivities.equals(that.simulatedActivities)

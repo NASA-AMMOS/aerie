@@ -5,13 +5,14 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.e2e.utils.GatewayRequests;
 import gov.nasa.jpl.aerie.e2e.utils.HasuraRequests;
-import gov.nasa.jpl.aerie.timeline.Duration;
-import gov.nasa.jpl.aerie.timeline.Interval;
-import gov.nasa.jpl.aerie.timeline.collections.profiles.Real;
-import gov.nasa.jpl.aerie.timeline.payloads.LinearEquation;
-import gov.nasa.jpl.aerie.timeline.payloads.Segment;
-import gov.nasa.jpl.aerie.timeline.plan.AeriePostgresPlan;
-import gov.nasa.jpl.aerie.timeline.plan.Plan;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.ammos.aerie.procedural.timeline.Interval;
+import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.LinearEquation;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment;
+import gov.nasa.ammos.aerie.procedural.remote.AeriePostgresPlan;
+import gov.nasa.ammos.aerie.procedural.remote.AeriePostgresSimulationResults;
+import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulatedPlan;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,9 +39,8 @@ public class TimelineRemoteTests {
   private int modelId;
   private int planId;
   private int activityId;
-  private int simDatasetId;
 
-  private Plan plan;
+  private SimulatedPlan simulatedPlan;
   private Connection connection;
   private HikariDataSource dataSource;
   @BeforeAll
@@ -92,14 +92,18 @@ public class TimelineRemoteTests {
         "1212h",
         "2021-01-01T00:00:00Z");
     //Insert the Activity
-    activityId = hasura.insertActivity(
+    activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",
         Json.createObjectBuilder().add("biteSize", 1).build());
-    simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
+    int simDatasetId = hasura.awaitSimulation(planId).simDatasetId();
 
-    plan = new AeriePostgresPlan(connection, simDatasetId);
+    // Connect to the database
+
+    final var plan = new AeriePostgresPlan(connection, planId);
+    final var simResults = new AeriePostgresSimulationResults(connection, simDatasetId, plan, false);
+    simulatedPlan = new SimulatedPlan(plan, simResults);
   }
 
   @AfterEach
@@ -110,28 +114,29 @@ public class TimelineRemoteTests {
 
   @Test
   void queryActivityInstances() {
-    final var instances = plan.instances().collect();
+    final var instances = simulatedPlan.instances().collect();
     assertEquals(1, instances.size());
     final var instance = instances.get(0);
     assertEquals("BiteBanana", instance.getType());
-    assertEquals(activityId, instance.directiveId);
+    assert instance.directiveId != null;
+    assertEquals(activityId, instance.directiveId.id());
     assertEquals(1, instance.inner.arguments.get("biteSize").asInt().get());
     assertEquals(Duration.ZERO, instance.getInterval().duration());
   }
 
   @Test
   void queryActivityDirectives() {
-    final var directives = plan.directives().collect();
+    final var directives = simulatedPlan.directives().collect();
     assertEquals(1, directives.size());
     final var directive = directives.get(0);
     assertEquals("BiteBanana", directive.getType());
-    assertEquals(activityId, directive.id);
+    assertEquals(activityId, directive.id.id());
     assertEquals(1, directive.inner.arguments.get("biteSize").asInt().get());
   }
 
   @Test
   void queryResources() {
-    final var fruit = plan.resource("/fruit", Real::deserialize).collect();
+    final var fruit = simulatedPlan.resource("/fruit", Real.deserializer()).collect();
     assertIterableEquals(
         List.of(
             Segment.of(Interval.betweenClosedOpen(Duration.ZERO, Duration.HOUR), new LinearEquation(4.0)),

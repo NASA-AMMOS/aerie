@@ -247,8 +247,8 @@ public record SchedulingActivity(
    */
   public boolean equalsInProperties(final SchedulingActivity that){
     return type.equals(that.type)
-           && duration.isEqualTo(that.duration)
-           && startOffset.isEqualTo(that.startOffset)
+           && duration.equals(that.duration)
+           && startOffset.equals(that.startOffset)
            && arguments.equals(that.arguments)
            && Objects.equals(topParent, that.topParent)
            && Objects.equals(anchorId, that.anchorId)

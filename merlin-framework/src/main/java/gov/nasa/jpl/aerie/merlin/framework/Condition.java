@@ -53,14 +53,14 @@ public interface Condition {
 
         right$ = right.nextSatisfied(true, atEarliest, atLatest);
         if (right$.isEmpty()) break;
-        if (right$.get().isEqualTo(left$.get())) return left$;
+        if (right$.get().equals(left$.get())) return left$;
 
         atEarliest = right$.get();
         if (atLatest.shorterThan(atEarliest)) break;
 
         left$ = left.nextSatisfied(true, atEarliest, atLatest);
         if (left$.isEmpty()) break;
-        if (left$.get().isEqualTo(right$.get())) return right$;
+        if (left$.get().equals(right$.get())) return right$;
       }
 
       return Optional.empty();

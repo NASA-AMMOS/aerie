@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver.onceAllActivitiesAreFinished;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.scheduleFromPlan;
+import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.schedulingActToActivityDir;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.updatePlanWithChildActivities;
 
 public class CheckpointSimulationFacade implements SimulationFacade {
@@ -308,14 +309,11 @@ public class CheckpointSimulationFacade implements SimulationFacade {
       final Plan plan,
       final Duration until,
       final Set<String> resourceNames
-  ) throws SimulationException, SchedulingInterruptedException
-  {
+  ) throws SimulationException, SchedulingInterruptedException {
     if (this.initialSimulationResults != null) {
       final var inputPlan = scheduleFromPlan(plan, schedulerModel);
-      final var initialPlanA = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
-      if (initialPlanA.equals(inputPlan)) {
-        return initialSimulationResults;
-      }
+      final var initialPlan = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
+      if (inputPlan.equals(initialPlan)) return initialSimulationResults;
     }
     final var resultsInput = simulateNoResults(plan, until);
     final var driverResults = resultsInput.simulationResultsComputerInputs().computeResults(resourceNames);
@@ -329,6 +327,9 @@ public class CheckpointSimulationFacade implements SimulationFacade {
 
   @Override
   public Optional<SimulationData> getLatestSimulationData() {
-    return Optional.ofNullable(this.latestSimulationData);
+    if (this.latestSimulationData == null)
+      return Optional.ofNullable(this.initialSimulationResults);
+    else
+      return Optional.of(this.latestSimulationData);
   }
 }

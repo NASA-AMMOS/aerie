@@ -333,7 +333,7 @@ public class FooSimulationDuplicationTest {
   static void assertResultsEqual(SimulationResults expected, SimulationResults actual) {
     if (expected.equals(actual)) return;
     final var differences = new ArrayList<String>();
-    if (!expected.duration.isEqualTo(actual.duration)) {
+    if (!expected.duration.equals(actual.duration)) {
       differences.add("duration");
     }
     if (!expected.realProfiles.equals(actual.realProfiles)) {
@@ -351,7 +351,7 @@ public class FooSimulationDuplicationTest {
     if (!expected.startTime.equals(actual.startTime)) {
       differences.add("startTime");
     }
-    if (!expected.duration.isEqualTo(actual.duration)) {
+    if (!expected.duration.equals(actual.duration)) {
       differences.add("duration");
     }
     if (!expected.topics.equals(actual.topics)) {
