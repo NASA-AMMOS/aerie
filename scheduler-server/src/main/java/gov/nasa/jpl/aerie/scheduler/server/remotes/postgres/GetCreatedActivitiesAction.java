@@ -33,7 +33,6 @@ import java.util.Optional;
 
   public Map<GoalId, List<ActivityDirectiveId>> get(final long analysisId) throws SQLException {
     this.statement.setLong(1, analysisId);
-    this.statement.setLong(2, analysisId);
     final var resultSet = this.statement.executeQuery();
 
     final var createdActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
