@@ -650,4 +650,13 @@ public record Duration(long micros) implements Comparable<Duration> {
     return Long.compare(this.micros, other.micros);
   }
 
+  /**
+   * Delegates to `.equals(other)`.
+   *
+   * @deprecated use `.equals` instead.
+   */
+  @Deprecated
+  public boolean isEqualTo(final Object other) {
+    return this.equals(other);
+  }
 }
