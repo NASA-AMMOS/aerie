@@ -9,23 +9,12 @@ import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.Map;
 
 @SchedulingProcedure
 public record SimulationDemo(int quantity) implements Goal {
   @Override
   public void run(@NotNull final EditablePlan plan) {
-//    final var firstActivityTime = plan.toRelative(Instant.from(DOY_WITHOUT_ZONE_FORMATTER.parse("2024-128T07:00:00")));
-//
-//    plan.create(
-//        "BiteBanana",
-//        new DirectiveStart.Absolute(firstActivityTime),
-//        Map.of("biteSize", SerializedValue.of(2))
-//    );
 
     var simResults = plan.latestResults();
     if (simResults == null) simResults = plan.simulate();
@@ -54,10 +43,4 @@ public record SimulationDemo(int quantity) implements Goal {
 
     plan.commit();
   }
-
-  private static final DateTimeFormatter DOY_WITHOUT_ZONE_FORMATTER = new DateTimeFormatterBuilder()
-      .appendPattern("uuuu-DDD'T'HH:mm:ss")
-      .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
-      .toFormatter()
-      .withZone(ZoneOffset.UTC);
 }
