@@ -609,6 +609,38 @@ public class HasuraRequests implements AutoCloseable {
   }
 
   /**
+   * Run scheduling on the specified scheduling specification with a timeout of 30 seconds
+   * Used when the scheduling run is expected to fail.
+   */
+  public SchedulingResponse awaitFailingScheduling(int schedulingSpecId) throws IOException {
+    return awaitFailingScheduling(schedulingSpecId, 30);
+  }
+
+  /**
+   * Run scheduling on the specified scheduling specification
+   * Used when the scheduling run is expected to fail.
+   */
+  public SchedulingResponse awaitFailingScheduling(int schedulingSpecId, int timeout) throws IOException {
+    for(int i = 0; i < timeout; ++i){
+      final var response = schedule(schedulingSpecId);
+      switch (response.status()) {
+        case "pending", "incomplete" -> {
+          try {
+            Thread.sleep(1000); // 1s
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        case "complete", "failed" -> {
+          return response;
+        }
+        default -> fail("Scheduling returned bad status " + response.status() + " with reason " +response.reason());
+      }
+    }
+    throw new TimeoutError("Scheduling timed out after " + timeout + " seconds");
+  }
+
+  /**
    * Start and immediately cancel a scheduling run with a timeout of 30 seconds
    * @param schedulingSpecId the scheduling specification to use
    *

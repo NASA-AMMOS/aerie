@@ -1063,7 +1063,9 @@ public class SchedulingTests {
      */
     @Test
     void executeSchedulingRunWithoutArguments() throws IOException {
-      assertThrows(AssertionFailedError.class, () -> hasura.awaitScheduling(specId));
+      final var resp = hasura.awaitFailingScheduling(specId);
+      final var message = resp.reason().getString("message");
+      assertTrue(message.contains("java.lang.RuntimeException: Record missing key Component[name=quantity"));
     }
 
     /**
