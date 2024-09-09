@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +71,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.parseJso
       }
       return goals;
     } catch (InvalidJsonException | InvalidEntityException e) {
-      throw new RuntimeException(e);
+      throw new SQLException(e);
     }
   }
 
