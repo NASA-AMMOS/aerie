@@ -35,6 +35,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 dokkaHtmlPartial.configure {
   dokkaSourceSets {
      configureEach {
