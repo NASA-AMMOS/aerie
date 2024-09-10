@@ -29,7 +29,7 @@ import kotlin.math.pow
  */
 data class Numbers<N: Number>(private val timeline: Timeline<Segment<N>, Numbers<N>>):
     Timeline<Segment<N>, Numbers<N>> by timeline,
-    SerialNumericOps<N, Numbers<N>>,
+    SerialNumericOps<N, N, Numbers<N>>,
     PrimitiveNumberOps<N, Numbers<N>>,
     SerialConstantOps<N, Numbers<N>>
 {

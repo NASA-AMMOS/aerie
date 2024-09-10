@@ -12,7 +12,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.LinearEquation
 /**
  * Operations for profiles that represent numbers.
  */
-interface SerialNumericOps<V: Any, THIS: SerialNumericOps<V, THIS>>: SerialSegmentOps<V, THIS>, NumericOps<V, THIS> {
+interface SerialNumericOps<V: Any, I: Number, THIS: SerialNumericOps<V, I, THIS>>: SerialSegmentOps<V, I, THIS>, NumericOps<V, THIS> {
   /** [(DOC)][toReal] Converts the profile to a linear profile, a.k.a. [Real] (no-op if it already was linear). */
   fun toReal(): Real
   /** [(DOC)][toNumbers] Converts the profile to a constant numbers profile, a.k.a. [Numbers] (no-op if it already was [Numbers]). */

@@ -52,7 +52,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param ctor the constructor of the result timeline
    * @param f a function which converts a payload object into the value of the resulting segment
    */
-  fun <R: Any, RESULT: SerialSegmentOps<R, RESULT>> flattenIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (T) -> R) =
+  fun <R: Any, RESULT: SerialSegmentOps<R, *, RESULT>> flattenIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, f: (T) -> R) =
       unsafeOperate(ctor) { bounds ->
         val result = collect(bounds).mapTo(mutableListOf()) { Segment(it.interval, f(it)) }
         result.sortWith { l, r -> l.interval.compareStarts(r.interval) }
@@ -90,7 +90,7 @@ interface ParallelOps<T: IntervalLike<T>, THIS: ParallelOps<T, THIS>>: GeneralOp
    * @param ctor the constructor of the result profile
    * @param op a binary operation for converting and combining the input objects
    */
-  fun <R: Any, RESULT: SerialSegmentOps<R, RESULT>> reduceIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, op: NullBinaryOperation<T, R, R>) =
+  fun <R: Any, RESULT: SerialSegmentOps<R, *, RESULT>> reduceIntoProfile(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, op: NullBinaryOperation<T, R, R>) =
       unsafeOperate(ctor) { opts ->
         val bounds = opts.bounds
         var acc: List<Segment<R>> = listOf()

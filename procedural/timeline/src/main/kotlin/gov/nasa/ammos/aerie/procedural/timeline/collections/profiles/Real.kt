@@ -19,7 +19,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.util.duration.*;
 /** A profile of [LinearEquations][LinearEquation]; a piece-wise linear real-number profile. */
 data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
     Timeline<Segment<LinearEquation>, Real> by timeline,
-    SerialNumericOps<LinearEquation, Real>,
+    SerialNumericOps<LinearEquation, Double, Real>,
     LinearOps<Real>
 {
   constructor(v: Number): this(LinearEquation(v.toDouble()))
@@ -42,7 +42,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   }
 
   /** Adds this and another numeric profile. */
-  operator fun plus(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, _ ->
+  operator fun plus(other: SerialNumericOps<*, *, *>) = map2Values(other.toReal()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue + shiftedRight.initialValue, l.rate + r.rate)
   }
@@ -51,7 +51,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   operator fun plus(n: Number) = plus(Numbers(n))
 
   /** Subtracts another numeric profile from this. */
-  operator fun minus(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, _ ->
+  operator fun minus(other: SerialNumericOps<*, *, *>) = map2Values(other.toReal()) { l, r, _ ->
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     LinearEquation(l.initialTime, l.initialValue - shiftedRight.initialValue, l.rate - r.rate)
   }
@@ -64,7 +64,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @throws RealOpException if both profiles have non-zero rate at the same time.
    */
-  operator fun times(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, i ->
+  operator fun times(other: SerialNumericOps<*, *, *>) = map2Values(other.toReal()) { l, r, i ->
     if (!l.isConstant() && !r.isConstant()) throw RealOpException("Cannot multiply two linear equations that are non-constant at the same time (at time ${i.start})")
     val shiftedRight = r.shiftInitialTime(l.initialTime)
     val newRate = l.rate * shiftedRight.initialValue + r.rate * l.initialValue
@@ -79,7 +79,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *
    * @throws RealOpException if the divisor has a non-zero rate at any time that the dividend is defined.
    */
-  operator fun div(other: SerialNumericOps<*, *>) = map2Values(other.toReal()) { l, r, i ->
+  operator fun div(other: SerialNumericOps<*, *, *>) = map2Values(other.toReal()) { l, r, i ->
     if (!r.isConstant()) throw RealOpException("Cannot divide by a non-piecewise-constant linear equation (at time ${i.start})")
     LinearEquation(l.initialTime, l.initialValue / r.initialValue, l.rate / r.initialValue)
   }
@@ -94,7 +94,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
    *                                 or if the base has a non-zero rate at any time that the exponent is defined and not
    *                                 either 0 or 1.
    */
-  infix fun pow(exp: SerialNumericOps<*, *>) = map2Values(exp.toReal()) { l, r, i ->
+  infix fun pow(exp: SerialNumericOps<*, *, *>) = map2Values(exp.toReal()) { l, r, i ->
     if (!r.isConstant()) throw RealOpException("Cannot apply a non-piecewise-constant exponent (at time ${i.start}")
     if (r.initialValue == 0.0) LinearEquation(1.0)
     else if (r.initialValue == 1.0) l
@@ -106,36 +106,36 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   infix fun pow(n: Number) = pow(Numbers(n))
 
   /** Returns a [Booleans] that is true when this and another numeric profile are equal. */
-  infix fun equalTo(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsEqualTo)
+  infix fun equalTo(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsEqualTo)
   /** Returns a [Booleans] that is true when this equals a constant number. */
   infix fun equalTo(n: Number) = equalTo(Numbers(n))
 
   /** Returns a [Booleans] that is true when this and another numeric profile are not equal. */
-  infix fun notEqualTo(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsNotEqualTo)
+  infix fun notEqualTo(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsNotEqualTo)
   /** Returns a [Booleans] that is true when this does not equal a constant number. */
   infix fun notEqualTo(n: Number) = notEqualTo(Numbers(n))
 
   /** Returns a [Booleans] that is true when this is less than another numeric profile. */
-  infix fun lessThan(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsLessThan)
+  infix fun lessThan(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsLessThan)
   /** Returns a [Booleans] that is true when this is less than a constant number. */
   infix fun lessThan(n: Number) = lessThan(Numbers(n))
 
   /** Returns a [Booleans] that is true when this is less than or equal to another numeric profile. */
-  infix fun lessThanOrEqualTo(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsLessThanOrEqualTo)
+  infix fun lessThanOrEqualTo(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsLessThanOrEqualTo)
   /** Returns a [Booleans] that is true when this is less than or equal to a constant number. */
   infix fun lessThanOrEqualTo(n: Number) = lessThanOrEqualTo(Numbers(n))
 
   /** Returns a [Booleans] that is true when this is greater than another numeric profile. */
-  infix fun greaterThan(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsGreaterThan)
+  infix fun greaterThan(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsGreaterThan)
   /** Returns a [Booleans] that is true when this is greater than a constant number. */
   infix fun greaterThan(n: Number) = greaterThan(Numbers(n))
 
   /** Returns a [Booleans] that is true when this is greater than or equal to another numeric profile. */
-  infix fun greaterThanOrEqualTo(other: SerialNumericOps<*, *>) = inequalityHelper(other, LinearEquation::intervalsGreaterThanOrEqualTo)
+  infix fun greaterThanOrEqualTo(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsGreaterThanOrEqualTo)
   /** Returns a [Booleans] that is true when this is greater than or equal to a constant number. */
   infix fun greaterThanOrEqualTo(n: Number) = greaterThanOrEqualTo(Numbers(n))
 
-  private fun inequalityHelper(other: SerialNumericOps<*, *>, f: LinearEquation.(LinearEquation) -> Booleans) =
+  private fun inequalityHelper(other: SerialNumericOps<*, *, *>, f: LinearEquation.(LinearEquation) -> Booleans) =
       flatMap2Values(::Booleans, other.toReal()) { l, r, _ -> l.f(r) }
 
   private fun detectChangesInternal(leftEdgeFilter: (Double, Double) -> Boolean, continuousFilter: (Double) -> Boolean) = unsafeOperate(::Booleans) { opts ->
@@ -165,11 +165,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
 
   override fun changes() = detectChangesInternal({ l, r -> l != r }, { it != 0.0 })
 
-  /**
-   * Returns a [Booleans] that is true whenever this discontinuously transitions between
-   * a specific pair of values, and false or gap everywhere else.
-   */
-  fun transitions(from: Double, to: Double) = detectEdges(NullBinaryOperation.cases(
+  override fun transitions(from: Double, to: Double) = detectEdges(NullBinaryOperation.cases(
       { l, i -> if (l.valueAt(i.start) == from) null else false },
       { r, i -> if (r.valueAt(i.start) == to) null else false },
       { l, r, i -> l.valueAt(i.start) == from && r.valueAt(i.start) == to }
@@ -188,8 +184,7 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
 
   private class UnreachableValueAtException: Exception("internal error. a serial profile had multiple values at the same time.")
 
-  /** Calculates the value of the profile at the given time. */
-  fun sample(time: Duration): Double? {
+  override fun sample(time: Duration): Double? {
     val list = collect(CollectOptions(Interval.at(time), true))
     if (list.isEmpty()) return null
     if (list.size > 1) throw UnreachableValueAtException()

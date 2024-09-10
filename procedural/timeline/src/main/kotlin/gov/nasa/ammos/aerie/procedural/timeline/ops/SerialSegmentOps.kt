@@ -10,31 +10,35 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.transpose
 import gov.nasa.ammos.aerie.procedural.timeline.util.coalesceList
 import gov.nasa.ammos.aerie.procedural.timeline.util.map2SegmentLists
 import gov.nasa.ammos.aerie.procedural.timeline.util.truncateList
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 
 /**
  * Operations mixin for timelines of ordered, non-overlapping segments (profiles).
  *
  * Opposite of [ParallelOps].
+ *
+ * @param V the segment payload type
+ * @param I the type of the instantaneous value represented by `V`. Differs from `V` only when the profile varies continuously.
  */
-interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<Segment<V>, THIS>, SegmentOps<V, THIS>, CoalesceSegmentsOp<V, THIS> {
+interface SerialSegmentOps<V : Any, I: Any, THIS: SerialSegmentOps<V, I, THIS>>: SerialOps<Segment<V>, THIS>, SegmentOps<V, THIS>, CoalesceSegmentsOp<V, THIS> {
   /** Overlays two profiles on each other, asserting that they both cannot be defined at the same time. */
-  infix fun zip(other: SerialSegmentOps<V, *>) = map2OptionalValues(other, NullBinaryOperation.zip())
+  infix fun zip(other: SerialSegmentOps<V, *, *>) = map2OptionalValues(other, NullBinaryOperation.zip())
 
   /** [(DOC)][assignGaps] Fills in gaps in this profile with another profile. */
   // While this is logically the converse of [set], they can't delegate to each other because it would mess up the return type.
-  infix fun assignGaps(other: SerialSegmentOps<V, *>) =
+  infix fun assignGaps(other: SerialSegmentOps<V, *, *>) =
       map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { l, _, _ -> l })
   /** [(DOC)][assignGaps] Fills in gaps in this profile with a constant value. */
   infix fun assignGaps(v: V) = assignGaps(Constants(v))
 
   /** [(DOC)][set] Overwrites this profile with another. Gaps in the argument profile will be filled in with this profile. */
-  infix fun set(other: SerialSegmentOps<V, *>) = map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { _, r, _ -> r })
+  infix fun set(other: SerialSegmentOps<V, *, *>) = map2OptionalValues(other, NullBinaryOperation.combineOrIdentity { _, r, _ -> r })
 
   /**
    * [(DOC)][map2OptionalValues] Performs a local binary operation between two profiles where the result
    * is the same type as this profile.
    */
-  fun <W: Any> map2OptionalValues(other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, V?>) = map2OptionalValues(ctor, other, op)
+  fun <W: Any> map2OptionalValues(other: SerialSegmentOps<W, *, *>, op: NullBinaryOperation<V, W, V?>) = map2OptionalValues(ctor, other, op)
 
   /**
    * [(DOC)][map2OptionalValues] Performs a local binary operation between two profiles, with special treatment
@@ -65,14 +69,14 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    *
    * @return a coalesced profile; an instance of the return type of [ctor]
    */
-  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> map2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, R?>) =
+  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> map2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *, *>, op: NullBinaryOperation<V, W, R?>) =
       unsafeOperate(ctor) { bounds -> map2SegmentLists(collect(bounds), other.collect(bounds), op) }
 
   /**
    * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens
    * it into a profile of the same type as this.
    */
-  fun <W: Any> flatMap2OptionalValues(other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<V, *>?>) = flatMap2OptionalValues(ctor, other, op)
+  fun <W: Any> flatMap2OptionalValues(other: SerialSegmentOps<W, *, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<V, *, *>?>) = flatMap2OptionalValues(ctor, other, op)
 
   /**
    * [(DOC)][flatMap2OptionalValues] Performs a local binary operation that produces profiles, and flattens it, with
@@ -96,7 +100,7 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    *
    * @see map2OptionalValues
    */
-  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> flatMap2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<R, *>?>) =
+  fun <W: Any, R: Any, RESULT: GeneralOps<Segment<R>, RESULT>> flatMap2OptionalValues(ctor: (Timeline<Segment<R>, RESULT>) -> RESULT, other: SerialSegmentOps<W, *, *>, op: NullBinaryOperation<V, W, SerialSegmentOps<R, *, *>?>) =
       unsafeOperate(ctor) { opts ->
         map2SegmentLists(collect(opts), other.collect(opts), op)
             .flatMap { it.value.collect(CollectOptions(it.interval, true)) }
@@ -155,6 +159,13 @@ interface SerialSegmentOps<V : Any, THIS: SerialSegmentOps<V, THIS>>: SerialOps<
    * This includes both continuous changes and discontinuous changes, if the profile can vary continuously.
    */
   fun changes(): Booleans
-  // `transitions(from, to)` is a similar function that you expect to also have a declaration here, but this isn't
-  // feasible because `Real.transitions` takes doubles as its arguments instead of its normal payload type (LinearEquation)
+
+  /**
+   * [(DOC)][transitions] Returns a [Booleans] that is `true` when this profile's value changes between
+   * two specific values.
+   */
+  fun transitions(from: I, to: I): Booleans
+
+  /** [(DOC)][sample] Calculates the value of the profile at the given time. */
+  fun sample(time: Duration): I?
 }
