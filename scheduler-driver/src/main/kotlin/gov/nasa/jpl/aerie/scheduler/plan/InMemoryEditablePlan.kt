@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.plan
 
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.Edit
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan
@@ -15,12 +14,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType
 import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator
 import gov.nasa.jpl.aerie.scheduler.model.*
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId
-import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults as TimelineSimResults
 
 data class InMemoryEditablePlan(
-    private val missionModel: MissionModel<*>,
     private var idGenerator: DirectiveIdGenerator,
     private val plan: SchedulerToProcedurePlanAdapter,
     private val simulationFacade: SimulationFacade,
@@ -81,12 +78,6 @@ data class InMemoryEditablePlan(
     simulationFacade.simulateWithResults(plan, options.pause.resolve(this))
     return latestResults()!!
   }
-
-  // These cannot be implemented with the by keyword,
-  // because directives() below needs a custom implementation.
-  override fun totalBounds() = plan.totalBounds()
-  override fun toRelative(abs: Instant) = plan.toRelative(abs)
-  override fun toAbsolute(rel: Duration) = plan.toAbsolute(rel)
 
   companion object {
     fun Directive<AnyDirective>.validateArguments(lookupActivityType: (String) -> ActivityType) {
