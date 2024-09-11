@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue
 import gov.nasa.ammos.aerie.procedural.timeline.*
 import gov.nasa.ammos.aerie.procedural.timeline.ops.GeneralOps
+import gov.nasa.ammos.aerie.procedural.timeline.ops.SerialSegmentOps
 import gov.nasa.ammos.aerie.procedural.timeline.ops.numeric.LinearOps
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
 import gov.nasa.ammos.aerie.procedural.timeline.ops.numeric.SerialNumericOps
@@ -110,10 +111,16 @@ data class Real(private val timeline: Timeline<Segment<LinearEquation>, Real>):
   /** Returns a [Booleans] that is true when this equals a constant number. */
   infix fun equalTo(n: Number) = equalTo(Numbers(n))
 
+  override fun equalTo(other: SerialSegmentOps<LinearEquation, *, *>) = equalTo(other as SerialNumericOps<*,*,*>)
+  override fun equalTo(v: Double) = equalTo(Numbers(v))
+
   /** Returns a [Booleans] that is true when this and another numeric profile are not equal. */
   infix fun notEqualTo(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsNotEqualTo)
   /** Returns a [Booleans] that is true when this does not equal a constant number. */
   infix fun notEqualTo(n: Number) = notEqualTo(Numbers(n))
+
+  override fun notEqualTo(other: SerialSegmentOps<LinearEquation, *, *>) = notEqualTo(other as SerialNumericOps<*,*,*>)
+  override fun notEqualTo(v: Double) = notEqualTo(Numbers(v))
 
   /** Returns a [Booleans] that is true when this is less than another numeric profile. */
   infix fun lessThan(other: SerialNumericOps<*, *, *>) = inequalityHelper(other, LinearEquation::intervalsLessThan)

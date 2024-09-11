@@ -21,6 +21,18 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
  * @param I the type of the instantaneous value represented by `V`. Differs from `V` only when the profile varies continuously.
  */
 interface SerialSegmentOps<V : Any, I: Any, THIS: SerialSegmentOps<V, I, THIS>>: SerialOps<Segment<V>, THIS>, SegmentOps<V, THIS>, CoalesceSegmentsOp<V, THIS> {
+  /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this and another profile are equal. */
+  infix fun equalTo(other: SerialSegmentOps<V, *, *>): Booleans
+
+  /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this equals a constant value. */
+  infix fun equalTo(v: I): Booleans
+
+  /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this and another profile are not equal. */
+  infix fun notEqualTo(other: SerialSegmentOps<V, *, *>): Booleans
+
+  /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this is not equal to a constant value. */
+  infix fun notEqualTo(v: I): Booleans
+
   /** Overlays two profiles on each other, asserting that they both cannot be defined at the same time. */
   infix fun zip(other: SerialSegmentOps<V, *, *>) = map2OptionalValues(other, NullBinaryOperation.zip())
 

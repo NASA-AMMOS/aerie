@@ -12,18 +12,16 @@ import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Constants
 interface SerialConstantOps<V: Any, THIS: SerialConstantOps<V, THIS>>: SerialSegmentOps<V, V, THIS>, ConstantOps<V, THIS> {
 
   /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this and another profile are equal. */
-  infix fun equalTo(other: SerialConstantOps<V, *>) =
+  override infix fun equalTo(other: SerialSegmentOps<V, *, *>) =
       map2Values(::Booleans, other) { l, r, _ -> l == r }
 
-  /** [(DOC)][equalTo] Returns a [Booleans] that is `true` when this equals a constant value. */
-  infix fun equalTo(v: V) = equalTo(Constants(v))
+  override infix fun equalTo(v: V) = equalTo(Constants(v))
 
   /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this and another profile are not equal. */
-  infix fun notEqualTo(other: SerialConstantOps<V, *>) =
+  override infix fun notEqualTo(other: SerialSegmentOps<V, *, *>) =
       map2Values(::Booleans, other) { l, r, _ -> l != r }
 
-  /** [(DOC)][notEqualTo] Returns a [Booleans] that is `true` when this is not equal to a constant value. */
-  infix fun notEqualTo(v: V) = notEqualTo(Constants(v))
+  override infix fun notEqualTo(v: V) = notEqualTo(Constants(v))
 
   override fun changes() = detectEdges(NullBinaryOperation.combineOrNull { l, r, _-> l != r })
 
