@@ -239,6 +239,27 @@ public sealed interface SerializedValue extends Comparable<SerializedValue> {
     return new ListValue(value);
   }
 
+  /**
+   * Creates a {@link SerializedValue} from a polymorphic {@link Object}.
+   *
+   * @param any Any object.
+   * @return A new {@link SerializedValue} containing the value.
+   */
+  @SuppressWarnings("unchecked")
+  static SerializedValue ofAny(final Object any) {
+    return switch (any) {
+      case null -> ofNull();
+      case BigDecimal d -> of(d);
+      case Double d -> of(d);
+      case Long l -> of(l);
+      case Boolean b -> of(b);
+      case String s -> of(s);
+      case Map<?,?> m -> of((Map<String, SerializedValue>) m);
+      case List<?> l -> of((List<SerializedValue>) l);
+      default -> throw new IllegalArgumentException("Unsupported type in SerializedValue: " + any.getClass().getSimpleName());
+    };
+  }
+
 
   /**
    * Provides a default case on top of the base Visitor.
