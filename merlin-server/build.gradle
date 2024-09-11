@@ -3,12 +3,17 @@ plugins {
   id 'application'
   id 'com.github.node-gradle.node' version '5.0.0'
   id 'jacoco'
+  id "org.jetbrains.kotlin.jvm" version "2.0.20"
 }
 
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(21)
   }
+}
+
+kotlin {
+  jvmToolchain(21)
 }
 
 node {
@@ -84,6 +89,8 @@ dependencies {
   implementation project(':parsing-utilities')
   implementation project(':constraints')
   implementation project(':permissions')
+  implementation project(':procedural:timeline')
+  implementation project(':procedural:constraints')
 
   implementation 'io.javalin:javalin:5.6.3'
   implementation 'org.slf4j:slf4j-simple:2.0.7'
