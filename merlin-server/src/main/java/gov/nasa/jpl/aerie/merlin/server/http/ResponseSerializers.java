@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.ammos.aerie.procedural.constraints.Violation;
+import gov.nasa.ammos.aerie.procedural.timeline.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintResult;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.types.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser;
@@ -19,7 +19,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
-import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -27,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkEffecti
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService.BulkArgumentValidationResponse;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -217,17 +218,19 @@ public final class ResponseSerializers {
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
-        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.windows()))
-        .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds()))
+        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, List.of(violation.getInterval())))
+        .add("activityInstanceIds", serializeIterable(Json::createValue, violation.getIds().stream().map($ -> switch ($) {
+          case ActivityDirectiveId d -> d.id();
+          case ActivityInstanceId i -> i.id();
+          default -> throw new Error("unreachable");
+        }).toList()))
         .build();
   }
 
   public static JsonValue serializeConstraintResult(final ConstraintResult list) {
     return Json
         .createObjectBuilder()
-        .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.violations))
-        .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, list.gaps))
-        .add("resourceIds", serializeIterable(Json::createValue, list.resourceIds))
+        .add("violations", serializeIterable(ResponseSerializers::serializeConstraintViolation, list.getViolations()))
         .build();
   }
 

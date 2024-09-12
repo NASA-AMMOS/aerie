@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.plan
+package gov.nasa.jpl.aerie.merlin.driver
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
@@ -8,20 +8,20 @@ import gov.nasa.ammos.aerie.procedural.timeline.collections.Instances
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.rangeTo
 import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceSegmentsOp
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
-import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Activity
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan
-import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
 import gov.nasa.jpl.aerie.types.ActivityDirectiveId
 import gov.nasa.jpl.aerie.types.ActivityInstanceId
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
 
+import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults as TimelineSimResults
+
 class MerlinToProcedureSimulationResultsAdapter(
-    private val results: gov.nasa.jpl.aerie.merlin.driver.SimulationResults,
-    private val stale: Boolean,
-    private val plan: Plan
-): SimulationResults {
+  private val results: SimulationResults,
+  private val stale: Boolean,
+  private val plan: Plan
+): TimelineSimResults {
 
   override fun isStale() = stale
 
@@ -73,7 +73,8 @@ class MerlinToProcedureSimulationResultsAdapter(
   private val commonActivities by lazy {
     val result = mutableListOf<CommonActivity>()
     for ((key, a) in results.simulatedActivities) {
-      result.add(CommonActivity(
+      result.add(
+        CommonActivity(
         a.arguments,
         a.type,
         a.directiveId.getOrNull(),
@@ -81,10 +82,12 @@ class MerlinToProcedureSimulationResultsAdapter(
         a.start,
         a.parentId,
         FinishedActivityAttributes(a.duration, a.computedAttributes)
-      ))
+      )
+      )
     }
     for ((key, a) in results.unfinishedActivities) {
-      result.add(CommonActivity(
+      result.add(
+        CommonActivity(
         a.arguments,
         a.type,
         a.directiveId.getOrNull(),
@@ -92,7 +95,8 @@ class MerlinToProcedureSimulationResultsAdapter(
         a.start,
         a.parentId,
         null
-      ))
+      )
+      )
     }
     result
   }

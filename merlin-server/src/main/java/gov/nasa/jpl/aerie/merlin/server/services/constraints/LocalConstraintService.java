@@ -1,6 +1,5 @@
-package gov.nasa.jpl.aerie.merlin.server.services;
+package gov.nasa.jpl.aerie.merlin.server.services.constraints;
 
-import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ConstraintRepository;

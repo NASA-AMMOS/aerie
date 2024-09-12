@@ -1,73 +1,23 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
-import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
-import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
-import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
-import gov.nasa.jpl.aerie.constraints.tree.Changes;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
-import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
-import gov.nasa.jpl.aerie.constraints.tree.Ends;
-import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
-import gov.nasa.jpl.aerie.constraints.tree.ForEachActivityViolations;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.KeepTrueSegment;
-import gov.nasa.jpl.aerie.constraints.tree.LessThan;
-import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
-import gov.nasa.jpl.aerie.constraints.tree.Not;
-import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.Plus;
-import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
-import gov.nasa.jpl.aerie.constraints.tree.Rate;
-import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
-import gov.nasa.jpl.aerie.constraints.tree.RealResource;
-import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.constraints.tree.RollingThreshold;
-import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
-import gov.nasa.jpl.aerie.constraints.tree.ShiftEdges;
-import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
-import gov.nasa.jpl.aerie.constraints.tree.SpansConnectTo;
-import gov.nasa.jpl.aerie.constraints.tree.SpansContains;
-import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
-import gov.nasa.jpl.aerie.constraints.tree.SpansSelectWhenTrue;
-import gov.nasa.jpl.aerie.constraints.tree.Split;
-import gov.nasa.jpl.aerie.constraints.tree.Starts;
-import gov.nasa.jpl.aerie.constraints.tree.Times;
-import gov.nasa.jpl.aerie.constraints.tree.Transition;
-import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
-import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintsDSLCompilationService;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.IOException;
-import java.time.Instant;
-import java.util.Map;
+import java.io.StringReader;
+import java.util.List;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitHull;
-import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.DeficitSpans;
-import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessHull;
-import static gov.nasa.jpl.aerie.constraints.tree.RollingThreshold.RollingThresholdAlgorithm.ExcessSpans;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -89,13 +39,12 @@ class ConstraintsDSLCompilationServiceTests {
   void tearDown() {
     constraintsDSLCompilationService.close();
   }
-
-  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
+  synchronized private <T> void checkSuccessfulCompilation(String constraint, String expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
     result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), Optional.empty(), constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
-      assertEquals(expected, r.constraintExpression());
+      assertEquals(parseJsonString(expected), r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
@@ -113,21 +62,36 @@ class ConstraintsDSLCompilationServiceTests {
     }
   }
 
+  private static JsonObject parseJsonString(String input) {
+    try (final var parser = Json.createReader(new StringReader(input))) {
+      return parser.readObject();
+    }
+  }
+
   @Test
   void testConstraintsDSL_helper_function()
   {
     checkSuccessfulCompilation(
-      """
+        """
         export default function myConstraint() {
           return times2(Real.Resource("state of charge")).changes()
         }
         function times2(e: Real): Real {
           return e.times(2)
         }
-      """,
-      new ViolationsOfWindows(
-          new Changes<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
-      )
+        """,
+        """
+            {
+              "kind": "ProfileChanges",
+              "expression": {
+                "kind": "RealProfileTimes",
+                "multiplier": 2,
+                "profile": {
+                  "kind": "RealProfileResource",
+                  "name": "state of charge"
+                }
+              }
+            }"""
     );
   }
 
@@ -139,7 +103,24 @@ class ConstraintsDSLCompilationServiceTests {
               return Windows.During(ActivityType.activity)
           }
         """,
-        new ViolationsOfWindows(new Or(new WindowsFromSpans(new ForEachActivitySpans("activity", "span activity alias 0", new ActivitySpan("span activity alias 0")))))
+        """
+{
+    "kind": "WindowsExpressionOr",
+    "expressions": [
+        {
+            "kind": "WindowsExpressionFromSpans",
+            "spansExpression": {
+                "kind": "ForEachActivitySpans",
+                "activityType": "activity",
+                "alias": "span activity alias 0",
+                "expression": {
+                    "kind": "SpansExpressionActivitySpan",
+                    "alias": "span activity alias 0"
+                }
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -181,7 +162,14 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").changes();
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "DiscreteProfileResource",
+        "name": "mode"
+    }
+}"""
     );
   }
 
@@ -193,7 +181,14 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(5).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "DiscreteProfileValue",
+        "value": 5
+    }
+}"""
     );
   }
 
@@ -208,10 +203,19 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(
-            SerializedValue.of(5),
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
-        ))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "DiscreteProfileValue",
+        "value": 5,
+        "interval": {
+            "kind": "AbsoluteInterval",
+            "start": "2019-11-18T10:52:01.816Z",
+            "end": "2019-11-18T10:52:02.816Z"
+        }
+    }
+}"""
     );
   }
 
@@ -224,11 +228,29 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").valueAt(new ActivityInstance(ActivityType.activity, "alias1").span().starts()).notEqual("Option1")
             }
         """,
-        new ViolationsOfWindows(new NotEqual<>(
-            new ValueAt<>(
-                new ProfileExpression<>(new DiscreteResource("mode")),
-                new Starts<>(new ActivitySpan("alias1"))),
-            new DiscreteValue(SerializedValue.of("Option1")))));
+        """
+{
+    "kind": "ExpressionNotEqual",
+    "left": {
+        "kind": "ValueAtExpression",
+        "profile": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        },
+        "timepoint": {
+            "kind": "IntervalsExpressionStarts",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "alias1"
+            }
+        }
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option1"
+    }
+}"""
+    );
   }
 
 
@@ -241,11 +263,20 @@ class ConstraintsDSLCompilationServiceTests {
               (instance) => instance.parameters.Param.changes()
             )
         """,
-        new ForEachActivityViolations(
-            "activity",
-            "activity alias 0",
-            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
-        )
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "ProfileChanges",
+        "expression": {
+            "kind": "DiscreteProfileParameter",
+            "alias": "activity alias 0",
+            "name": "Param"
+        }
+    }
+}"""
     );
   }
 
@@ -257,13 +288,16 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").transition("Option1", "Option2");
             }
         """,
-        new ViolationsOfWindows(
-            new Transition(
-                new DiscreteResource("mode"),
-                SerializedValue.of("Option1"),
-                SerializedValue.of("Option2")
-            )
-        )
+        """
+{
+    "kind": "DiscreteProfileTransition",
+    "profile": {
+        "kind": "DiscreteProfileResource",
+        "name": "mode"
+    },
+    "from": "Option1",
+    "to": "Option2"
+}"""
     );
   }
 
@@ -287,7 +321,18 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal("Option2");
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "DiscreteProfileResource",
+        "name": "mode"
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option2"
+    }
+}"""
     );
   }
 
@@ -299,7 +344,18 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOfWindows(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4))))
+        """
+{
+    "kind": "ExpressionNotEqual",
+    "left": {
+        "kind": "DiscreteProfileResource",
+        "name": "an integer"
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": 4
+    }
+}"""
     );
   }
 
@@ -311,7 +367,14 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(4).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "DiscreteProfileValue",
+        "value": 4
+    }
+}"""
     );
   }
 
@@ -323,7 +386,18 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").equal("Option1")
           }
         """,
-        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "DiscreteProfileResource",
+        "name": "mode"
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option1"
+    }
+}"""
     );
   }
 
@@ -335,15 +409,25 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").assignGaps("Option1").equal("Option1");
           }
         """,
-        new ViolationsOfWindows(
-            new Equal<>(
-                new AssignGaps<>(
-                    new DiscreteResource("mode"),
-                    new DiscreteValue(SerializedValue.of("Option1"))
-                ),
-                new DiscreteValue(SerializedValue.of("Option1"))
-            )
-        )
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "AssignGapsExpression",
+        "originalProfile": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        },
+        "defaultProfile": {
+            "kind": "DiscreteProfileValue",
+            "value": "Option1"
+        }
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option1"
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -352,7 +436,25 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").assignGaps(Discrete.Resource("mode")).equal("Option1");
           }
         """,
-        new ViolationsOfWindows(new Equal<>(new AssignGaps<>(new DiscreteResource("mode"), new DiscreteResource("mode")), new DiscreteValue(SerializedValue.of("Option1"))))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "AssignGapsExpression",
+        "originalProfile": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        },
+        "defaultProfile": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        }
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option1"
+    }
+}"""
     );
   }
 
@@ -366,7 +468,14 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").changes();
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    }
+}"""
     );
   }
 
@@ -378,7 +487,15 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -393,10 +510,20 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
-        ))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 3,
+        "interval": {
+            "kind": "AbsoluteInterval",
+            "start": "2019-11-18T10:52:01.816Z",
+            "end": "2019-11-18T10:52:02.816Z"
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -410,11 +537,22 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.of(
-                Interval.Inclusivity.Exclusive), Optional.of(Interval.Inclusivity.Inclusive)))
-        ))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 3,
+        "interval": {
+            "kind": "AbsoluteInterval",
+            "start": "2019-11-18T10:52:01.816Z",
+            "end": "2019-11-18T10:52:02.816Z",
+            "startInclusivity": "Exclusive",
+            "endInclusivity": "Inclusive"
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -425,10 +563,20 @@ class ConstraintsDSLCompilationServiceTests {
               )).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.empty(), Optional.empty()))
-        ))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 3,
+        "interval": {
+            "kind": "AbsoluteInterval",
+            "start": "2019-11-18T10:52:01.816Z",
+            "end": "2019-11-18T10:52:01.816Z"
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -437,10 +585,18 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5, 3, Interval.Horizon()).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
-            5, 3,
-            Optional.of(new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))
-        ))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 3,
+        "interval": {
+            "kind": "AbsoluteInterval"
+        }
+    }
+}"""
     );
   }
 
@@ -453,11 +609,20 @@ class ConstraintsDSLCompilationServiceTests {
               (instance) => instance.parameters.AnotherParam.changes()
             )
         """,
-        new ForEachActivityViolations(
-            "activity",
-            "activity alias 0",
-            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
-        )
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "ProfileChanges",
+        "expression": {
+            "kind": "RealProfileParameter",
+            "alias": "activity alias 0",
+            "name": "AnotherParam"
+        }
+    }
+}"""
     );
   }
 
@@ -469,7 +634,22 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfileRate",
+        "profile": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -481,7 +661,26 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(Temporal.Duration.from({seconds: 1}));
             }
         """,
-        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(1000, Duration.MILLISECONDS))))
+        """
+{
+    "kind": "WindowsExpressionLongerThan",
+    "windowExpression": {
+        "kind": "ExpressionEqual",
+        "left": {
+            "kind": "RealProfileRate",
+            "profile": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            }
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 4,
+            "rate": 0
+        }
+    },
+    "duration": 1000000
+}"""
     );
   }
 
@@ -493,7 +692,26 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(Temporal.Duration.from({hours: 2}));
             }
         """,
-        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(2, Duration.HOURS))))
+        """
+{
+    "kind": "WindowsExpressionShorterThan",
+    "windowExpression": {
+        "kind": "ExpressionEqual",
+        "left": {
+            "kind": "RealProfileRate",
+            "profile": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            }
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 4,
+            "rate": 0
+        }
+    },
+    "duration": 7200000000
+}"""
     );
   }
 
@@ -506,11 +724,27 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
-        new ViolationsOfWindows(new ShiftEdges<>(
-            new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
-            new DurationLiteral(Duration.of(2, Duration.MINUTE)),
-            new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
-        )
+        """
+{
+    "kind": "IntervalsExpressionShiftEdges",
+    "expression": {
+        "kind": "ExpressionEqual",
+        "left": {
+            "kind": "RealProfileRate",
+            "profile": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            }
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 4,
+            "rate": 0
+        }
+    },
+    "fromStart": 120000000,
+    "fromEnd": -1200000000
+}"""
     );
   }
 
@@ -522,7 +756,23 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").times(2).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfileTimes",
+        "multiplier": 2,
+        "profile": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -534,7 +784,27 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").plus(Real.Value(2.0)).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfilePlus",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 2,
+            "rate": 0
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -546,7 +816,23 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").negate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), -1.0), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfileTimes",
+        "profile": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "multiplier": -1
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -558,7 +844,27 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").minus(2.0).equal(4.0)
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(-2.0)), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfilePlus",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": -2,
+            "rate": 0
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -567,7 +873,30 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").minus(Real.Resource("state of charge")).equal(4.0)
             }
         """,
-        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new Times(new RealResource("state of charge"), -1.0)), new RealValue(4.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfilePlus",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileTimes",
+            "profile": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "multiplier": -1
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -579,7 +908,19 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
+        """
+{
+    "kind": "RealProfileLessThan",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 2,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -591,7 +932,19 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
+        """
+{
+    "kind": "RealProfileLessThanOrEqual",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 2,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -603,7 +956,19 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
+        """
+{
+    "kind": "RealProfileGreaterThan",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 2,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -615,7 +980,19 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOfWindows(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
+        """
+{
+    "kind": "RealProfileGreaterThanOrEqual",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 2,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -627,7 +1004,19 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1));
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "state of charge"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": -1,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -639,7 +1028,19 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("an integer").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOfWindows(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
+        """
+{
+    "kind": "ExpressionNotEqual",
+    "left": {
+        "kind": "RealProfileResource",
+        "name": "an integer"
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": -1,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -651,14 +1052,56 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("an integer").isWithin(Real.Value(10), Real.Value(1));
         }
         """,
-        new ViolationsOfWindows(
-            new And(
-                java.util.List.of(
-                    new LessThanOrEqual(new RealResource("an integer"), new Plus(new RealValue(10), new RealValue(1))),
-                    new GreaterThanOrEqual(new RealResource("an integer"), new Plus(new RealValue(10), new Times(new RealValue(1), -1)))
-                )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionAnd",
+    "expressions": [
+        {
+            "kind": "RealProfileLessThanOrEqual",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "an integer"
+            },
+            "right": {
+                "kind": "RealProfilePlus",
+                "left": {
+                    "kind": "RealProfileValue",
+                    "value": 10,
+                    "rate": 0
+                },
+                "right": {
+                    "kind": "RealProfileValue",
+                    "value": 1,
+                    "rate": 0
+                }
+            }
+        },
+        {
+            "kind": "RealProfileGreaterThanOrEqual",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "an integer"
+            },
+            "right": {
+                "kind": "RealProfilePlus",
+                "left": {
+                    "kind": "RealProfileValue",
+                    "value": 10,
+                    "rate": 0
+                },
+                "right": {
+                    "kind": "RealProfileTimes",
+                    "profile": {
+                        "kind": "RealProfileValue",
+                        "value": 1,
+                        "rate": 0
+                    },
+                    "multiplier": -1
+                }
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -670,7 +1113,15 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(4).changes()
             }
         """,
-        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
+        """
+{
+    "kind": "ProfileChanges",
+    "expression": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -682,7 +1133,28 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Value(2.2).plus(-3).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0)))
+        """
+            {
+              "kind": "RealProfileLessThan",
+              "left": {
+                "kind": "RealProfilePlus",
+                "left": {
+                  "kind": "RealProfileValue",
+                  "value": 2.2,
+                  "rate": 0
+                },
+                "right": {
+                  "kind": "RealProfileValue",
+                  "value": -3,
+                  "rate": 0
+                }
+              },
+              "right": {
+                "kind": "RealProfileValue",
+                "value": 5,
+                "rate": 0
+              }
+            }"""
     );
   }
 
@@ -694,7 +1166,27 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").assignGaps(0).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealValue(0.0)), new RealValue(5.0)))
+        """
+{
+    "kind": "RealProfileLessThan",
+    "left": {
+        "kind": "AssignGapsExpression",
+        "originalProfile": {
+            "kind": "RealProfileResource",
+            "name": "an integer"
+        },
+        "defaultProfile": {
+            "kind": "RealProfileValue",
+            "value": 0,
+            "rate": 0
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 0
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -703,7 +1195,26 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").assignGaps(Real.Resource("an integer")).lessThan(5);
           }
         """,
-        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealResource("an integer")), new RealValue(5.0)))
+        """
+{
+    "kind": "RealProfileLessThan",
+    "left": {
+        "kind": "AssignGapsExpression",
+        "originalProfile": {
+            "kind": "RealProfileResource",
+            "name": "an integer"
+        },
+        "defaultProfile": {
+            "kind": "RealProfileResource",
+            "name": "an integer"
+        }
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -717,7 +1228,16 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "WindowsExpressionActivityWindow",
+        "alias": "activity alias 0"
+    }
+}"""
     );
   }
 
@@ -729,7 +1249,22 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start().windows());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Starts<>(new ActivitySpan("activity alias 0")))))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "WindowsExpressionFromSpans",
+        "spansExpression": {
+            "kind": "IntervalsExpressionStarts",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "activity alias 0"
+            }
+        }
+    }
+}"""
     );
   }
 
@@ -741,7 +1276,22 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end().windows());
           }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Ends<>(new ActivitySpan("activity alias 0")))))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "WindowsExpressionFromSpans",
+        "spansExpression": {
+            "kind": "IntervalsExpressionEnds",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "activity alias 0"
+            }
+        }
+    }
+}"""
     );
   }
 
@@ -754,14 +1304,34 @@ class ConstraintsDSLCompilationServiceTests {
               .if(Discrete.Resource("mode").changes());
           }
         """,
-        new ViolationsOfWindows(
-            new Or(
-                new Not(new Changes<>(
-                    new ProfileExpression<>(new DiscreteResource("mode"))
-                )),
-                new LessThan(new RealResource("state of charge"), new RealValue(2.0))
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionOr",
+    "expressions": [
+        {
+            "kind": "WindowsExpressionNot",
+            "expression": {
+                "kind": "ProfileChanges",
+                "expression": {
+                    "kind": "DiscreteProfileResource",
+                    "name": "mode"
+                }
+            }
+        },
+        {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 2,
+                "rate": 0
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -777,15 +1347,43 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        new ViolationsOfWindows(
-            new And(
-                java.util.List.of(
-                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionAnd",
+    "expressions": [
+        {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 2,
+                "rate": 0
+            }
+        },
+        {
+            "kind": "ExpressionNotEqual",
+            "left": {
+                "kind": "DiscreteProfileValue",
+                "value": "hello there"
+            },
+            "right": {
+                "kind": "DiscreteProfileValue",
+                "value": "hello there"
+            }
+        },
+        {
+            "kind": "ProfileChanges",
+            "expression": {
+                "kind": "RealProfileValue",
+                "value": 5,
+                "rate": 0
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -801,15 +1399,43 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        new ViolationsOfWindows(
-            new Or(
-                java.util.List.of(
-                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionOr",
+    "expressions": [
+        {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 2,
+                "rate": 0
+            }
+        },
+        {
+            "kind": "ExpressionNotEqual",
+            "left": {
+                "kind": "DiscreteProfileValue",
+                "value": "hello there"
+            },
+            "right": {
+                "kind": "DiscreteProfileValue",
+                "value": "hello there"
+            }
+        },
+        {
+            "kind": "ProfileChanges",
+            "expression": {
+                "kind": "RealProfileValue",
+                "value": 5,
+                "rate": 0
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -821,11 +1447,17 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").changes().not()
           }
         """,
-        new ViolationsOfWindows(
-            new Not(
-                new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionNot",
+    "expression": {
+        "kind": "ProfileChanges",
+        "expression": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        }
+    }
+}"""
     );
   }
 
@@ -837,9 +1469,22 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).starts()
           }
         """,
-        new ViolationsOfWindows(
-            new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
-        )
+        """
+{
+    "kind": "IntervalsExpressionStarts",
+    "expression": {
+        "kind": "RealProfileLessThan",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 0.3,
+            "rate": 0
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -848,9 +1493,28 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().starts().windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(new Starts<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "IntervalsExpressionStarts",
+        "expression": {
+            "kind": "SpansExpressionFromWindows",
+            "windowsExpression": {
+                "kind": "RealProfileLessThan",
+                "left": {
+                    "kind": "RealProfileResource",
+                    "name": "state of charge"
+                },
+                "right": {
+                    "kind": "RealProfileValue",
+                    "value": 0.3,
+                    "rate": 0
+                }
+            }
+        }
+    }
+}"""
     );
   }
 @Test
@@ -861,9 +1525,26 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).starts().keepTrueSegment(2)
           }
         """,
-        new ViolationsOfWindows(
-            new KeepTrueSegment(new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3))), 2)
-        )
+        """
+{
+    "kind": "WindowsExpressionKeepTrueSegment",
+    "expression": {
+        "kind": "IntervalsExpressionStarts",
+        "expression": {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 0.3,
+                "rate": 0
+            }
+        }
+    },
+    "index": 2
+}"""
     );
   }
 
@@ -875,9 +1556,22 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).ends()
           }
         """,
-        new ViolationsOfWindows(
-            new Ends<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
-        )
+        """
+{
+    "kind": "IntervalsExpressionEnds",
+    "expression": {
+        "kind": "RealProfileLessThan",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 0.3,
+            "rate": 0
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -886,9 +1580,28 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().ends().windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(new Ends<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "IntervalsExpressionEnds",
+        "expression": {
+            "kind": "SpansExpressionFromWindows",
+            "windowsExpression": {
+                "kind": "RealProfileLessThan",
+                "left": {
+                    "kind": "RealProfileResource",
+                    "name": "state of charge"
+                },
+                "right": {
+                    "kind": "RealProfileValue",
+                    "value": 0.3,
+                    "rate": 0
+                }
+            }
+        }
+    }
+}"""
     );
   }
 
@@ -900,16 +1613,28 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(4).windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(
-              new Split<>(
-                  new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
-                  4,
-                  Interval.Inclusivity.Inclusive,
-                  Interval.Inclusivity.Exclusive
-              )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansExpressionSplit",
+        "intervals": {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 0.3,
+                "rate": 0
+            }
+        },
+        "numberOfSubIntervals": 4,
+        "internalStartInclusivity": "Inclusive",
+        "internalEndInclusivity": "Exclusive"
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -918,16 +1643,31 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(4).windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(
-              new Split<>(
-                  new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
-                  4,
-                  Interval.Inclusivity.Inclusive,
-                  Interval.Inclusivity.Exclusive
-              )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansExpressionSplit",
+        "intervals": {
+            "kind": "SpansExpressionFromWindows",
+            "windowsExpression": {
+                "kind": "RealProfileLessThan",
+                "left": {
+                    "kind": "RealProfileResource",
+                    "name": "state of charge"
+                },
+                "right": {
+                    "kind": "RealProfileValue",
+                    "value": 0.3,
+                    "rate": 0
+                }
+            }
+        },
+        "numberOfSubIntervals": 4,
+        "internalStartInclusivity": "Inclusive",
+        "internalEndInclusivity": "Exclusive"
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -936,16 +1676,28 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(4, Inclusivity.Exclusive, Inclusivity.Inclusive).windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(
-                new Split<>(
-                    new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
-                    4,
-                    Interval.Inclusivity.Exclusive,
-                    Interval.Inclusivity.Inclusive
-                )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansExpressionSplit",
+        "intervals": {
+            "kind": "RealProfileLessThan",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 0.3,
+                "rate": 0
+            }
+        },
+        "numberOfSubIntervals": 4,
+        "internalStartInclusivity": "Exclusive",
+        "internalEndInclusivity": "Inclusive"
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -954,16 +1706,31 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(4, Inclusivity.Exclusive, Inclusivity.Exclusive).windows()
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(
-                new Split<>(
-                    new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
-                    4,
-                    Interval.Inclusivity.Exclusive,
-                    Interval.Inclusivity.Exclusive
-                )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansExpressionSplit",
+        "intervals": {
+            "kind": "SpansExpressionFromWindows",
+            "windowsExpression": {
+                "kind": "RealProfileLessThan",
+                "left": {
+                    "kind": "RealProfileResource",
+                    "name": "state of charge"
+                },
+                "right": {
+                    "kind": "RealProfileValue",
+                    "value": 0.3,
+                    "rate": 0
+                }
+            }
+        },
+        "numberOfSubIntervals": 4,
+        "internalStartInclusivity": "Exclusive",
+        "internalEndInclusivity": "Exclusive"
+    }
+}"""
     );
   }
 
@@ -1016,12 +1783,31 @@ class ConstraintsDSLCompilationServiceTests {
               .lessThan(5);
           }
         """,
-        new ViolationsOfWindows(
-            new LessThan(
-                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), new DurationLiteral(Duration.MINUTE)),
-                new RealValue(5.0)
-            )
-        )
+        """
+{
+    "kind": "RealProfileLessThan",
+    "left": {
+        "kind": "RealProfileAccumulatedDuration",
+        "intervalsExpression": {
+            "kind": "ExpressionEqual",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 4,
+                "rate": 0
+            }
+        },
+        "unit": 60000000
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 5,
+        "rate": 0
+    }
+}"""
     );
   }
 
@@ -1033,7 +1819,22 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1)).violations();
         }
         """,
-        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
+        """
+{
+    "kind": "ViolationsOf",
+    "expression": {
+        "kind": "ExpressionEqual",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": -1,
+            "rate": 0
+        }
+    }
+}"""
     );
   }
 
@@ -1045,7 +1846,11 @@ class ConstraintsDSLCompilationServiceTests {
             return Windows.Value(false);
           }
         """,
-        new ViolationsOfWindows(new WindowsValue(false))
+        """
+{
+    "kind": "WindowsExpressionValue",
+    "value": false
+}"""
     );
   }
 
@@ -1057,7 +1862,26 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("an integer").lessThan(5).assignGaps(false);
           }
         """,
-        new ViolationsOfWindows(new AssignGaps<>(new LessThan(new RealResource("an integer"), new RealValue(5.0)), new WindowsValue(false)))
+        """
+{
+    "kind": "AssignGapsExpression",
+    "originalProfile": {
+        "kind": "RealProfileLessThan",
+        "left": {
+            "kind": "RealProfileResource",
+            "name": "an integer"
+        },
+        "right": {
+            "kind": "RealProfileValue",
+            "value": 5,
+            "rate": 0
+        }
+    },
+    "defaultProfile": {
+        "kind": "WindowsExpressionValue",
+        "value": false
+    }
+}"""
     );
   }
 
@@ -1071,7 +1895,25 @@ class ConstraintsDSLCompilationServiceTests {
                 return Real.Resource("state of charge").equal(0.3).spans().windows();
             }
         """,
-        new ViolationsOfWindows(new WindowsFromSpans(new SpansFromWindows(new Equal<>(new RealResource("state of charge"), new RealValue(0.3)))))
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansExpressionFromWindows",
+        "windowsExpression": {
+            "kind": "ExpressionEqual",
+            "left": {
+                "kind": "RealProfileResource",
+                "name": "state of charge"
+            },
+            "right": {
+                "kind": "RealProfileValue",
+                "value": 0.3,
+                "rate": 0
+            }
+        }
+    }
+}"""
     );
   }
 
@@ -1085,15 +1927,33 @@ class ConstraintsDSLCompilationServiceTests {
           return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
-        new ForEachActivityViolations(
-            "activity",
-            "activity alias 0",
-            new ForEachActivityViolations(
-                "activity",
-                "activity alias 1",
-                new ViolationsOfWindows(new Not(new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
-            )
-        )
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "ForEachActivityViolations",
+        "activityType": "activity",
+        "alias": "activity alias 1",
+        "expression": {
+            "kind": "WindowsExpressionNot",
+            "expression": {
+                "kind": "WindowsExpressionAnd",
+                "expressions": [
+                    {
+                        "kind": "WindowsExpressionActivityWindow",
+                        "alias": "activity alias 0"
+                    },
+                    {
+                        "kind": "WindowsExpressionActivityWindow",
+                        "alias": "activity alias 1"
+                    }
+                ]
+            }
+        }
+    }
+}"""
     );
   }
 
@@ -1108,7 +1968,16 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "WindowsExpressionActivityWindow",
+        "alias": "activity alias 0"
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1125,7 +1994,16 @@ class ConstraintsDSLCompilationServiceTests {
           return instance.window();
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "WindowsExpressionActivityWindow",
+        "alias": "activity alias 0"
+    }
+}"""
     );
   }
 
@@ -1143,9 +2021,30 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivityViolations("activity", "activity alias 0", new ForEachActivityViolations("activity", "activity alias 1", new ViolationsOfWindows(
-            new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
-        )))
+        """
+{
+    "kind": "ForEachActivityViolations",
+    "activityType": "activity",
+    "alias": "activity alias 0",
+    "expression": {
+        "kind": "ForEachActivityViolations",
+        "activityType": "activity",
+        "alias": "activity alias 1",
+        "expression": {
+            "kind": "WindowsExpressionAnd",
+            "expressions": [
+                {
+                    "kind": "WindowsExpressionActivityWindow",
+                    "alias": "activity alias 0"
+                },
+                {
+                    "kind": "WindowsExpressionActivityWindow",
+                    "alias": "activity alias 1"
+                }
+            ]
+        }
+    }
+}"""
     );
   }
 
@@ -1157,17 +2056,24 @@ class ConstraintsDSLCompilationServiceTests {
           return Windows.During(ActivityType.activity)
         }
         """,
-        new ViolationsOfWindows(
-            new Or(
-              new WindowsFromSpans(
-                      new ForEachActivitySpans(
-                          "activity",
-                          "span activity alias 0",
-                          new ActivitySpan("span activity alias 0")
-                      )
-              )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionOr",
+    "expressions": [
+        {
+            "kind": "WindowsExpressionFromSpans",
+            "spansExpression": {
+                "kind": "ForEachActivitySpans",
+                "activityType": "activity",
+                "alias": "span activity alias 0",
+                "expression": {
+                    "kind": "SpansExpressionActivitySpan",
+                    "alias": "span activity alias 0"
+                }
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -1179,22 +2085,36 @@ class ConstraintsDSLCompilationServiceTests {
           return Windows.During(ActivityType.activity, ActivityType.activity2)
         }
         """,
-        new ViolationsOfWindows(
-            new Or(
-              new WindowsFromSpans(
-                  new ForEachActivitySpans(
-                      "activity",
-                      "span activity alias 0",
-                      new ActivitySpan("span activity alias 0"))
-              ),
-              new WindowsFromSpans(
-                  new ForEachActivitySpans(
-                      "activity2",
-                      "span activity alias 1",
-                      new ActivitySpan("span activity alias 1"))
-              )
-            )
-        )
+        """
+{
+    "kind": "WindowsExpressionOr",
+    "expressions": [
+        {
+            "kind": "WindowsExpressionFromSpans",
+            "spansExpression": {
+                "kind": "ForEachActivitySpans",
+                "activityType": "activity",
+                "alias": "span activity alias 0",
+                "expression": {
+                    "kind": "SpansExpressionActivitySpan",
+                    "alias": "span activity alias 0"
+                }
+            }
+        },
+        {
+            "kind": "WindowsExpressionFromSpans",
+            "spansExpression": {
+                "kind": "ForEachActivitySpans",
+                "activityType": "activity2",
+                "alias": "span activity alias 1",
+                "expression": {
+                    "kind": "SpansExpressionActivitySpan",
+                    "alias": "span activity alias 1"
+                }
+            }
+        }
+    ]
+}"""
     );
   }
 
@@ -1281,9 +2201,23 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").shiftBy(minute(2)).equal(Real.Value(4.0))
         }
         """,
-        new ViolationsOfWindows(
-            new Equal<>(new ShiftBy<>(new RealResource("state of charge"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new RealValue(4.0))
-        )
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "ProfileExpressionShiftBy",
+        "expression": {
+            "kind": "RealProfileResource",
+            "name": "state of charge"
+        },
+        "duration": 120000000
+    },
+    "right": {
+        "kind": "RealProfileValue",
+        "value": 4,
+        "rate": 0
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1293,21 +2227,34 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").shiftBy(minute(2)).equal("Option1")
         }
         """,
-        new ViolationsOfWindows(
-            new Equal<>(new ShiftBy<>(new DiscreteResource("mode"), new DurationLiteral(Duration.of(2, Duration.MINUTE))), new DiscreteValue(SerializedValue.of("Option1")))
-        )
+        """
+{
+    "kind": "ExpressionEqual",
+    "left": {
+        "kind": "ProfileExpressionShiftBy",
+        "expression": {
+            "kind": "DiscreteProfileResource",
+            "name": "mode"
+        },
+        "duration": 120000000
+    },
+    "right": {
+        "kind": "DiscreteProfileValue",
+        "value": "Option1"
+    }
+}"""
     );
   }
 
   @Test
   void testRollingThreshold() {
-    final var algs = Map.of(
-        "ExcessHull", ExcessHull,
-        "ExcessSpans", ExcessSpans,
-        "DeficitHull", DeficitHull,
-        "DeficitSpans", DeficitSpans
+    final var algs = List.of(
+        "ExcessHull",
+        "ExcessSpans",
+        "DeficitHull",
+        "DeficitSpans"
     );
-    for (final var entry: algs.entrySet()) {
+    for (final var entry: algs) {
       checkSuccessfulCompilation(
           """
               export default () => {
@@ -1318,17 +2265,23 @@ class ConstraintsDSLCompilationServiceTests {
                   RollingThresholdAlgorithm.%s
                 );
               }
-              """.formatted(entry.getKey()),
-          new RollingThreshold(
-              new ForEachActivitySpans(
-                  "activity",
-                  "span activity alias 0",
-                  new ActivitySpan("span activity alias 0")
-              ),
-              new DurationLiteral(Duration.of(1, Duration.HOUR)),
-              new DurationLiteral(Duration.of(5, Duration.MINUTE)),
-              entry.getValue()
-          )
+              """.formatted(entry),
+          """
+{
+    "kind": "RollingThreshold",
+    "spans": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 0",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 0"
+        }
+    },
+    "width": 3600000000,
+    "threshold": 300000000,
+    "algorithm": "%s"
+}""".formatted(entry)
       );
     }
   }
@@ -1342,15 +2295,24 @@ class ConstraintsDSLCompilationServiceTests {
           return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2)).windows();
         }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(new ShiftEdges<>(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")),
-                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
-                new DurationLiteral(Duration.of(2, Duration.MINUTE))))
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "IntervalsExpressionShiftEdges",
+        "expression": {
+            "kind": "ForEachActivitySpans",
+            "activityType": "activity",
+            "alias": "span activity alias 0",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "span activity alias 0"
+            }
+        },
+        "fromStart": 120000000,
+        "fromEnd": 120000000
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1360,16 +2322,24 @@ class ConstraintsDSLCompilationServiceTests {
           return Spans.ForEachActivity(ActivityType.activity, i => i.span()).shiftBy(minute(2), minute(3)).windows();
         }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(new ShiftEdges<>(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")),
-                new DurationLiteral(Duration.of(2, Duration.MINUTE)),
-                new DurationLiteral(Duration.of(3, Duration.MINUTE))
-            ))
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "IntervalsExpressionShiftEdges",
+        "expression": {
+            "kind": "ForEachActivitySpans",
+            "activityType": "activity",
+            "alias": "span activity alias 0",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "span activity alias 0"
+            }
+        },
+        "fromStart": 120000000,
+        "fromEnd": 180000000
+    }
+}"""
     );
   }
 
@@ -1382,16 +2352,26 @@ class ConstraintsDSLCompilationServiceTests {
           return Spans.ForEachActivity(ActivityType.activity, i => i.span()).selectWhenTrue(Windows.Value(true)).windows()
         }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(new SpansSelectWhenTrue(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")
-                ),
-                new WindowsValue(true)
-            ))
-        )
+        """
+{
+    "kind": "WindowsExpressionFromSpans",
+    "spansExpression": {
+        "kind": "SpansSelectWhenTrue",
+        "spansExpression": {
+            "kind": "ForEachActivitySpans",
+            "activityType": "activity",
+            "alias": "span activity alias 0",
+            "expression": {
+                "kind": "SpansExpressionActivitySpan",
+                "alias": "span activity alias 0"
+            }
+        },
+        "windowsExpression": {
+            "kind": "WindowsExpressionValue",
+            "value": true
+        }
+    }
+}"""
     );
   }
   @Test
@@ -1404,14 +2384,27 @@ class ConstraintsDSLCompilationServiceTests {
             ).windows();
           }
         """,
-        new ViolationsOfWindows(
-            new WindowsFromSpans(
-                new SpansConnectTo(
-                    new SpansFromWindows(new WindowsValue(true)),
-                    new SpansFromWindows(new WindowsValue(false))
-                )
-            )
-        )
+        """
+            {
+              "kind": "WindowsExpressionFromSpans",
+              "spansExpression": {
+                "kind": "SpansExpressionConnectTo",
+                "from": {
+                  "kind": "SpansExpressionFromWindows",
+                  "windowsExpression": {
+                    "kind": "WindowsExpressionValue",
+                    "value": true
+                  }
+                },
+                "to": {
+                  "kind": "SpansExpressionFromWindows",
+                  "windowsExpression": {
+                    "kind": "WindowsExpressionValue",
+                    "value": false
+                  }
+                }
+              }
+            }"""
     );
   }
 
@@ -1423,21 +2416,35 @@ class ConstraintsDSLCompilationServiceTests {
             return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity));
           }
         """,
-        new ViolationsOfWindows(
-            new SpansContains(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")
-                ),
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 1",
-                    new ActivitySpan("span activity alias 1")
-                ),
-                SpansContains.Requirement.newDefault()
-            )
-        )
+        """
+{
+    "kind": "SpansExpressionContains",
+    "parents": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 0",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 0"
+        }
+    },
+    "children": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 1",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 1"
+        }
+    },
+    "requirement": {
+        "count": {
+            "min": 1
+        },
+        "duration": {
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1446,26 +2453,36 @@ class ConstraintsDSLCompilationServiceTests {
             return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity), {count: 3});
           }
         """,
-        new ViolationsOfWindows(
-            new SpansContains(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")
-                ),
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 1",
-                    new ActivitySpan("span activity alias 1")
-                ),
-                new SpansContains.Requirement(
-                    Optional.of(3),
-                    Optional.of(3),
-                    Optional.empty(),
-                    Optional.empty()
-                )
-            )
-        )
+        """
+{
+    "kind": "SpansExpressionContains",
+    "parents": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 0",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 0"
+        }
+    },
+    "children": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 1",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 1"
+        }
+    },
+    "requirement": {
+        "count": {
+            "min": 3,
+            "max": 3
+        },
+        "duration": {
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1474,26 +2491,35 @@ class ConstraintsDSLCompilationServiceTests {
             return Spans.ForEachActivity(ActivityType.activity).contains(Spans.ForEachActivity(ActivityType.activity), {duration: {min: Temporal.Duration.from({minutes: 1})}});
           }
         """,
-        new ViolationsOfWindows(
-            new SpansContains(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")
-                ),
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 1",
-                    new ActivitySpan("span activity alias 1")
-                ),
-                new SpansContains.Requirement(
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.of(new DurationLiteral(Duration.of(1, Duration.MINUTE))),
-                    Optional.empty()
-                )
-            )
-        )
+        """
+{
+    "kind": "SpansExpressionContains",
+    "parents": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 0",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 0"
+        }
+    },
+    "children": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 1",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 1"
+        }
+    },
+    "requirement": {
+        "duration": {
+            "min": 60000000
+        },
+        "count": {
+        }
+    }
+}"""
     );
 
     checkSuccessfulCompilation(
@@ -1505,26 +2531,38 @@ class ConstraintsDSLCompilationServiceTests {
             });
           }
         """,
-        new ViolationsOfWindows(
-            new SpansContains(
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 0",
-                    new ActivitySpan("span activity alias 0")
-                ),
-                new ForEachActivitySpans(
-                    "activity",
-                    "span activity alias 1",
-                    new ActivitySpan("span activity alias 1")
-                ),
-                new SpansContains.Requirement(
-                    Optional.of(1),
-                    Optional.of(2),
-                    Optional.of(new DurationLiteral(Duration.of(1, Duration.MINUTE))),
-                    Optional.of(new DurationLiteral(Duration.of(2, Duration.MINUTE)))
-                )
-            )
-        )
+        """
+{
+    "kind": "SpansExpressionContains",
+    "parents": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 0",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 0"
+        }
+    },
+    "children": {
+        "kind": "ForEachActivitySpans",
+        "activityType": "activity",
+        "alias": "span activity alias 1",
+        "expression": {
+            "kind": "SpansExpressionActivitySpan",
+            "alias": "span activity alias 1"
+        }
+    },
+    "requirement": {
+        "count": {
+            "min": 1,
+            "max": 2
+        },
+        "duration": {
+            "min": 60000000,
+            "max": 120000000
+        }
+    }
+}"""
     );
   }
 }

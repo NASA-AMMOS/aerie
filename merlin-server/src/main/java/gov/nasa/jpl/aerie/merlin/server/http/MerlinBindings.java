@@ -1,16 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.SimulationDatasetMismatchException;
-import gov.nasa.jpl.aerie.merlin.server.services.ConstraintAction;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;

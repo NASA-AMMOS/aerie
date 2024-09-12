@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintResultParser;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintResult;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import org.intellij.lang.annotations.Language;
 
@@ -8,8 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
-
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintResultP;
 
 /* package local */ class InsertConstraintRunsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
@@ -33,7 +32,10 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintRe
       statement.setLong(3, simulationDatasetId);
 
       if (results.get(constraint.id()) != null) {
-        statement.setString(4, constraintResultP.unparse(results.get(constraint.id())).toString());
+        statement.setString(
+            4,
+            ConstraintResultParser.INSTANCE.getConstraintResultP().unparse(results.get(constraint.id())).toString()
+        );
       } else {
         statement.setString(4, "{}");
       }

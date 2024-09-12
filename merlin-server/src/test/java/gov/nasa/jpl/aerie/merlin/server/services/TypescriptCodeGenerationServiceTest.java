@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.Test;
 

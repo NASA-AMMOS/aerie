@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
+import gov.nasa.jpl.aerie.merlin.server.services.constraints.ConstraintResultParser;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintResultP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 final class GetValidConstraintRunsAction implements AutoCloseable {
@@ -58,7 +58,7 @@ final class GetValidConstraintRunsAction implements AutoCloseable {
         } else {
           constraintRuns.add(new ConstraintRunRecord(
               constraintId,
-              getJsonColumn(results, "results", constraintResultP)
+              getJsonColumn(results, "results", ConstraintResultParser.getConstraintResultP())
                   .getSuccessOrThrow($ -> new Error("Corrupt results cannot be parsed: " + $.reason()))));
         }
       }

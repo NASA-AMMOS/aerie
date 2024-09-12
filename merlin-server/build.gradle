@@ -87,7 +87,6 @@ dependencies {
   implementation project(':type-utils')
   implementation project(':merlin-driver')
   implementation project(':parsing-utilities')
-  implementation project(':constraints')
   implementation project(':permissions')
   implementation project(':procedural:timeline')
   implementation project(':procedural:constraints')

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.constraints;
+package gov.nasa.jpl.aerie.merlin.server.services.constraints;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -47,8 +47,8 @@ public final class TypescriptCodeGenerationService {
     result.add("export type RealResourceName = " + String.join(
         " | ",
         Stream.concat(
-                  resources.entrySet().stream().filter($ -> valueSchemaIsNumeric($.getValue())).map($ -> ("\"" + $.getKey() + "\"")),
-                  Stream.of("never"))
+            resources.entrySet().stream().filter($ -> valueSchemaIsNumeric($.getValue())).map($ -> ("\"" + $.getKey() + "\"")),
+            Stream.of("never"))
               .toList()
     ) + ";");
 
@@ -391,8 +391,8 @@ public final class TypescriptCodeGenerationService {
 
   private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
     return valueSchema.equals(ValueSchema.INT)
-           || valueSchema.equals(ValueSchema.REAL)
-           || valueSchema.equals(LINEAR_RESOURCE_SCHEMA)
-           || valueSchema.asMeta().map($ -> valueSchemaIsNumeric($.target())).orElse(false);
+        || valueSchema.equals(ValueSchema.REAL)
+        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA)
+        || valueSchema.asMeta().map($ -> valueSchemaIsNumeric($.target())).orElse(false);
   }
 }

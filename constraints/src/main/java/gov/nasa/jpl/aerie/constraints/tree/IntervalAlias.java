@@ -4,11 +4,7 @@ import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import java.util.Set;
 
 public record IntervalAlias(

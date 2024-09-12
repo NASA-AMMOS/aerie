@@ -1,7 +1,6 @@
-package gov.nasa.jpl.aerie.merlin.server
+package gov.nasa.jpl.aerie.merlin.server.services.constraints
 
 import gov.nasa.ammos.aerie.procedural.constraints.Violation
-import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import java.util.*
 
 class ConstraintResult {
@@ -20,8 +19,6 @@ class ConstraintResult {
 
   constructor(
     violations: List<Violation>,
-    gaps: List<Interval?>,
-    resourceIds: List<String>?,
     constraintId: Long?,
     constraintRevision: Long?,
     constraintName: String?
