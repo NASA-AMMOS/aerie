@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
+import gov.nasa.ammos.aerie.procedural.timeline.ops.SerialSegmentOps
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
 import java.time.Instant
 
 /** An interface for querying plan information and simulation results. */
@@ -31,4 +33,6 @@ interface Plan {
   fun directives(type: String) = directives(type, AnyDirective.deserializer())
   /** Queries all activity directives, deserializing them as [AnyDirective]. **/
   fun directives() = directives(null, AnyDirective.deserializer())
+
+  fun <V: Any, TL: SerialSegmentOps<V, TL>> resource(name: String, deserializer: (List<Segment<SerializedValue>>) -> TL): TL
 }
