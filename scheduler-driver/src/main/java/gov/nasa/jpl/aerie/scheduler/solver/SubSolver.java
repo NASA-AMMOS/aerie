@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 
@@ -18,6 +20,8 @@ import java.util.Optional;
  */
 public abstract class SubSolver {
   protected ConflictSatisfaction satisfaction;
+  protected Solver metaSolver;
+  protected SubSolver dependentSolver;
 
   /**
    * calculates the next solution plan based on solver configuration
@@ -45,7 +49,15 @@ public abstract class SubSolver {
    * solution for all requests thereafter, but some algorithms may optionally
    * support further solutions (eg on some input/configuration modification)
    */
-  public abstract ConflictSolverResult resolveConflict(Problem problem, Plan plan, Conflict conflict,
-                                        boolean analysisOnly) throws SchedulingInterruptedException;
+  public abstract ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
+  throws SchedulingInterruptedException, InstantiationException;
+
+  public void setDependentSolver(SubSolver solver) {
+    this.dependentSolver = solver;
+  }
+
+  public abstract ConflictSolverResult solveDependencyConflict(Optional<Goal> goal, Conflict conflict)
+  throws SchedulingInterruptedException, InstantiationException;
 
 }
+

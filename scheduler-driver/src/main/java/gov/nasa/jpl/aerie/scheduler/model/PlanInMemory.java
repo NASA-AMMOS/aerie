@@ -40,7 +40,8 @@ public class PlanInMemory implements Plan {
    * container of all activity instances in plan, indexed by start time
    */
   private final TreeMap<Duration, List<SchedulingActivity>> actsByTime;
-  private List<TaskNetTemplateData> decompositions;
+  private List<TaskNetTemplateData> pendingDecompositions;
+  private List<TaskNetTemplateData> solvedDecompositions;
 
   /**
    * ctor creates a new empty solution plan
@@ -48,7 +49,8 @@ public class PlanInMemory implements Plan {
    */
   public PlanInMemory() {
     this.actsByTime = new TreeMap<>();
-    this.decompositions = new ArrayList<>();
+    this.pendingDecompositions = new ArrayList<>();
+    this.solvedDecompositions = new ArrayList<>();
   }
 
   public PlanInMemory(final PlanInMemory other){
@@ -57,8 +59,11 @@ public class PlanInMemory implements Plan {
     for(final var entry: other.actsByTime.entrySet()){
       this.actsByTime.put(entry.getKey(), new ArrayList<>(entry.getValue()));
     }
-    this.decompositions = new ArrayList<>();
-    Collections.copy(this.decompositions,other.decompositions);
+    this.pendingDecompositions = new ArrayList<>();
+    this.solvedDecompositions = new ArrayList<>();
+
+    Collections.copy(this.pendingDecompositions,other.pendingDecompositions);
+    Collections.copy(this.solvedDecompositions,other.solvedDecompositions);
   }
 
   @Override
@@ -112,7 +117,7 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding template with null list of substasks");
     }
-    this.decompositions.add(tn);
+    this.pendingDecompositions.add(tn);
     //TODO need to add code in scheduler to instantiate activities
   }
 
@@ -129,10 +134,6 @@ public class PlanInMemory implements Plan {
     if (acts != null) acts.remove(act);
   }
 
-  @Override
-  public void removeTaskNetTemplate(final TaskNetTemplate tn){
-    this.decompositions.remove(tn);
-  }
 
   /**
    * {@inheritDoc}
@@ -182,11 +183,11 @@ public class PlanInMemory implements Plan {
     return Collections.unmodifiableMap(map);
   }
 
-@Override
+  @Override
   public Set<ActivityDirectiveId> getAnchorIds() {
     return getActivities().stream()
-                  .map(SchedulingActivity::anchorId)
-                  .collect(Collectors.toSet());
+                          .map(SchedulingActivity::anchorId)
+                          .collect(Collectors.toSet());
   }
 
   /**
@@ -199,6 +200,15 @@ public class PlanInMemory implements Plan {
       set.addAll(entry.getValue());
     }
     return Collections.unmodifiableSet(set);
+  }
+
+  public List<TaskNetTemplateData> getPendingDecompositions() {
+    return pendingDecompositions;
+  }
+
+
+  public List<TaskNetTemplateData> getSolvedDecompositions() {
+    return solvedDecompositions;
   }
 
   /**
@@ -259,3 +269,4 @@ public class PlanInMemory implements Plan {
     return act.startOffset();
   }
 }
+

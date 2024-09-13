@@ -71,12 +71,6 @@ public interface Plan {
   void remove(SchedulingActivity act);
 
   /**
-   * removes the given TaskNetTemplate from the plan
-   * @param tn IN TaskNetTemplate to be removed from the plan
-   */
-  void removeTaskNetTemplate(final TaskNetTemplate tn);
-
-  /**
    * replace and old activity by a new one
    * @param oldAct Old Activity
    * @param newAct New Activity
@@ -112,7 +106,7 @@ public interface Plan {
   Set<SchedulingActivity> getActivities();
 
   /**
-  * @return the set of anchors from all activities in the plan
+   * @return the set of anchors from all activities in the plan
    */
   Set<ActivityDirectiveId> getAnchorIds();
 

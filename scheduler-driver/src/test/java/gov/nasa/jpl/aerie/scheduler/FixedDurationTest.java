@@ -71,7 +71,7 @@ public class FixedDurationTest {
 
     final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().get();
-    solver.printEvaluation();
+    solver.printEvaluation(plan);
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT1H1M"), problem.getActivityType("BananaNap")));
   }
 
@@ -100,7 +100,7 @@ public class FixedDurationTest {
 
     final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().get();
-    solver.printEvaluation();
+    solver.printEvaluation(plan);
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("P2DT1M"), problem.getActivityType("RipenBanana")));
   }
 

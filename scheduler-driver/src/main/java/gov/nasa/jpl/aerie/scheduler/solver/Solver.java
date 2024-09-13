@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.Optional;
@@ -46,5 +47,6 @@ public interface Solver {
    *     cannot provide any more solutions right now
    */
   Optional<Plan> getNextSolution() throws SchedulingInterruptedException;
-
+  void rollback(ConflictSolverResult conflictResults);
+  void rollback(Goal goal);
 }

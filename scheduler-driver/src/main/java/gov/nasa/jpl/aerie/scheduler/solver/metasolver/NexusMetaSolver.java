@@ -7,6 +7,9 @@ import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -44,6 +47,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import gov.nasa.jpl.aerie.scheduler.solver.planner.NexusDecomposer;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,10 +168,6 @@ public class NexusMetaSolver implements Solver {
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
     this.analysisOnly = analysisOnly;
-    this.decomposer = new NexusDecomposer();
-    //TODO jd check if that's ok to pass problem here
-    this.scheduler = new PrioritySolver(this.problem, this.analysisOnly);
-
     this.idGenerator = new DirectiveIdGenerator(
         problem
             .getInitialPlan()
@@ -178,7 +178,13 @@ public class NexusMetaSolver implements Solver {
             .max(Long::compareTo)
             .orElse(-1L)
         + 1
-        );
+    );
+    this.decomposer = new NexusDecomposer(this.problem, this.plan, this.analysisOnly, this.idGenerator);
+    //TODO jd check if that's ok to pass problem here
+    this.scheduler = new PrioritySolver(this.problem, this.plan, this.analysisOnly, this.idGenerator);
+
+    this.decomposer.setDependentSolver(scheduler);
+    this.scheduler.setDependentSolver(decomposer);
   }
 
   public NexusMetaSolver(final Problem problem) {
@@ -238,7 +244,7 @@ public class NexusMetaSolver implements Solver {
       var duration = act.duration();
       if(duration != null && act.startOffset().plus(duration).longerThan(this.problem.getPlanningHorizon().getEndAerie())) {
         logger.warn("Not simulating activity " + act
-                           + " because it is planned to finish after the end of the planning horizon.");
+                    + " because it is planned to finish after the end of the planning horizon.");
         return new InsertActivityResult(allGood, List.of());
       }
     }
@@ -299,8 +305,8 @@ public class NexusMetaSolver implements Solver {
       assert goal != null;
 
       //update the output solution plan directly to satisfy goal
-      satisfyGoal(goal);
       satisfyDecompositions();
+      satisfyGoal(goal);
     }
   }
 
@@ -336,7 +342,7 @@ public class NexusMetaSolver implements Solver {
     return goalQ;
   }
 
-  private void satisfyDecompositions() throws SchedulingInterruptedException {
+  private void satisfyDecompositions() throws SchedulingInterruptedException, InstantiationException {
     assert plan != null;
 
     //continue creating activities as long as goal wants more and we can do so
@@ -359,11 +365,11 @@ public class NexusMetaSolver implements Solver {
       //determine the best activities to satisfy the conflict
 
       if(missing instanceof MissingDecompositionConflict){
-        this.decomposer.resolveConflict(problem, plan, missing, analysisOnly);
+        this.decomposer.resolveConflict(null, missing);
         //TODO jd check where to remove conflict
       }
       else {
-        this.scheduler.resolveConflict(problem, plan, missing, analysisOnly);
+        this.scheduler.resolveConflict(missing, analysisOnly);
       }
     }//for(missing)
     logger.info("Finishing decomposition satisfaction" +":"+ (missingConflicts.size() == 0 ?
@@ -389,75 +395,81 @@ public class NexusMetaSolver implements Solver {
 
 
   private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException{
-      if (goal.hasOptimizer()) {
-        //try to satisfy all and see what is best
-        Goal currentSatisfiedGoal = null;
-        Collection<SchedulingActivity> actsToInsert = null;
-        Collection<SchedulingActivity> actsToAssociateWith = null;
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          if(plan.getEvaluation().forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
-            var associatedActivities = plan.getEvaluation().forGoal(subgoal).getAssociatedActivities();
-            var insertedActivities = plan.getEvaluation().forGoal(subgoal).getInsertedActivities();
-            var aggregatedActivities = new ArrayList<SchedulingActivity>();
-            aggregatedActivities.addAll(associatedActivities);
-            aggregatedActivities.addAll(insertedActivities);
-            if (!aggregatedActivities.isEmpty() &&
-                (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
-                 currentSatisfiedGoal == null)) {
-              actsToInsert = insertedActivities;
-              actsToAssociateWith = associatedActivities;
-              currentSatisfiedGoal = subgoal;
-            }
+    if (goal.hasOptimizer()) {
+      //try to satisfy all and see what is best
+      Goal currentSatisfiedGoal = null;
+      Collection<SchedulingActivity> actsToInsert = null;
+      Collection<SchedulingActivity> actsToAssociateWith = null;
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        if(plan.getEvaluation().forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
+          var associatedActivities = plan.getEvaluation().forGoal(subgoal).getAssociatedActivities();
+          var insertedActivities = plan.getEvaluation().forGoal(subgoal).getInsertedActivities();
+          var aggregatedActivities = new ArrayList<SchedulingActivity>();
+          aggregatedActivities.addAll(associatedActivities);
+          aggregatedActivities.addAll(insertedActivities);
+          if (!aggregatedActivities.isEmpty() &&
+              (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
+               currentSatisfiedGoal == null)) {
+            actsToInsert = insertedActivities;
+            actsToAssociateWith = associatedActivities;
+            currentSatisfiedGoal = subgoal;
           }
-          rollback(subgoal);
         }
-        //we should have the best solution
-        if (currentSatisfiedGoal != null) {
-          final var insertionResult = checkAndInsertActs(actsToInsert);
-          final var goalEvaluation = plan.getEvaluation().forGoal(goal);
-          if(insertionResult.success()) {
-            for(var act: insertionResult.activitiesInserted()){
-              goalEvaluation.associate(act, false, null);
-            }
-            goalEvaluation.setConflictSatisfaction(null, ConflictSatisfaction.SAT);
-          } else{
-            rollback(currentSatisfiedGoal);
-
+        rollback(subgoal);
+      }
+      //we should have the best solution
+      if (currentSatisfiedGoal != null) {
+        final var insertionResult = checkAndInsertActs(actsToInsert);
+        final var goalEvaluation = plan.getEvaluation().forGoal(goal);
+        if(insertionResult.success()) {
+          for(var act: insertionResult.activitiesInserted()){
+            goalEvaluation.associate(act, false, null);
           }
-        } else {
-          plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.NOT_SAT);
+          goalEvaluation.setConflictSatisfaction(null, ConflictSatisfaction.SAT);
+        } else{
+          rollback(currentSatisfiedGoal);
+
         }
       } else {
-        var atLeastOneSatisfied = false;
-        //just satisfy any goal
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          final var evaluation = plan.getEvaluation();
-          final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getSatisfaction() == ConflictSatisfaction.SAT);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false, null);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true, null);
-          if(subgoalIsSatisfied){
-            logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has been satisfied, stopping");
-            atLeastOneSatisfied = true;
-            break;
-          }
-          logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " could not be satisfied, moving on to next subgoal");
+        plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.NOT_SAT);
+      }
+    } else {
+      var atLeastOneSatisfied = false;
+      //just satisfy any goal
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        final var evaluation = plan.getEvaluation();
+        final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getSatisfaction() == ConflictSatisfaction.SAT);
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false, null);
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true, null);
+        if(subgoalIsSatisfied){
+          logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " has been satisfied, stopping");
+          atLeastOneSatisfied = true;
+          break;
         }
-        if(atLeastOneSatisfied){
-          plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.SAT);
-        } else {
-          plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.NOT_SAT);
-          if(goal.shouldRollbackIfUnsatisfied()) {
-            for (var subgoal : goal.getSubgoals()) {
-              rollback(subgoal);
-            }
+        logger.info("OR goal " + goal.getName() + ": subgoal " + subgoal.getName() + " could not be satisfied, moving on to next subgoal");
+      }
+      if(atLeastOneSatisfied){
+        plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.SAT);
+      } else {
+        plan.getEvaluation().forGoal(goal).setConflictSatisfaction(null, ConflictSatisfaction.NOT_SAT);
+        if(goal.shouldRollbackIfUnsatisfied()) {
+          for (var subgoal : goal.getSubgoals()) {
+            rollback(subgoal);
           }
         }
       }
+    }
   }
 
-  private void rollback(Goal goal){
+  @Override
+  public void rollback(ConflictSolverResult conflictResults){
+  //TODO jd complete
+  }
+
+  @Override
+  public void rollback(Goal goal){
     var evalForGoal = plan.getEvaluation().forGoal(goal);
     var associatedActivities = evalForGoal.getAssociatedActivities();
     var insertedActivities = evalForGoal.getInsertedActivities();
@@ -541,7 +553,7 @@ public class NexusMetaSolver implements Solver {
     final var alreadyTried = new ArrayList<Conflict>();
     int i = 0;
     final var itConflicts = missingConflicts.iterator();
-      //create new activity instances for each missing conflict
+    //create new activity instances for each missing conflict
     while (itConflicts.hasNext()) {
       final var missing = itConflicts.next();
       assert missing != null;
@@ -555,7 +567,7 @@ public class NexusMetaSolver implements Solver {
         //TODO jd check where to remove conflict
       }
       else {
-        this.scheduler.resolveConflict(problem, plan, goal, missing, analysisOnly);
+        this.scheduler.resolveConflict(goal, missing, analysisOnly);
       }
 
       //TODO jd add evaulation for decompostion
@@ -592,7 +604,7 @@ public class NexusMetaSolver implements Solver {
     final var resources = new HashSet<String>();
     goal.extractResources(resources);
     final var simulationResults = this.scheduler.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(),
-                                                                resources);
+                                                                         resources);
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
     final var rawConflicts = goal.getConflicts(
         plan,
@@ -613,12 +625,26 @@ public class NexusMetaSolver implements Solver {
 
     //Conflict if any directive is compound
     for(SchedulingActivity act: plan.getActivities()){
-      if(problem.getSchedulerModel().getIsCompound().get(act.getType().getName())){
+      if(act.getType().isCompound() && !act.getType().getSpecType().getDecompositionRule().isPresent()){
         //TODO jd create conflict. consider that here you don't have activityreference. think on difference between
         // activity that needs to be decomposed (here) and activity that needs to be instantiated (below)
-        conflicts.add(new MissingDecompositionConflict(null, evaluationEnvironment, act.getType()));
+        conflicts.add(new MissingDecompositionConflict(null, evaluationEnvironment,
+                                                       act));
       }
     }
+
+    for(TaskNetTemplateData taskNetTemplateData : ((PlanInMemory)plan).getPendingDecompositions()) {
+      for (ActivityReference activityReference : taskNetTemplateData.subtasks()) {
+        if (problem.getActivityType(activityReference.activityType()).isCompound()) {
+          conflicts.add(new MissingDecompositionConflict(null, evaluationEnvironment,
+                                                         activityReference));
+        }
+      }
+    }
+
+    /*
+
+     */
 
     // Conflicts for each ActivityReference from a TaskNet added as a result of decomposition:
     // 1. If activity is compound: Conflict to decompose it
@@ -638,3 +664,4 @@ public class NexusMetaSolver implements Solver {
     return conflicts;
   }
 }
+

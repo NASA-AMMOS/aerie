@@ -2,8 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 
 /**
  * describes an issue in a plan whereby a desired activity instance is absent
@@ -11,7 +12,8 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
  * such conflicts are typically addressed by scheduling additional activities
  */
 public class MissingDecompositionConflict extends Conflict {
-  private final ActivityType actType;
+  //private final ActivityType actType;
+  private ActivityReference activity;
 
   /**
    * ctor creates a new conflict regarding a missing activity
@@ -21,14 +23,21 @@ public class MissingDecompositionConflict extends Conflict {
   public MissingDecompositionConflict(
       final Goal goal,
       EvaluationEnvironment environment,
-      ActivityType actType)
-
-  {
+      ActivityReference activity) {
     super(goal, environment);
-    this.actType = actType;
+    this.activity = activity;
   }
 
-  public ActivityType getActivityType(){return actType;}
+  public MissingDecompositionConflict(
+      final Goal goal,
+      EvaluationEnvironment environment,
+      SchedulingActivity activity
+  ){
+    super(goal, environment);
+    this.activity = new ActivityReference(activity.getType().getName(), activity.arguments());
+  }
+
+  public ActivityReference getActivityType(){return activity;}
 
   /**
    * {@inheritDoc}
