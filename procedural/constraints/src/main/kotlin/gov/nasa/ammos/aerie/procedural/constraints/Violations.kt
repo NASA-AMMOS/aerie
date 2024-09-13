@@ -31,39 +31,51 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
    */
   fun mapIds(f: (Violation) -> List<ActivityId>) = unsafeMap(BoundsTransformer.IDENTITY, false) { it.withNewIds(f(it)) }
 
+  /**
+   * Sets a default violation message for violations that don't already have one.
+   *
+   * @param message the default message to give to the user
+   */
+  fun withDefaultMessage(message: String) = unsafeMap(BoundsTransformer.IDENTITY, false) {
+    if (it.message == null) Violation(it.interval, message, it.ids)
+    else it
+  }
+
   /***/ companion object {
-    /** Creates a [Violations] object that violates when this profile equals a given value. */
-    @JvmStatic fun <V: Any> SerialConstantOps<V, *>.violateOn(v: V) = isolateEqualTo(v).violations()
+    /** Creates a [Violations] object that violates when the profile equals a given value. */
+    @JvmStatic fun <V: Any> on(tl: SerialConstantOps<V, *>, v: V) = onAll(tl.isolateEqualTo(v))
 
     /** Creates a [Violations] object that violates when this profile equals a given value. */
-    @JvmStatic fun Real.violateOn(n: Number) = equalTo(n).violateOn(true)
+    @JvmStatic fun on(tl: Real, n: Number) = on(tl.equalTo(n), true)
 
     /**
      * Creates a [Violations] object that violates on every object in the timeline.
      *
      * If the object is an activity, it will record the directive or instance id.
      */
-    @JvmStatic fun <I: IntervalLike<I>> ParallelOps<I, *>.violations() =
-        unsafeMap(::Violations, BoundsTransformer.IDENTITY, false) {
+    @JvmStatic fun <I: IntervalLike<I>> onAll(tl: ParallelOps<I, *>) =
+        tl.unsafeMap(::Violations, BoundsTransformer.IDENTITY, false) {
           Violation(
               it.interval,
+              null,
               listOfNotNull(it.getActivityId())
           )
         }
 
     /** Creates a [Violations] object that violates inside each interval. */
-    @JvmStatic fun Windows.violateInside() = unsafeCast(::Universal).violations()
+    @JvmStatic fun inside(tl: Windows) = onAll(tl.unsafeCast(::Universal))
     /** Creates a [Violations] object that violates outside each interval. */
-    @JvmStatic fun Windows.violateOutside() = complement().violateInside()
+    @JvmStatic fun outside(tl: Windows) = inside(tl.complement())
 
     /**
      * Creates a [Violations] object from two timelines, that violates whenever they have overlap.
      *
      * If either object is an activity, it will record the directive or instance id.
      */
-    @JvmStatic infix fun <V: IntervalLike<V>, W: IntervalLike<W>> GeneralOps<V, *>.mutex(other: GeneralOps<W, *>) =
-        unsafeMap2(::Violations, other) { l, r, i -> Violation(
+    @JvmStatic fun <V: IntervalLike<V>, W: IntervalLike<W>> whenSimultaneous(left: GeneralOps<V, *>, right: GeneralOps<W, *>) =
+        left.unsafeMap2(::Violations, right) { l, r, i -> Violation(
             i,
+            null,
             listOfNotNull(
                 l.getActivityId(),
                 r.getActivityId()
