@@ -1,5 +1,6 @@
 package gov.nasa.ammos.aerie.procedural.constraints
 
+import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Windows
 import gov.nasa.ammos.aerie.procedural.timeline.collections.profiles.Real
 import gov.nasa.ammos.aerie.procedural.timeline.ops.GeneralOps
@@ -19,9 +20,14 @@ import gov.nasa.ammos.aerie.procedural.timeline.plan.SimulationResults
 abstract class GeneratorConstraint: Constraint {
   private var violations = mutableListOf<Violation>()
 
+  /** Finalizes one or more intervals as violations. */
+  @JvmOverloads protected fun violate(vararg i: Interval, message: String? = null) {
+    violate(i.map { Violation(it) }, message)
+  }
+
   /** Finalizes one or more violations. */
   @JvmOverloads protected fun violate(vararg v: Violation, message: String? = null) {
-    violate(v.toList())
+    violate(v.toList(), message)
   }
 
   /** Finalizes a list of violations. */
@@ -29,7 +35,7 @@ abstract class GeneratorConstraint: Constraint {
     violations.addAll(l.map {
       if (it.message == null) Violation(
         it.interval,
-        message,
+        message ?: defaultMessage(),
         it.ids
       ) else it
     })
@@ -37,7 +43,7 @@ abstract class GeneratorConstraint: Constraint {
 
   /** Collects a [Violations] timeline and finalizes the result. */
   @JvmOverloads protected fun violate(tl: Violations, message: String? = null) {
-    violate(tl.collect())
+    violate(tl.collect(), message)
   }
 
   /** Creates a [Violations] object that violates when this profile equals a given value. */
@@ -74,9 +80,19 @@ abstract class GeneratorConstraint: Constraint {
    */
   abstract fun generate(plan: Plan, simResults: SimulationResults)
 
+  /**
+   * Default violation message to be displayed to user.
+   *
+   * Can be overridden on a violation-by-violation basis by manually specifying
+   * it in the [Violation] object.
+   */
+  open fun defaultMessage(): String? = null
+
   final override fun run(plan: Plan, simResults: SimulationResults): Violations {
     violations = mutableListOf()
     generate(plan, simResults)
-    return Violations(violations)
+    val message = defaultMessage()
+    return if (message == null) Violations(violations)
+    else Violations(violations).withDefaultMessage(message)
   }
 }

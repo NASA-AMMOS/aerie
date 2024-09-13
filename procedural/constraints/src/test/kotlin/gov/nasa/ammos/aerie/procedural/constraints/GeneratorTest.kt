@@ -14,22 +14,18 @@ import kotlin.test.Test
 
 class GeneratorTest: GeneratorConstraint() {
   override fun generate(plan: Plan, simResults: SimulationResults) {
-    violate(Violation(Interval.at(seconds(0))))
+    violate(Interval.at(seconds(0)), message = "other message")
     simResults.resource("/plant", Numbers.deserializer())
       .greaterThan(0)
       .violateOn(false)
   }
 
-  override fun message() = "Plant must be greater than 0"
+  override fun defaultMessage() = "Plant must be greater than 0"
 
   @Test
   fun testGenerator() {
     val plan = NotImplementedPlan()
-    val simResults = object : SimulationResults {
-      override fun isStale() = TODO()
-
-      override fun simBounds() = TODO()
-
+    val simResults = object : NotImplementedSimulationResults() {
       override fun <V : Any, TL : CoalesceSegmentsOp<V, TL>> resource(
         name: String,
         deserializer: (List<Segment<SerializedValue>>) -> TL
@@ -45,17 +41,16 @@ class GeneratorTest: GeneratorConstraint() {
           TODO("Not yet implemented")
         }
       }
-
-      override fun <A : Any> instances(type: String?, deserializer: (SerializedValue) -> A) = TODO()
     }
 
     val result = run(plan, simResults).collect()
 
+    val defaultMessage = "Plant must be greater than 0";
     assertIterableEquals(
       listOf(
-        Violation(seconds(-4) .. seconds(-2)),
-        Violation(Interval.at(seconds(0))),
-        Violation(seconds(1) .. seconds(2))
+        Violation(seconds(-4) .. seconds(-2), defaultMessage),
+        Violation(Interval.at(seconds(0)), "other message"),
+        Violation(seconds(1) .. seconds(2), defaultMessage)
       ),
       result
     )

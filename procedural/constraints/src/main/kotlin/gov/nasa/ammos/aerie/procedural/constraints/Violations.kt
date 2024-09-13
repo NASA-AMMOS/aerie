@@ -31,6 +31,16 @@ data class Violations(private val timeline: Timeline<Violation, Violations>):
    */
   fun mapIds(f: (Violation) -> List<ActivityId>) = unsafeMap(BoundsTransformer.IDENTITY, false) { it.withNewIds(f(it)) }
 
+  /**
+   * Sets a default violation message for violations that don't already have one.
+   *
+   * @param message the default message to give to the user
+   */
+  fun withDefaultMessage(message: String) = unsafeMap(BoundsTransformer.IDENTITY, false) {
+    if (it.message == null) Violation(it.interval, message, it.ids)
+    else it
+  }
+
   /***/ companion object {
     /** Creates a [Violations] object that violates when the profile equals a given value. */
     @JvmStatic fun <V: Any> on(tl: SerialConstantOps<V, *>, v: V) = onAll(tl.isolateEqualTo(v))
