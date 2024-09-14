@@ -16,7 +16,7 @@ interface SimulationResults {
   fun simBounds(): Interval
 
   /**
-   * Query a resource profile from the database
+   * Query a resource profile from this simulation dataset.
    *
    * @param deserializer constructor of the profile, converting [SerializedValue]
    * @param name string name of the resource

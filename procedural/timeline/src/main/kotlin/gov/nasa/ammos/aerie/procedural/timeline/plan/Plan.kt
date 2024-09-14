@@ -34,5 +34,11 @@ interface Plan {
   /** Queries all activity directives, deserializing them as [AnyDirective]. **/
   fun directives() = directives(null, AnyDirective.deserializer())
 
+  /**
+   * Query a resource profile from the external datasets associated with this plan.
+   *
+   * @param deserializer constructor of the profile, converting [SerializedValue]
+   * @param name string name of the resource
+   */
   fun <V: Any, TL: SerialSegmentOps<V, TL>> resource(name: String, deserializer: (List<Segment<SerializedValue>>) -> TL): TL
 }
