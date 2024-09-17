@@ -258,16 +258,7 @@ public final class SimulationEngine implements AutoCloseable {
       removedCellReadHistory.put(entry.getKey(), new HashSet<>(entry.getValue()));
     }
     scheduledDirectives = other.scheduledDirectives;
-//    scheduledDirectives = other.scheduledDirectives == null ? null : new LinkedHashMap<>(other.scheduledDirectives);
     directivesDiff = other.directivesDiff;
-//    if (other.directivesDiff == null) {
-//      directivesDiff = null;
-//    } else {
-//      directivesDiff = new LinkedHashMap<>();
-//      for (final var entry : other.directivesDiff.entrySet()) {
-//        directivesDiff.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
-//      }
-//    }
     spanInfo = new SpanInfo(other.spanInfo, this);
     simulatedActivities = new LinkedHashMap<>(other.simulatedActivities);
     removedActivities = new LinkedHashSet<>(other.removedActivities);
