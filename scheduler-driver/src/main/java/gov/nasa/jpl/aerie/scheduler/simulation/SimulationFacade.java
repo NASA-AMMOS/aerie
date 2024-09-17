@@ -21,8 +21,6 @@ import java.util.function.Supplier;
 public interface SimulationFacade {
   void setInitialSimResults(SimulationData simulationData);
 
-  Duration totalSimulationTime();
-
   Supplier<Boolean> getCanceledListener();
 
   void addActivityTypes(Collection<ActivityType> activityTypes);
@@ -46,8 +44,6 @@ public interface SimulationFacade {
       Plan plan,
       Duration until,
       Set<String> resourceNames) throws SimulationException, SchedulingInterruptedException;
-
-  Optional<SimulationData> getLatestSimulationData();
 
   class SimulationException extends Exception {
     SimulationException(final String message, final Throwable cause) {

@@ -46,7 +46,7 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
   private SimulationData latestSimulationData;
 
   /**
-   * Loads initial simulation results into the simulation. They will be served until initialSimulationResultsAreStale()
+   * Loads initial simulation results into the simulation.
    * is called.
    * @param simulationData the initial simulation results
    */
@@ -94,7 +94,6 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
    * Returns the total simulated time
    * @return
    */
-  @Override
   public Duration totalSimulationTime(){
     return totalSimulationTime;
   }
@@ -341,8 +340,4 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
     return this.latestSimulationData;
   }
 
-  @Override
-  public Optional<SimulationData> getLatestSimulationData() {
-    return Optional.ofNullable(this.latestSimulationData);
-  }
 }

@@ -322,6 +322,8 @@ public final class LocalMissionModelService implements MissionModelService {
         SerializedValue.of(config));
 
     final var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
+    //TODO: cache key should include sim configuration, otherwise may get incorrect sim
+    //may also want to use planId in cache key to tie one driver to each plan for maximum similarity
     SimulationDriver<?> driver = simulationDrivers.get(planInfo);
 
     SimulationResultsInterface results;
