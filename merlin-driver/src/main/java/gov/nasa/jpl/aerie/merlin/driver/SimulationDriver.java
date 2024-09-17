@@ -169,25 +169,6 @@ public final class SimulationDriver<Model> {
       final Duration planDuration,
       final boolean doComputeResults,
       final Supplier<Boolean> simulationCanceled,
-      final Consumer<Duration> simulationExtentConsumer
-  ) {
-    return simulate(
-        schedule,
-        simulationStartTime, simulationDuration,
-        planStartTime, planDuration,
-        doComputeResults,
-        simulationCanceled, simulationExtentConsumer,
-        new InMemorySimulationResourceManager());
-  }
-
-  public SimulationResultsInterface simulate(
-      final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final Instant simulationStartTime,
-      final Duration simulationDuration,
-      final Instant planStartTime,
-      final Duration planDuration,
-      final boolean doComputeResults,
-      final Supplier<Boolean> simulationCanceled,
       final Consumer<Duration> simulationExtentConsumer,
       final SimulationResourceManager resourceManager
   ) {
