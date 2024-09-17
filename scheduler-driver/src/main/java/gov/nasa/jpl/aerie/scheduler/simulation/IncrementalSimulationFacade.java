@@ -350,6 +350,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     final var planSimCorrespondence = scheduleFromPlan(plan, this.schedulerModel);
     final var schedule = planSimCorrespondence.directiveIdActivityDirectiveMap();
     final Consumer<Duration> noopSimExtentConsumer= $->{}; //no progress bar in scheduler since it would jump around
+    final var resourceManager = new InMemorySimulationResourceManager();
     //TODO: pass down stopping condition re specific activity vs all acts
     try {
       driver.initSimulation(simulationDuration);
@@ -360,7 +361,8 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
           simulationStartTime, simulationDuration,
           false, //don't compute all results; will calculate act timing data only below
           this.canceledListener,
-          noopSimExtentConsumer);
+          noopSimExtentConsumer,
+          resourceManager);
     } catch (Exception e) {
       //re-wrap exceptions from simulation itself to clarify to scheduler re eg invalid plan
       throw new SimulationException("exception during plan simulation", e);
@@ -383,7 +385,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
         SimulationEngine.defaultActivityTopic, //always the same static topic, not per engine
         missionModel.getTopics(),
         driver.getEngine().spanInfo.directiveIdToSpanId(),
-        new InMemorySimulationResourceManager());
+        resourceManager);
     return new AugmentedSimulationResultsComputerInputs(resultsComputer, planSimCorrespondence);
   }
 
