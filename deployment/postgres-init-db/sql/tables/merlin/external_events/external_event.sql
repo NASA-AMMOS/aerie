@@ -5,7 +5,7 @@ create table merlin.external_event (
     derivation_group_name text not null,
     start_time timestamp with time zone not null,
     duration interval not null,
-    properties jsonb,
+    properties merlin.argument_set,
 
     constraint external_event_pkey
       primary key (key, source_key, derivation_group_name, event_type_name),
@@ -40,6 +40,36 @@ comment on column merlin.external_event.properties is e''
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
 create function merlin.check_event_times()
+-- Add a trigger verifying that properties only contains defined properties for the external event type
+create or replace function merlin.validate_external_event_properties()
+  returns trigger
+  language plpgsql as
+$func$
+declare
+ valid_properties text[];
+ event_properties text[];
+ required_properties text[];
+ invalid_properties text[];
+begin
+  select jsonb_object_keys(properties) into valid_properties from merlin.external_event_type where new.event_type_name = external_event_type.name;
+  select jsonb_object_keys(properties) into event_properties from new.properties;
+  select required_properties into required_properties from merlin.external_event_type where new.event_type_name = external_event_type.required_properties;
+  select array(select property from unnest(event_properties) as property except select valid_property from unnest(valid_properties) as valid_property) into invalid_properties;
+
+  if not (event_properties <@ required_properties) then
+    raise exception 'External event does not contain all the required properties for an event of type "%s"', new.event_type_name;
+  end if;
+
+  if array_length(invalid_properties, 1) > 0 then
+    raise exception 'External event contains properties that do not exist in the definition of the event type "%s"', new.event_type_name;
+  end if;
+end;
+$func$;
+comment on function merlin.validate_external_event_properties() is e''
+  'Validate that the external event contains only properties that are defined in the external event type, and all the required properties for the event type are present.';
+
+-- Add a trigger verifying that events fit into their sources
+create or replace function merlin.check_event_times()
  	returns trigger
  	language plpgsql as
 $func$
@@ -72,3 +102,6 @@ after insert on merlin.external_event
 
 comment on trigger check_event_times on merlin.external_event is e''
   'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
+create trigger validate_external_event_properties
+after insert on merlin.external_event
+  for each row execute function merlin.validate_external_event_properties();
