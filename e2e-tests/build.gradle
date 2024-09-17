@@ -57,13 +57,13 @@ task e2eTest(type: Test) {
 }
 
 dependencies {
-  testAnnotationProcessor project(':procedural:processor')
+  annotationProcessor project(':procedural:processor')
 
-  testImplementation project(":procedural:scheduling")
-  testImplementation project(":procedural:timeline")
-  testImplementation project(':merlin-driver')
-  testImplementation project(':type-utils')
-  testImplementation project(':contrib')
+  implementation project(":procedural:scheduling")
+  implementation project(":procedural:timeline")
+  implementation project(':merlin-sdk')
+  implementation project(':type-utils')
+  implementation project(':contrib')
 
   testImplementation project(":procedural:remote")
   testImplementation "com.zaxxer:HikariCP:5.1.0"
@@ -112,7 +112,7 @@ tasks.create("generateSchedulingProcedureJarTasks") {
 
     tasks.create(taskName, ShadowJar) {
       group = 'SchedulingProcedureJars'
-      configurations = [project.configurations.testCompileClasspath]
+      configurations = [project.configurations.compileClasspath]
       from sourceSets.main.output
       archiveBaseName = "" // clear
       archiveClassifier.set(nameWithoutExtension) // set output jar name
