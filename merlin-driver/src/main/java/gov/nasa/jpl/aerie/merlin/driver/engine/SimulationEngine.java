@@ -59,7 +59,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SequencedSet;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.TreeSet;
@@ -123,8 +122,6 @@ public final class SimulationEngine implements AutoCloseable {
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
   private HashMap<String, SimulatedActivityId> taskToSimulatedActivityId = null;
-  private HashMap<SpanId, SpanId> activityParents = null;
-  private HashMap<SpanId, List<SpanId>> activityChildren = null;
   private HashMap<SpanId, ActivityDirectiveId> activityDirectiveIds = null;
 
   /** When tasks become stale */
@@ -214,9 +211,11 @@ public final class SimulationEngine implements AutoCloseable {
 
     elapsedTime = other.elapsedTime;
 
-    timeline = new TemporalEventSource();
+    this.timeline = new TemporalEventSource(null, other.getMissionModel(),
+                                            other.oldEngine == null ? null : other.oldEngine.timeline);
     setCurTime(other.curTime());
     cells = new LiveCells(timeline, other.cells);
+    this.timeline.liveCells = this.cells;
     referenceTimeline = other.combineTimeline();
 
     // New Executor allows other SimulationEngine to be closed
@@ -246,10 +245,29 @@ public final class SimulationEngine implements AutoCloseable {
     stepIndexAtTime = other.stepIndexAtTime;
     missionModel = other.missionModel;
     referencedTopics = new HashMap<>(other.referencedTopics);
-    cellReadHistory = new HashMap<>(other.cellReadHistory);
-    removedCellReadHistory = new TreeMap<>(other.removedCellReadHistory);
-    scheduledDirectives = other.scheduledDirectives == null ? null : new LinkedHashMap<>(other.scheduledDirectives);
-    directivesDiff = other.directivesDiff == null ? null : new LinkedHashMap<>(other.directivesDiff);
+    cellReadHistory = new HashMap<>();
+    for (final var entry : other.cellReadHistory.entrySet()) {
+      var newVal = new TreeMap<SubInstantDuration, HashMap<TaskId, Event>>();
+      for (final var e2 : entry.getValue().entrySet()) {
+        newVal.put(e2.getKey(), new HashMap<>(e2.getValue()));
+      }
+      cellReadHistory.put(entry.getKey(), newVal);
+    }
+    removedCellReadHistory = new TreeMap<>();
+    for (final var entry : other.removedCellReadHistory.entrySet()) {
+      removedCellReadHistory.put(entry.getKey(), new HashSet<>(entry.getValue()));
+    }
+    scheduledDirectives = other.scheduledDirectives;
+//    scheduledDirectives = other.scheduledDirectives == null ? null : new LinkedHashMap<>(other.scheduledDirectives);
+    directivesDiff = other.directivesDiff;
+//    if (other.directivesDiff == null) {
+//      directivesDiff = null;
+//    } else {
+//      directivesDiff = new LinkedHashMap<>();
+//      for (final var entry : other.directivesDiff.entrySet()) {
+//        directivesDiff.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+//      }
+//    }
     spanInfo = new SpanInfo(other.spanInfo, this);
     simulatedActivities = new LinkedHashMap<>(other.simulatedActivities);
     removedActivities = new LinkedHashSet<>(other.removedActivities);
@@ -257,8 +275,6 @@ public final class SimulationEngine implements AutoCloseable {
     topics = new ArrayList<>(other.topics);
     simulationResults = other.simulationResults;
     taskToSimulatedActivityId = other.taskToSimulatedActivityId == null ? null : new HashMap<>(other.taskToSimulatedActivityId);
-    activityParents = other.activityParents == null ? null : new HashMap<>(other.activityParents);
-    activityChildren = other.activityChildren == null ? null : new HashMap<>(other.activityChildren);
     activityDirectiveIds = other.activityDirectiveIds == null ? null : new HashMap<>(other.activityDirectiveIds);
     staleTasks = new LinkedHashMap<>(other.staleTasks);
     staleEvents = new LinkedHashMap<>(other.staleEvents);
@@ -266,7 +282,10 @@ public final class SimulationEngine implements AutoCloseable {
     taskFactories = new LinkedHashMap<>(other.taskFactories);
     daemonTasks = other.daemonTasks;
     taskParent = new HashMap<>(other.taskParent);
-    taskChildren = new HashMap<>(other.taskChildren);
+    taskChildren = new HashMap<>();
+    for (final var entry : other.taskChildren.entrySet()) {
+      taskChildren.put(entry.getKey(), new HashSet<>(entry.getValue()));
+    }
     taskToSpanMap = new HashMap<>(other.taskToSpanMap);
     spanToSimulatedActivityId = other.spanToSimulatedActivityId == null ? null :
         new HashMap<>(other.spanToSimulatedActivityId);
@@ -2459,24 +2478,6 @@ public final class SimulationEngine implements AutoCloseable {
     return parent;
   }
 
-  private TaskId getTaskParentFromSpan(TaskId taskId) {
-    var spanId = getSpanId(taskId);
-    TaskId parent = null;
-    if (spanId != null && activityParents != null && !activityParents.isEmpty()) {
-      var parentSpanId = activityParents.get(spanId);
-      if (parentSpanId != null) {
-        var tasks = getTaskIds(spanId);
-        if (tasks != null && !tasks.isEmpty()) {
-          parent = tasks.getFirst();
-        }
-      }
-    }
-    if (parent == null && oldEngine != null) {
-      parent = oldEngine.getTaskParent(taskId);
-    }
-    return parent;
-  }
-
   boolean isDaemonTask(TaskId taskId) {
     if (daemonTasks.contains(taskId)) return true;
     SpanId spanId = getSpanId(taskId);
@@ -2551,63 +2552,7 @@ public final class SimulationEngine implements AutoCloseable {
     return children;
   }
 
-  public Set<TaskId> getTaskChildrenFromSpans(TaskId taskId) {
-    var spanId = getSpanId(taskId);
-    var taskSeq = getTaskIds(spanId);
-    Set<TaskId> taskChildren = taskSeq == null ? null : taskSeq.stream().filter(t -> !t.equals(taskId)).collect(Collectors.toSet());
-    if (spanId != null && activityChildren != null && !activityChildren.isEmpty()) {
-      var childSpans = activityChildren.get(spanId);
-      if (childSpans != null) {
-        final Set<TaskId> children = new HashSet<>();
-        childSpans.forEach(s -> {
-          var tasks = getTaskIds(s);
-          if (tasks != null) children.addAll(tasks);
-        });
-        if (taskChildren == null || taskChildren.isEmpty()) {
-          taskChildren = children;
-        } else {
-          taskChildren.addAll(children);
-        }
-      }
-    }
-    if (oldEngine != null && (taskChildren == null || taskChildren.isEmpty())) {
-      taskChildren = oldEngine.getTaskChildren(taskId);
-    }
-    if (taskChildren == null) taskChildren = Collections.emptySet();
-    return taskChildren;
-  }
-
   public void rescheduleTask(TaskId taskId, Duration startOffset) {
-    //Look for serialized activity for task
-    // If no parent is an activity, then see if it is a daemon task.
-    // If it's not an activity or daemon task, report an error somehow (e.g., exception or log.error()).
-//    TaskId activityId = null;
-//    TaskId daemonTaskId = taskId;
-//    TaskId lastId = taskId;
-//    boolean isAct = false;
-//    boolean isDaemon = false;
-//    while (true) {
-//      if (oldEngine.isActivity(lastId)) {
-//        isAct = true;
-//        activityId = lastId;
-//        isDaemon = false;
-//        break;
-//      }
-//      if (oldEngine.isDaemonTask(lastId)) {
-//        isDaemon = true;
-//        daemonTaskId = lastId;
-//        break;
-//      }
-//      if (oldEngine.getFactoryForTaskId(lastId) != null) {
-//        break;
-//      }
-//      var tempId = oldEngine.getTaskParent(lastId);
-//      if (tempId == null) {
-//        break;
-//      }
-//      lastId = tempId;
-//    }
-
     if (oldEngine.isDaemonTask(taskId)) {
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
