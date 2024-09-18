@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
@@ -147,12 +149,14 @@ public record SynchronousSchedulerAgent(
             schedulerMissionModel.schedulerModel()
         );
         final var externalProfiles = loadExternalProfiles(planMetadata.planId());
+        final var externalEventsByDerivationGroup = loadExternalEvents(planMetadata.planId(), planMetadata.horizon().getStartInstant());
         final var initialSimulationResultsAndDatasetId = loadSimulationResults(planMetadata);
         //seed the problem with the initial plan contents
         final var loadedPlanComponents = loadInitialPlan(planMetadata, problem,
                                                          initialSimulationResultsAndDatasetId.map(Pair::getKey));
         problem.setInitialPlan(loadedPlanComponents.schedulerPlan(), initialSimulationResultsAndDatasetId.map(Pair::getKey));
         problem.setExternalProfile(externalProfiles.realProfiles(), externalProfiles.discreteProfiles());
+        problem.setEventsByDerivationGroup(externalEventsByDerivationGroup);
         //apply constraints/goals to the problem
         final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
         final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
@@ -336,6 +340,12 @@ public record SynchronousSchedulerAgent(
   throws MerlinServiceException, IOException
   {
     return merlinDatabaseService.getExternalProfiles(planId);
+  }
+
+  private Map<String, List<ExternalEvent>> loadExternalEvents(final PlanId planId, final Instant horizonStart)
+  throws MerlinServiceException, IOException
+  {
+    return merlinDatabaseService.getExternalEvents(planId, horizonStart);
   }
 
   private Optional<DatasetId> storeSimulationResults(

@@ -2,9 +2,12 @@ package gov.nasa.jpl.aerie.scheduler.plan
 
 import gov.nasa.ammos.aerie.procedural.timeline.Interval
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
+import gov.nasa.ammos.aerie.procedural.timeline.collections.ExternalEvents
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Directive
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart.Anchor.AnchorPoint.Companion.anchorToStart
+import gov.nasa.ammos.aerie.procedural.timeline.plan.EventQuery
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.minus
 import gov.nasa.ammos.aerie.procedural.timeline.util.duration.plus
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration
@@ -17,6 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan as SchedulerPlan
 data class SchedulerToProcedurePlanAdapter(
     private val schedulerPlan: SchedulerPlan,
     private val planningHorizon: PlanningHorizon,
+    private val eventsByDerivationGroup: Map<String, List<ExternalEvent>>
 ): TimelinePlan, SchedulerPlan by schedulerPlan {
   override fun totalBounds() = Interval.between(Duration.ZERO, planningHorizon.aerieHorizonDuration)
 
@@ -47,4 +51,12 @@ data class SchedulerToProcedurePlanAdapter(
     return Directives(result)
   }
 
+  override fun events(query: EventQuery): ExternalEvents {
+    var result = if (query.derivationGroup != null) eventsByDerivationGroup[query.derivationGroup]
+      ?: throw Error("derivation group either doesn't exist or isn't associated with plan: ${query.derivationGroup}")
+    else eventsByDerivationGroup.values.flatten()
+    if (query.type != null) result = result.filter { it.type == query.type }
+    if (query.source != null) result = result.filter { it.source == query.source }
+    return ExternalEvents(result)
+  }
 }

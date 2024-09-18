@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.ammos.aerie.procedural.scheduling.ProcedureMapper;
@@ -35,7 +36,15 @@ public class Procedure extends Goal {
     this.args = args;
   }
 
-  public void run(Evaluation eval, Plan plan, MissionModel<?> missionModel, Function<String, ActivityType> lookupActivityType, SimulationFacade simulationFacade, DirectiveIdGenerator idGenerator) {
+  public void run(
+      Evaluation eval,
+      Plan plan,
+      MissionModel<?> missionModel,
+      Function<String, ActivityType> lookupActivityType,
+      SimulationFacade simulationFacade,
+      DirectiveIdGenerator idGenerator,
+      Map<String, List<ExternalEvent>> eventsByDerivationGroup
+  ) {
     final ProcedureMapper<?> procedureMapper;
     try {
       procedureMapper = ProcedureLoader.loadProcedure(jarPath);
@@ -47,7 +56,8 @@ public class Procedure extends Goal {
 
     final var planAdapter = new SchedulerToProcedurePlanAdapter(
         plan,
-        planHorizon
+        planHorizon,
+        eventsByDerivationGroup
     );
 
     final var editablePlan = new InMemoryEditablePlan(
