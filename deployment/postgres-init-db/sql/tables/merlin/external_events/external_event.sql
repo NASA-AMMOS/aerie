@@ -46,23 +46,22 @@ create or replace function merlin.validate_external_event_properties()
   language plpgsql as
 $func$
 declare
- valid_properties text[];
  event_properties text[];
- required_properties text[];
- invalid_properties text[];
+ event_invalid_properties text[];
+ event_type_required_properties text[];
+ event_type_valid_properties text[];
 begin
-  select jsonb_object_keys(properties) into valid_properties from merlin.external_event_type where new.event_type_name = external_event_type.name;
-  select jsonb_object_keys(properties) into event_properties from new.properties;
-  select required_properties into required_properties from merlin.external_event_type where new.event_type_name = external_event_type.required_properties;
-  select array(select property from unnest(event_properties) as property except select valid_property from unnest(valid_properties) as valid_property) into invalid_properties;
-
-  if not (event_properties <@ required_properties) then
+  event_properties := (select array(select jsonb_object_keys(new.properties)));
+  select array(select jsonb_array_elements_text(required_properties)) into event_type_required_properties from merlin.external_event_type where new.event_type_name = external_event_type.name;
+  select array(select jsonb_object_keys(properties)) into event_type_valid_properties from merlin.external_event_type where new.event_type_name = external_event_type.name;
+  select array(select property from unnest(event_properties) as property except select valid_property from unnest(event_type_valid_properties) as valid_property) into event_invalid_properties;
+  if not (event_type_required_properties <@ event_properties) then
     raise exception 'External event does not contain all the required properties for an event of type "%s"', new.event_type_name;
   end if;
-
-  if array_length(invalid_properties, 1) > 0 then
-    raise exception 'External event contains properties that do not exist in the definition of the event type "%s"', new.event_type_name;
+  if array_length(event_invalid_properties, 1) > 0 then
+    raise exception 'External event contains properties that are not defined within the event type "%s"', new.event_type_name;
   end if;
+  return null;
 end;
 $func$;
 comment on function merlin.validate_external_event_properties() is e''
