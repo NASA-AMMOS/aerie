@@ -7,6 +7,26 @@ create table merlin.external_event_type (
       primary key (name)
 );
 
+-- Add a trigger to validate that the properties in 'required_properties' actually exist in 'properties'. TODO this can probably be simplified from a trigger but I had issues doing a 'check' constraint b/c of casting the compared columns to text[]s
+create or replace function merlin.validate_required_properties_exist()
+  returns trigger
+  language plpgsql as
+$func$
+declare
+  valid_properties text[];
+  required_property_names text[];
+begin
+  valid_properties := (select array(select jsonb_object_keys(new.properties)));
+  required_property_names := (select array(select jsonb_array_elements_text(new.required_properties)));
+  if not (required_property_names <@ valid_properties) then
+    raise exception 'External event type definition contained required properties that are not defined in the properties of the type.';
+  end if;
+  return null;
+end;
+$func$;
+
+comment on function merlin.validate_required_properties_exist() is e''
+  'Validate that the property names in required_properties actually exist within those defined in the properties column.';
 comment on table merlin.external_event_type is e''
   'Externally imported event types.';
 
@@ -18,4 +38,4 @@ comment on column merlin.external_event_type.properties is e''
 comment on column merlin.external_event_type.required_properties is e''
   'A description of which properties are required to be provided to instantiate external events of this type';
 comment on column merlin.external_event_type.computed_attributes_value_schema is e''
-'The type of value returned by the effect model of this external event type';
+  'The type of value returned by the effect model of this external event type';
