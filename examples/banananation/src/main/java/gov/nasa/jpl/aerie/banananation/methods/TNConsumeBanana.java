@@ -18,8 +18,8 @@ public class TNConsumeBanana implements TaskNetTemplate<CompoundConsumeBanana> {
     final ActivityReference pickAct = ActivityReferences.PickBanana(compoundBanana.howMany);
     final ActivityReference biteAct = ActivityReferences.BiteBanana(compoundBanana.biteSize);
     HashSet<ActivityReference> subtasks = new HashSet<>(Arrays.asList(pickAct, biteAct));
-    HashSet<TaskNetworkTemporalConstraint> constraints = new HashSet<>(Arrays.asList(new TaskNetworkTemporalConstraint.Before(pickAct, biteAct,
-                                                                                                                              Duration.of(1,Duration.HOURS))));
+    HashSet<TaskNetworkTemporalConstraint> constraints =
+        new HashSet<>(Arrays.asList(new TaskNetworkTemporalConstraint.Meets(pickAct, biteAct)));
     return new TaskNetTemplateData(subtasks, constraints);
   }
 }

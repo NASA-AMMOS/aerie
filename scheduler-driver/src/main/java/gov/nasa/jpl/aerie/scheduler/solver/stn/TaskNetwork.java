@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.solver.stn;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,7 +17,7 @@ import java.util.Map;
  */
 public class TaskNetwork {
 
-  private final Map<String, String> startActTimepoints;
+  private final BidiMap<String, String> startActTimepoints;
   private final Map<String, String> endActTimepoints;
   private final String startHorizon = "SI";
   private final String endHorizon = "EI";
@@ -28,7 +32,7 @@ public class TaskNetwork {
 
   public TaskNetwork(double horizonStart, double horizonEnd){
     stn = new STN();
-    startActTimepoints = new HashMap<>();
+    startActTimepoints = new DualHashBidiMap<>();
     endActTimepoints = new HashMap<>();
     setHorizon(horizonStart, horizonEnd);
   }
@@ -121,13 +125,32 @@ public class TaskNetwork {
     stn.addBeforeCst(etAct,etenvTpName);
   }
 
+  public List<String> getOrderedTasks(){
+    final var taskNames = new ArrayList<String>();
+
+    List<String> tpNames = stn.orderNodesRootToLeaf();
+    for(String tpName : tpNames)
+      taskNames.add(startActTimepoints.getKey(tpName));
+    return taskNames;
+  }
+
   public void addStartInterval(String actName, double t1, double t2){
     failIfActDoesNotExist(actName);
     var stAct = startActTimepoints.get(actName);
     stn.addDurCst(startHorizon, stAct, t1-stHorizon, t2-stHorizon);
   }
 
+  public boolean hasCycle() {
+    return stn.hasCycle();
+  }
+
+  public boolean isFullyOrdered(){
+    return !(stn.hasOrphans() || stn.hasMultipleStartingNodes());
+  }
+
   /**
+   *
+   *
    * Adds an absolute time interval for activity
    */
   public void addEndInterval(String actName, double lb, double ub){

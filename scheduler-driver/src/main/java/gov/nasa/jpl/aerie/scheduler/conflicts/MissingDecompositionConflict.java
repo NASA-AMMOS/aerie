@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -14,6 +15,8 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 public class MissingDecompositionConflict extends Conflict {
   //private final ActivityType actType;
   private ActivityReference activity;
+  public Interval startInterval;
+  public Interval endInterval;
 
   /**
    * ctor creates a new conflict regarding a missing activity
@@ -26,6 +29,19 @@ public class MissingDecompositionConflict extends Conflict {
       ActivityReference activity) {
     super(goal, environment);
     this.activity = activity;
+    this.startInterval = null;
+    this.endInterval = null;
+  }
+
+  public MissingDecompositionConflict(
+      final Goal goal,
+      EvaluationEnvironment environment,
+      ActivityReference activity,
+      Interval startInterval, Interval endInterval) {
+    super(goal, environment);
+    this.activity = activity;
+    this.startInterval = startInterval;
+    this.endInterval = endInterval;
   }
 
   public MissingDecompositionConflict(

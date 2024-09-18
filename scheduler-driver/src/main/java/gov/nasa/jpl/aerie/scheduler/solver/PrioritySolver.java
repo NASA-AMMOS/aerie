@@ -6,10 +6,14 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
+import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetworkTemporalConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
@@ -25,9 +29,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingRecurrenceConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
-import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -35,12 +37,14 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.solver.planner.NexusDecomposer;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -156,6 +160,10 @@ public class PrioritySolver extends SubSolver {
     this(problem, plan,false, idGenerator, metaSolver);
   }
 
+  public void setDependentSolver(NexusDecomposer solver) {
+    this.dependentSolver = solver;
+  }
+
   private ConflictSolverResult solveMissingRecurrenceConflict(
       final MissingRecurrenceConflict missingRecurrenceConflict,
       final Goal goal
@@ -204,7 +212,7 @@ public class PrioritySolver extends SubSolver {
         break;
       }
     }
-    return new ConflictSolverResult(satisfaction, lastPartiallySat, new HashMap<>());
+    return new ConflictSolverResult(satisfaction, lastPartiallySat, new ArrayList<>());
   }
 
   private boolean hasDuplicates(List<SchedulingActivity> activities){
@@ -296,6 +304,7 @@ public class PrioritySolver extends SubSolver {
         new Windows(false).set(Interval.betweenClosedOpen(missingRecurrenceConflict.validWindow.start, missingRecurrenceConflict.validWindow.end), true)));
   }
 
+
   @Override
   public ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException
@@ -323,7 +332,7 @@ public class PrioritySolver extends SubSolver {
                                                        newActivity));
       }
     }
-    conflictSolverReturn.setNewConflicts(conflicts);
+    //conflictSolverReturn.setNewConflicts(conflicts);
     return conflictSolverReturn;
   }
 
@@ -381,61 +390,53 @@ public class PrioritySolver extends SubSolver {
         //even if an activity fails, constraint propagation should make sure we get the transitive dependencies we need even if a middle act is not satisfied
       }
     }
-    return new ConflictSolverResult(satisfaction, activitiesCreated, new HashMap<>());
+    return new ConflictSolverResult(satisfaction, activitiesCreated, new ArrayList<>());
   }
 
   private ConflictSolverResult solveActivityInstanceConflict(
       final MissingActivityInstanceConflict missingActivityInstanceConflict,
       final Optional<Goal> goal) throws SchedulingInterruptedException, InstantiationException
   {
-    ConflictSolverResult aggregatedResults = new ConflictSolverResult();
     var satisfaction = ConflictSatisfaction.NOT_SAT;
     List<SchedulingActivity> activitiesCreated = new ArrayList<>();
-    final var newActivity = getBestNewActivity(missingActivityInstanceConflict);
+    final var solverResult = getBestNewActivity(missingActivityInstanceConflict);
     //add the activities to the output plan
-    if (newActivity.isPresent()) {
+    if (!solverResult.activitiesCreated().isEmpty()) {
       logger.info("Found activity to satisfy missing activity instance conflict");
-      // Decompose if necessary
-      if(newActivity.get().getType().isCompound()){
-        Conflict conflict = new MissingDecompositionConflict(null,
-                                                             missingActivityInstanceConflict.getEvaluationEnvironment(),
-                                                             newActivity.get());
-        aggregatedResults.mergeConflictSolverResult(this.solveDependencyConflict(goal, conflict));
-      }
+      final var newActivity = solverResult.activitiesCreated().iterator().next();
+      solverResult.activitiesCreated().iterator().remove();
       // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
       // undo everything
-      if(aggregatedResults.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
+      if(solverResult.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
         if(goal.isPresent()){
           this.metaSolver.rollback(goal.get());
         }
         else{
-          this.metaSolver.rollback(aggregatedResults);
+          this.metaSolver.rollback(solverResult);
         }
       }
       else{
-        final var insertionResult = checkAndInsertActs(List.of(newActivity.get()));
+        final var insertionResult = checkAndInsertActs(List.of(newActivity));
         if (insertionResult.success) {
           satisfaction = ConflictSatisfaction.SAT;
-          activitiesCreated.add(newActivity.get());
+          activitiesCreated.add(newActivity);
           //REVIEW: really association should be via the goal's own query...
         } else {
           logger.info("Conflict " + " could not be satisfied");
           // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
           // undo everything
-          if(aggregatedResults.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
-            if(goal.isPresent()){
-              this.metaSolver.rollback(goal.get());
-            }
-            else{
-              this.metaSolver.rollback(aggregatedResults);
-            }
+          if(goal.isPresent()){
+            this.metaSolver.rollback(goal.get());
+          }
+          else{
+            this.metaSolver.rollback(solverResult);
           }
         }
       }
 
     }
-    aggregatedResults.mergeConflictSolverResult(new ConflictSolverResult(satisfaction, activitiesCreated, new HashMap<>()));
-    return aggregatedResults;
+    solverResult.mergeConflictSolverResult(new ConflictSolverResult(satisfaction, activitiesCreated, new ArrayList<>()));
+    return solverResult;
   }
 
   private ConflictSolverResult solveActivityTemplateConflict(
@@ -454,6 +455,9 @@ public class PrioritySolver extends SubSolver {
       durationLeft = durationToAccomplish.get();
     }
     var nbIterations = 0;
+    ConflictSolverResult solverResult = new ConflictSolverResult();
+    //TODO Adrien check implementation. here we don't interrupt the while even if we can insert the activity? If
+    // that's the case, the conflict results for each loop of the while need to be merged
     while (cardinalityLeft > 0 || durationLeft.longerThan(ZERO)) {
       logger.info("Trying to satisfy "+ (isSubconflict ? "sub-" : "") + "template conflict "
                   + " (iteration: "
@@ -462,31 +466,25 @@ public class PrioritySolver extends SubSolver {
                   + cardinalityLeft
                   + ", duration: "
                   + (durationLeft.isEqualTo(ZERO) ? "N/A" : durationLeft));
-      final var newActivity = getBestNewActivity(missingActivityTemplateConflict);
-      assert newActivity != null;
+      solverResult = getBestNewActivity(missingActivityTemplateConflict);
       //add the activities to the output plan
-      ConflictSolverResult aggregatedResults = new ConflictSolverResult();
-      if (newActivity.isPresent()) {
+      //ConflictSolverResult aggregatedResults = new ConflictSolverResult();
+      if (!solverResult.activitiesCreated().isEmpty()) {
         logger.info("Found activity to satisfy missing activity template conflict");
-        // Decompose if necessary
-        if(newActivity.get().getType().isCompound()){
-          Conflict conflict = new MissingDecompositionConflict(null,
-                                                               missingActivityTemplateConflict.getEvaluationEnvironment(),
-                                                               newActivity.get());
-          aggregatedResults.mergeConflictSolverResult(this.solveDependencyConflict(goal, conflict));
-        }
+        final var newActivity = solverResult.activitiesCreated().iterator().next();
+        solverResult.activitiesCreated().iterator().remove();
         // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
         // undo everything
-        if(aggregatedResults.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
+        if(solverResult.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
           if(goal.isPresent()){
             this.metaSolver.rollback(goal.get());
           }
           else{
-            this.metaSolver.rollback(aggregatedResults);
+            this.metaSolver.rollback(solverResult);
           }
         }
         else{
-          final var insertionResult = checkAndInsertActs(List.of(newActivity.get()));
+          final var insertionResult = checkAndInsertActs(List.of(newActivity));
           if (insertionResult.success()) {
             //REVIEW: really association should be via the goal's own query...
             cardinalityLeft--;
@@ -496,19 +494,17 @@ public class PrioritySolver extends SubSolver {
                                                   .map(SchedulingActivity::duration)
                                                   .reduce(ZERO, Duration::plus));
             satisfaction = ConflictSatisfaction.PARTIALLY_SAT;
-            activitiesCreated.add(newActivity.get());
+            activitiesCreated.add(newActivity);
           }
           else {
             logger.info("Conflict " + " could not be satisfied");
             // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
             // undo everything
-            if(aggregatedResults.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
-              if(goal.isPresent()){
-                this.metaSolver.rollback(goal.get());
-              }
-              else{
-                this.metaSolver.rollback(aggregatedResults);
-              }
+            if(goal.isPresent()){
+              this.metaSolver.rollback(goal.get());
+            }
+            else{
+              this.metaSolver.rollback(solverResult);
             }
           }
         }
@@ -522,7 +518,8 @@ public class PrioritySolver extends SubSolver {
       //logger.info("Conflict " + i + " has been addressed");
       satisfaction = ConflictSatisfaction.SAT;
     }
-    return new ConflictSolverResult(satisfaction, activitiesCreated, new HashMap<>());
+    solverResult.mergeConflictSolverResult(new ConflictSolverResult(satisfaction, activitiesCreated, new ArrayList<>()));
+    return solverResult;
   }
 
   /**
@@ -667,8 +664,9 @@ public class PrioritySolver extends SubSolver {
    *     added to the plan to best satisfy the conflict without disrupting
    *     the rest of the plan, or null if there are no such suggestions
    */
-  private Optional<SchedulingActivity> getBestNewActivity(MissingActivityConflict missing)
-  throws SchedulingInterruptedException {
+  private ConflictSolverResult getBestNewActivity(MissingActivityConflict missing)
+  throws SchedulingInterruptedException, InstantiationException
+  {
     assert missing != null;
     SchedulingActivity newActivity = null;
     //REVIEW: maybe push into polymorphic method of conflict/goal? (picking best act
@@ -715,6 +713,8 @@ public class PrioritySolver extends SubSolver {
 
     //create new act if there is any valid time (otherwise conflict is
     //unsatisfiable in current plan)
+
+    ConflictSolverResult solverResult = new ConflictSolverResult();
     if (startWindows.stream().anyMatch(Segment::value)) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
@@ -731,13 +731,19 @@ public class PrioritySolver extends SubSolver {
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
         logger.info("Instantiating activity in windows " + startWindows.trueSegmentsToString());
-        final var act = createOneActivity(
+
+
+
+
+        solverResult = createOneActivity(
             missingTemplate,
-            goal.getName() + "_" + java.util.UUID.randomUUID(),
+            goal.getName() + "_" + UUID.randomUUID(),
             startWindows,
             missing.getEvaluationEnvironment(),
             missing.scheduleAt());
-        if(act.isPresent()){
+        if(solverResult.activitiesCreated().iterator().hasNext()){
+          final var act = solverResult.activitiesCreated().iterator().next();
+          solverResult.activitiesCreated().iterator().remove();
           if (missingTemplate.getAnchorId().isPresent()) {
             final SchedulingActivity predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
             int includePredDuration = 0;
@@ -745,12 +751,12 @@ public class PrioritySolver extends SubSolver {
               includePredDuration = missingTemplate.getAnchorToStart().get() ? 0 : 1;
             }
             final Duration dur = predecessor.duration().times(includePredDuration);
-            final Duration startOffset = act.get().startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
+            final Duration startOffset = act.startOffset().minus(plan.calculateAbsoluteStartOffsetAnchoredActivity(predecessor).plus(dur));
             // In case the goal requires generation of anchors and anchor is startsAt End, then check that predecessor completes before act starts. If that's not the case, don't add act as the anchor cannot be verified
             if(((MissingActivityTemplateConflict) missing).getAnchorToStart().isEmpty() ||
                ((MissingActivityTemplateConflict) missing).getAnchorToStart().get() || startOffset.noShorterThan(
                 ZERO)){
-              final var actWithAnchor = Optional.of(act.get().withNewAnchor(missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
+              final var actWithAnchor = Optional.of(act.withNewAnchor(missingTemplate.getAnchorId().get(), missingTemplate.getAnchorToStart().get(), startOffset));
               newActivity = actWithAnchor.get();
             }
             else{
@@ -758,15 +764,15 @@ public class PrioritySolver extends SubSolver {
             }
           }
           else{
-            newActivity = act.get();
+            newActivity = act;
           }
         }
         //is an exception that act is empty?
       }
 
     }//if(startWindows)
-
-    return Optional.ofNullable(newActivity);
+    solverResult.activitiesCreated().add(newActivity);
+    return solverResult;
   }
 
   /**
@@ -817,6 +823,24 @@ public class PrioritySolver extends SubSolver {
     return ret;
   }
 
+  public Optional<SimulationData> createFakeSimulationData(){
+    final var groundedPlan = SchedulePlanGrounder.groundSchedule(
+        this.plan.getActivities().stream().toList(),
+        this.problem.getPlanningHorizon().getEndAerie());
+    if (groundedPlan.isPresent()) {
+      return Optional.of(new SimulationData(
+              plan,
+              null,
+              new SimulationResults(
+                      problem.getPlanningHorizon().getStartInstant(),
+                      problem.getPlanningHorizon().getHor(),
+                      groundedPlan.get(),
+                      Map.of(),
+                      Map.of())
+      ));
+    }
+    return Optional.empty();
+  }
   public SimulationData getLatestSimResultsUpTo(final Duration time, final Set<String> resourceNames) throws SchedulingInterruptedException {
     //if no resource is needed, build the results from the current plan
     if(resourceNames.isEmpty()) {
@@ -893,41 +917,45 @@ public class PrioritySolver extends SubSolver {
    * @param windows the windows in which the activity can be instantiated
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
-  public @NotNull Optional<SchedulingActivity> createOneActivity(
+  public @NotNull ConflictSolverResult createOneActivity(
       final MissingActivityTemplateConflict missingConflict,
       final String name,
       final Windows windows,
       final EvaluationEnvironment evaluationEnvironment,
-      final ScheduleAt scheduleAt) throws SchedulingInterruptedException
+      final ScheduleAt scheduleAt) throws SchedulingInterruptedException, InstantiationException
   {
     //REVIEW: how to properly export any flexibility to instance?
     logger.info("Trying to create one activity, will loop through possible windows");
     var iterator = scheduleAt == ScheduleAt.EARLIEST ? windows.iterator() : windows.reverseIterator();
+    ConflictSolverResult solverResult = new ConflictSolverResult();
     while(iterator.hasNext()) {
       final var segment = iterator.next();
       if(segment.value()) {
         logger.info("Trying in window " + segment.interval());
-        var activity = instantiateActivity(
+        solverResult = instantiateActivity(
             missingConflict.getActTemplate(),
             name,
             segment.interval(),
             missingConflict.getEvaluationEnvironment(),
             scheduleAt);
-        if (activity.isPresent()) {
-          return activity;
+        if (solverResult.activitiesCreated().iterator().hasNext()) {
+          return solverResult;
         }
       }
     }
-    return Optional.empty();
+    return solverResult;
   }
 
-  private Optional<SchedulingActivity> instantiateActivity(
+    private ConflictSolverResult instantiateActivity(
       final ActivityExpression activityExpression,
       final String name,
       final Interval interval,
       final EvaluationEnvironment evaluationEnvironment,
       final ScheduleAt scheduleAt
-  ) throws SchedulingInterruptedException {
+  ) throws SchedulingInterruptedException, InstantiationException
+  {
+    ConflictSolverResult solverResults = new ConflictSolverResult();
+    Optional<SchedulingActivity> activity;
     final var planningHorizon = this.problem.getPlanningHorizon();
     final var envelopes = new ArrayList<Interval>();
     if(interval != null) envelopes.add(interval);
@@ -937,8 +965,23 @@ public class PrioritySolver extends SubSolver {
         evaluationEnvironment,
         envelopes);
 
-    if(reduced.isEmpty()) return Optional.empty();
+    if(reduced.isEmpty()) return solverResults;
+    //TODO jd I can use this solved variable
     final var solved = reduced.get();
+
+    if(activityExpression.type().isCompound()){
+      //TODO jd remove commentfinal var instantiatedArguments = SchedulingActivity.instantiateArguments(activityExpression.arguments(), ZERO, simulationResults, evaluationEnvironment,type);
+
+      //TODO jd uncommnet
+      /*Conflict conflict = new MissingDecompositionConflict(null,
+                                                           evaluationEnvironment,
+
+                                                           new ActivityReference(activityExpression.type().getName(),
+                                                                                 convertProfileToReference(activityExpression.arguments())),
+                                                           solved.start(), solved.end());
+      solverResults.mergeConflictSolverResult(this.solveDependencyConflict(null, conflict));*/
+      //TODO jd if not satisfied return not satisfied
+    }
 
     //Extract resource names to lighten the computation of simulation results
     final var resourceNames = new HashSet<String>();
@@ -993,9 +1036,10 @@ public class PrioritySolver extends SubSolver {
         }
 
       };
-      return rootFindingHelper(f, history, solved, scheduleAt);
-      //CASE 2: activity has a controllable duration
-    } else if (activityExpression.type().getDurationType() instanceof DurationType.Controllable dt) {
+      activity = rootFindingHelper(f, history, solved, scheduleAt);
+    }
+    //CASE 2: activity has a controllable duration
+    else if (activityExpression.type().getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
       final var start = scheduleAt == ScheduleAt.EARLIEST ? solved.start().start : solved.start().end;
       final var instantiatedArguments = SchedulingActivity.instantiateArguments(
@@ -1015,14 +1059,15 @@ public class PrioritySolver extends SubSolver {
         } else {
           logger.debug(
               "Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
-          return Optional.empty();
+          return solverResults;
+          //return Optional.empty();
         }
       } else {
         //REVIEW: should take default duration of activity type maybe ?
         setActivityDuration = solved.end().start.minus(solved.start().start);
       }
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivity.of(
+      activity = Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
           start,
@@ -1036,12 +1081,12 @@ public class PrioritySolver extends SubSolver {
     } else if (activityExpression.type().getDurationType() instanceof DurationType.Fixed dt) {
       if (!solved.duration().contains(dt.duration())) {
         logger.debug("Interval is too small");
-        return Optional.empty();
+        return solverResults;
       }
 
       final var start = scheduleAt == ScheduleAt.EARLIEST ? solved.start().start : solved.start().end;
       // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
-      return Optional.of(SchedulingActivity.of(
+      activity = Optional.of(SchedulingActivity.of(
           idGenerator.next(),
           activityExpression.type(),
           start,
@@ -1091,11 +1136,12 @@ public class PrioritySolver extends SubSolver {
           }
         }
       };
-
-      return rootFindingHelper(f, history, solved, scheduleAt);
+      activity = rootFindingHelper(f, history, solved, scheduleAt);
     } else {
       throw new UnsupportedOperationException("Unsupported duration type found: " + activityExpression.type().getDurationType());
     }
+    solverResults.activitiesCreated().add(activity.get());
+    return solverResults;
   }
 
   private  Optional<SchedulingActivity> rootFindingHelper(
@@ -1148,6 +1194,18 @@ public class PrioritySolver extends SubSolver {
   throws SchedulingInterruptedException, InstantiationException
   {
     return this.dependentSolver.resolveConflict(goal, conflict);
+  }
+
+  //TODO Adrien how to convert from profileexpression to ActivityRefernce
+  //final var instantiatedArguments = SchedulingActivity.instantiateArguments(arguments, act.interval().start, simulationResults, evaluationEnvironment, type);
+  // use createFakeSimulationData
+  //
+  public static Map<String, SerializedValue> convertProfileToReference(Map<String, ProfileExpression<?>> arguments) {
+    Map<String, SerializedValue> parameters = new HashMap<>();
+    for (Map.Entry<String, ProfileExpression<?>> entry : arguments.entrySet()) {
+      //TODO jd remove commentsparameters.put(entry.getKey(), entry.getValue().);
+    }
+    return parameters;
   }
 
   public void printEvaluation() {

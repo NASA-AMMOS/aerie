@@ -1,40 +1,23 @@
 package gov.nasa.jpl.aerie.scheduler.solver.metasolver;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Segment;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.htn.ActivityReference;
-import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplate;
 import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.DirectiveIdGenerator;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
-import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityNetworkConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingDecompositionConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingRecurrenceConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
-import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulePlanGrounder;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -42,31 +25,20 @@ import gov.nasa.jpl.aerie.scheduler.solver.ConflictSatisfaction;
 import gov.nasa.jpl.aerie.scheduler.solver.ConflictSolverResult;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
-import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import gov.nasa.jpl.aerie.scheduler.solver.planner.NexusDecomposer;
-import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.apache.commons.lang3.tuple.Pair;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 
 /**
  * prototype scheduling algorithm that schedules activities for a plan
@@ -179,9 +151,9 @@ public class NexusMetaSolver implements Solver {
             .orElse(-1L)
         + 1
     );
-    this.decomposer = new NexusDecomposer(this.problem, this.plan, this.analysisOnly, this.idGenerator);
+    this.decomposer = new NexusDecomposer(this.problem, this.plan, this.analysisOnly, this.idGenerator, this);
     //TODO jd check if that's ok to pass problem here
-    this.scheduler = new PrioritySolver(this.problem, this.plan, this.analysisOnly, this.idGenerator);
+    this.scheduler = new PrioritySolver(this.problem, this.plan, this.analysisOnly, this.idGenerator, this);
 
     this.decomposer.setDependentSolver(scheduler);
     this.scheduler.setDependentSolver(decomposer);
@@ -199,7 +171,7 @@ public class NexusMetaSolver implements Solver {
    * this solver is expended after one solution request; all subsequent
    * requests will return no solution
    */
-  public Optional<Plan> getNextSolution() throws SchedulingInterruptedException {
+  public Optional<Plan> getNextSolution() throws SchedulingInterruptedException, InstantiationException {
     if (plan == null) {
       //on first call to solver; setup fresh solution workspace for problem
       if(simulationFacade.getCanceledListener().get()) throw new SchedulingInterruptedException("initializing plan");
@@ -294,7 +266,7 @@ public class NexusMetaSolver implements Solver {
    *
    * the output plan member is updated directly with the devised solution
    */
-  private void solve() throws SchedulingInterruptedException{
+  private void solve() throws SchedulingInterruptedException, InstantiationException {
     //construct a priority sorted goal container
     final var goalQ = getGoalQueue();
     assert goalQ != null;
@@ -369,7 +341,7 @@ public class NexusMetaSolver implements Solver {
         //TODO jd check where to remove conflict
       }
       else {
-        this.scheduler.resolveConflict(missing, analysisOnly);
+        this.scheduler.resolveConflict(null, missing);
       }
     }//for(missing)
     logger.info("Finishing decomposition satisfaction" +":"+ (missingConflicts.size() == 0 ?
@@ -378,7 +350,7 @@ public class NexusMetaSolver implements Solver {
     //plan.getEvaluation().forGoal(goal).setScore(-missingConflicts.size());
   }
 
-  private void satisfyGoal(Goal goal) throws SchedulingInterruptedException{
+  private void satisfyGoal(Goal goal) throws SchedulingInterruptedException, InstantiationException {
     if(simulationFacade.getCanceledListener().get()) throw new SchedulingInterruptedException("satisfying goal");
     final boolean checkSimConfig = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = goal.simulateAfter;
@@ -394,7 +366,7 @@ public class NexusMetaSolver implements Solver {
   }
 
 
-  private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException{
+  private void satisfyOptionGoal(OptionGoal goal) throws SchedulingInterruptedException, InstantiationException {
     if (goal.hasOptimizer()) {
       //try to satisfy all and see what is best
       Goal currentSatisfiedGoal = null;
@@ -478,7 +450,9 @@ public class NexusMetaSolver implements Solver {
     evalForGoal.removeAssociation(insertedActivities);
   }
 
-  private void satisfyCompositeGoal(CompositeAndGoal goal) throws SchedulingInterruptedException{
+  private void satisfyCompositeGoal(CompositeAndGoal goal) throws SchedulingInterruptedException,
+                                                                  InstantiationException
+  {
     assert goal != null;
     assert plan != null;
 
@@ -540,7 +514,7 @@ public class NexusMetaSolver implements Solver {
    *
    * @param goal IN the single goal to address with plan modifications
    */
-  private void satisfyGoalGeneral(Goal goal) throws SchedulingInterruptedException{
+  private void satisfyGoalGeneral(Goal goal) throws SchedulingInterruptedException, InstantiationException {
     assert goal != null;
     assert plan != null;
     //continue creating activities as long as goal wants more and we can do so
@@ -563,11 +537,11 @@ public class NexusMetaSolver implements Solver {
       ConflictSolverResult conflictSolverReturn = null;
 
       if(missing instanceof MissingDecompositionConflict){
-        this.decomposer.resolveConflict(problem, plan, missing, analysisOnly);
+        this.decomposer.resolveConflict(Optional.of(goal), missing);
         //TODO jd check where to remove conflict
       }
       else {
-        this.scheduler.resolveConflict(goal, missing, analysisOnly);
+        this.scheduler.resolveConflict(Optional.of(goal), missing);
       }
 
       //TODO jd add evaulation for decompostion
@@ -633,6 +607,7 @@ public class NexusMetaSolver implements Solver {
       }
     }
 
+    //TODO jd check how nexusdecomposer works when conflict doesnt have start and end interval
     for(TaskNetTemplateData taskNetTemplateData : ((PlanInMemory)plan).getPendingDecompositions()) {
       for (ActivityReference activityReference : taskNetTemplateData.subtasks()) {
         if (problem.getActivityType(activityReference.activityType()).isCompound()) {

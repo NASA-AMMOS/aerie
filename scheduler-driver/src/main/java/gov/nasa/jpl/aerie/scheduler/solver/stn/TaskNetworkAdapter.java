@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -95,6 +96,20 @@ public class TaskNetworkAdapter {
 
   public void startsAfterEnd(String actBefore, String actAfter){
     tw.startsAfterEnd(actBefore,actAfter);
+  }
+
+  //TODO JD add Meet
+
+ public List<String> getOrderedTasks(){
+    return tw.getOrderedTasks();
+ }
+
+  public boolean hasCycle() {
+    return tw.hasCycle();
+  }
+
+  public boolean isFullyOrdered(){
+    return tw.isFullyOrdered();
   }
 
   public void addAct(String name){

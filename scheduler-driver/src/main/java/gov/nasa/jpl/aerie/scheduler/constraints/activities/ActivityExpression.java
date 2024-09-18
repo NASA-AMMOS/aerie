@@ -101,6 +101,13 @@ public record ActivityExpression(
       return getThis();
     }
 
+    public Builder withSerializedArguments(Map<String, SerializedValue> arguments) {
+      for(Map.Entry<String, SerializedValue> entry : arguments.entrySet()){
+        this.arguments.put(entry.getKey(), new ProfileExpression<>(new DiscreteValue(entry.getValue())));
+      }
+      return getThis();
+    }
+
     public Builder withArgument(String argument, ProfileExpression<?> val) {
       arguments.put(argument, val);
       return getThis();
