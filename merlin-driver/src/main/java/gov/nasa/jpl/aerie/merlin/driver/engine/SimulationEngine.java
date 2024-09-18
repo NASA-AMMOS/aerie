@@ -880,8 +880,8 @@ public final class SimulationEngine implements AutoCloseable {
     // find parent task to execute and mark parents stale
     TaskId parentId = taskId;
     while (parentId != null) {
-      staleTasks.put(taskId, time);
-      staleEvents.put(taskId, afterEvent);
+      staleTasks.put(parentId, time);
+      staleEvents.put(parentId, afterEvent);
       // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
       if (oldEngine.getFactoryForTaskId(parentId) != null) {
         break;
@@ -892,7 +892,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (oldEngine.isDaemonTask(parentId)) {
         break;
       }
-      var nextParentId = oldEngine.getTaskParent(taskId);
+      var nextParentId = oldEngine.getTaskParent(parentId);
       if (nextParentId == null) break;
       parentId = nextParentId;
     }
