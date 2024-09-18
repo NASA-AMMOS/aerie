@@ -10,6 +10,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class STNTest {
 
   @Test
+  //test should show that the end interval of left should be constrained to [8, 8] because of meets
+  public void testMeets(){
+    var tn = new TaskNetwork(5, 15);
+    tn.addAct("left");
+    tn.addAct("right");
+    tn.addStartInterval("left", 6,9);
+    tn.addEndInterval("left", 6,9);
+    tn.addStartInterval("right", 8,8);
+    var success = tn.propagate();
+    assertTrue(success);
+    var d = tn.getAllData("left");
+    var expD1 = new TaskNetwork.TNActData(Pair.of(6.,8.), Pair.of(8.,8.), Pair.of(0.,2.));
+    assertEquals(d, expD1);
+  }
+
+  @Test
   public void testInduceDur(){
     var stn = new TaskNetwork(2,10);
     stn.addAct("Act");

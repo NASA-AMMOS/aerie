@@ -76,6 +76,11 @@ public class TaskNetwork {
     stn.addDurCst(startActTimepoints.get(nameAct), endActTimepoints.get(nameAct), lb, ub);
   }
 
+  public void meets(final String leftAct, final String rightAct){
+    failIfActDoesNotExist(leftAct);
+    failIfActDoesNotExist(rightAct);
+    stn.addDurCst(endActTimepoints.get(leftAct), startActTimepoints.get(rightAct), 0, 0);
+  }
 
   public Pair<Double,Double> getStartInterval(String actName) {
     var st = startActTimepoints.get(actName);

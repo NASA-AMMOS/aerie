@@ -65,6 +65,10 @@ public class TaskNetworkAdapter {
     tw.addStartInterval(actName,toDouble(t1),toDouble(t2));
   }
 
+  public void meets(final String leftAct, final String rightAct){
+    tw.meets(leftAct, rightAct);
+  }
+
   /**
    * Adds an absolute time interval for activity
    */
