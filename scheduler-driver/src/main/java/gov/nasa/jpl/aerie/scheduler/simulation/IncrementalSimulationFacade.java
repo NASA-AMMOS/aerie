@@ -433,7 +433,6 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     //the plan has arrived at a prior plan. hopefully the incremental speedups make this fast enough and
     //don't kill the memory use.
 
-    //TODO: turn back on to use incremental (testing especially dumb version that just recreates every time)
     if(this.driverEngineCache!=null) return this.driverEngineCache;
 
     //no suitable engine found so fallback to creating and caching a fresh one
