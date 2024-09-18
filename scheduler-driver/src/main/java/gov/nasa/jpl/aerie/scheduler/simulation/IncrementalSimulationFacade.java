@@ -337,7 +337,9 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
 
     //use time limit if specified, otherwise just the end of the plan
     final var simulationStartTime = this.planningHorizon.getStartInstant();
-    final var simulationDuration = until!=null ? until : this.planningHorizon.getEndAerie();
+    //TODO: turn back on to limit simulation span (testing a dumber version that does whole plan every time)
+    //final var simulationDuration = until!=null ? until : this.planningHorizon.getAerieHorizonDuration();
+    final var simulationDuration = this.planningHorizon.getAerieHorizonDuration();
 
     //locate the best starting point driver (and internal engine)
     //(don't try-with-res AutoClosable SimDriver/SimEng since may come back to it again and again)
@@ -351,10 +353,10 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     final var schedule = planSimCorrespondence.directiveIdActivityDirectiveMap();
     final Consumer<Duration> noopSimExtentConsumer= $->{}; //no progress bar in scheduler since it would jump around
     final var resourceManager = new InMemorySimulationResourceManager();
-    //TODO: pass down stopping condition re specific activity vs all acts
+    //eventually want to pass down stopping condition re specific activity vs all acts
     try {
       driver.initSimulation(simulationDuration);
-      driver.simulate(
+      driver.diffAndSimulate(
           schedule,
           simulationStartTime, simulationDuration,
           //same plan vs sim start/dur ok for now, but should distinguish if scheduling in just a window
@@ -430,7 +432,8 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     //so for now we just do incremental sims in a straight chain only using the single leaf tip, even if
     //the plan has arrived at a prior plan. hopefully the incremental speedups make this fast enough and
     //don't kill the memory use.
-    //TODO: actually check through old engines
+
+    //TODO: turn back on to use incremental (testing especially dumb version that just recreates every time)
     if(this.driverEngineCache!=null) return this.driverEngineCache;
 
     //no suitable engine found so fallback to creating and caching a fresh one
