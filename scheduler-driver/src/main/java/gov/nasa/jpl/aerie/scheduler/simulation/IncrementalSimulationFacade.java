@@ -282,9 +282,9 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
 
     //check if cached results are still relevant
     if(this.latestSimulationData==null && initialSimulationResults != null ) {
-      final var initialSched = scheduleFromPlan(this.initialSimulationResults.plan(),this.schedulerModel);
-      final var reqSched = scheduleFromPlan(plan,this.schedulerModel);
-      if(initialSched.equals(reqSched)) {
+      final var initialSchedule = scheduleFromPlan(this.initialSimulationResults.plan(),this.schedulerModel);
+      final var currentSchedule = scheduleFromPlan(plan,this.schedulerModel);
+      if(initialSchedule.equals(currentSchedule)) {
         //plan is unchanged since initial, so can return cached data directly
         return this.initialSimulationResults;
       }
@@ -329,10 +329,13 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     throws SimulationException, SchedulingInterruptedException
   {
     checkNotNull(plan);
+    checkArgument(until==null || !until.isNegative(),
+                  "target time limit specified but is negative");
     checkArgument(activity==null || plan.getActivities().contains(activity),
                   "target activity specified but not found in given plan");
+    if(canceledListener.get()) throw new SchedulingInterruptedException("simulation setup");
 
-    //should also try to use pre-loaded initial results if the plan is unchanged (instead of only
+    //should also try to use preloaded initial results if the plan is unchanged (instead of only
     //checking that higher up at the simulateWithResults() level)
 
     //use time limit if specified, otherwise just the end of the plan
@@ -369,6 +372,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
       //re-wrap exceptions from simulation itself to clarify to scheduler re eg invalid plan
       throw new SimulationException("exception during plan simulation", e);
     }
+    if(canceledListener.get()) throw new SchedulingInterruptedException("simulation cleanup");
     //compute just the activity timing needed out of simulation (not full results)
     final var activityResults = driver.getEngine().computeActivitySimulationResults(
         simulationStartTime, driver.getEngine().spanInfo);
@@ -411,6 +415,8 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
   private SimulationDriver<Model> findBestDriverToStartFrom(
       final Plan plan)
   {
+    checkNotNull(plan);
+
     //typical use by current scheduler will just exact match the current plan or one prior, ie
     //doA+doB+doC or doA+undoA+doB patterns. more rarely it might jump way back after unwinding a series
     //of mods, eg doA+doB+undoA+undoB.
@@ -432,11 +438,10 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     //so for now we just do incremental sims in a straight chain only using the single leaf tip, even if
     //the plan has arrived at a prior plan. hopefully the incremental speedups make this fast enough and
     //don't kill the memory use.
-
     if(this.driverEngineCache!=null) return this.driverEngineCache;
 
     //no suitable engine found so fallback to creating and caching a fresh one
-    final var newDriver = new SimulationDriver<Model>(
+    final var newDriver = new SimulationDriver<>(
         this.missionModel,
         this.planningHorizon.getStartInstant(),
         this.planningHorizon.getAerieHorizonDuration());
