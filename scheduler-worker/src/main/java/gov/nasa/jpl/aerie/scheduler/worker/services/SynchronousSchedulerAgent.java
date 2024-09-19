@@ -26,6 +26,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -70,6 +71,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
+import gov.nasa.jpl.aerie.scheduler.simulation.IncrementalSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.apache.commons.collections4.BidiMap;
@@ -86,6 +88,7 @@ import java.util.HashSet;
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
  * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
+ * @param simReuseStrategy how to reuse simulation results during/between scheduler runs (eg incremental sim)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
@@ -95,7 +98,8 @@ public record SynchronousSchedulerAgent(
     Path goalsJarPath,
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService,
-    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades
+    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades,
+    SimulationReuseStrategy simReuseStrategy
 )
     implements SchedulerAgent
 {
@@ -109,6 +113,7 @@ public record SynchronousSchedulerAgent(
     Objects.requireNonNull(outputMode);
     Objects.requireNonNull(schedulingDSLCompilationService);
     Objects.requireNonNull(simulationFacades);
+    Objects.requireNonNull(simReuseStrategy);
   }
 
   public SynchronousSchedulerAgent(
@@ -117,9 +122,10 @@ public record SynchronousSchedulerAgent(
       Path modelJarsDir,
       Path goalsJarPath,
       PlanOutputMode outputMode,
-      SchedulingDSLCompilationService schedulingDSLCompilationService) {
+      SchedulingDSLCompilationService schedulingDSLCompilationService,
+      SimulationReuseStrategy simReuseStrategy) {
     this(specificationService, merlinService, modelJarsDir, goalsJarPath, outputMode,
-         schedulingDSLCompilationService, new HashMap<>());
+         schedulingDSLCompilationService, new HashMap<>(), simReuseStrategy);
   }
 
   /**
@@ -370,9 +376,14 @@ public record SynchronousSchedulerAgent(
     final var key = Pair.of(planId, planningHorizon);
     var facade = this.simulationFacades.get(key);
     if (facade == null) {
-      facade = new CheckpointSimulationFacade(
-          missionModel, schedulerModel, cachedEngineStore,
-          planningHorizon, simEngineConfig, canceledListener);
+      facade = switch(simReuseStrategy) {
+        case Incremental -> new IncrementalSimulationFacade<>(
+            missionModel, schedulerModel,
+            planningHorizon, canceledListener);
+        case Checkpoint -> new CheckpointSimulationFacade(
+            missionModel, schedulerModel, cachedEngineStore,
+            planningHorizon, simEngineConfig, canceledListener);
+        };
       this.simulationFacades.put(key, facade);
     }
     return facade;
