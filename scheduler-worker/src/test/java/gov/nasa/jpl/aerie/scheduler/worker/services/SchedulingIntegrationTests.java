@@ -30,6 +30,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -67,6 +68,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SchedulingIntegrationTests {
+
+  //choose which kind of simulation to use in the scheduler tests (just one at a time for now; could upgrade to vary)
+  public static final SimulationReuseStrategy SIM_REUSE_STRATEGY = SimulationReuseStrategy.Incremental;
 
   public static final PlanningHorizon PLANNING_HORIZON = new PlanningHorizon(
       TimeUtility.fromDOY("2021-001T00:00:00"),
@@ -2215,7 +2219,8 @@ public class SchedulingIntegrationTests {
         desc.libPath(),
         Path.of(""),
         PlanOutputMode.UpdateInputPlanWithNewActivities,
-        schedulingDSLCompiler);
+        schedulingDSLCompiler,
+        SIM_REUSE_STRATEGY);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
     agent.schedule(new ScheduleRequest(new SpecificationId(1L), new SpecificationRevisionData(1L, 1L)), writer, () -> false, cachedEngineStoreCapacity);

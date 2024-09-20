@@ -23,8 +23,6 @@ import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansWrapperExpression;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -32,28 +30,21 @@ import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTE;
-import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildFooProblem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,7 +56,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoff1() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -97,7 +88,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoff2() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -129,7 +120,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceShorterWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -161,7 +152,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceLongerWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -206,7 +197,7 @@ public class TestApplyWhen {
     RESULT: [+-------------------]
     */
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -242,7 +233,7 @@ public class TestApplyWhen {
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -284,7 +275,7 @@ public class TestApplyWhen {
     // RESULT:            [++--------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(Arrays.asList(
@@ -327,7 +318,7 @@ public class TestApplyWhen {
     // RESULT:            [++-----++-++----~~---] (if not global)
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -371,7 +362,7 @@ public class TestApplyWhen {
     // RESULT:            [----------++--------]
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -410,7 +401,7 @@ public class TestApplyWhen {
   @Test
   public void testRecurrenceCutoffUncontrollable() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(21));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("BasicActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -446,7 +437,7 @@ public class TestApplyWhen {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
@@ -486,7 +477,7 @@ public class TestApplyWhen {
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -532,7 +523,7 @@ public class TestApplyWhen {
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
 
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
     final var goalWindow = new Windows(false).set(List.of(
@@ -579,7 +570,7 @@ public class TestApplyWhen {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
 
     final var activityType = problem.getActivityType("BasicActivity");
@@ -622,7 +613,7 @@ public class TestApplyWhen {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -667,7 +658,7 @@ public class TestApplyWhen {
   public void testCoexistenceJustFits() throws SchedulingInterruptedException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -721,7 +712,7 @@ public class TestApplyWhen {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -772,7 +763,7 @@ public class TestApplyWhen {
     // RESULT:      [++-----------++-------]
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -835,7 +826,7 @@ public class TestApplyWhen {
     // RESULT:      [-\\------++----++-------++--] (the first one won't be scheduled, ask Adrien) - FIXED
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(28)); //this boundary is inclusive.
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -910,7 +901,7 @@ public class TestApplyWhen {
      */
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(12));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -974,7 +965,7 @@ public class TestApplyWhen {
      */
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(16));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1032,7 +1023,7 @@ public class TestApplyWhen {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1077,7 +1068,7 @@ public class TestApplyWhen {
   public void testCoexistenceExternalResource() throws SchedulingInterruptedException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    final var problem = SimulationUtility.buildProblemFromFoo(planningHorizon);
+    final var problem = SimulationUtility.buildFooProblem(planningHorizon);
     final var r3Value = Map.of("amountInMicroseconds", SerializedValue.of(6));
     final var r1 = new LinearProfile(new Segment<>(Interval.between(Duration.ZERO, Duration.SECONDS.times(5)), new LinearEquation(Duration.ZERO, 5, 1)));
     final var r2 = new DiscreteProfile(new Segment<>(Interval.FOREVER, SerializedValue.of(5)));
@@ -1131,22 +1122,8 @@ public class TestApplyWhen {
   public void testCoexistenceWithAnchors() throws SchedulingInterruptedException {
     final var period = Interval.betweenClosedOpen(Duration.of(0, Duration.HOURS), Duration.of(20, Duration.HOURS));
 
-    final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
-
-    final var simulationFacade = new CheckpointSimulationFacade(
-        bananaMissionModel,
-        SimulationUtility.getBananaSchedulerModel(),
-        new InMemoryCachedEngineStore(10),
-        planningHorizon,
-        new SimulationEngineConfiguration(Map.of(), Instant.now(), new MissionModelId(0)),
-        () -> false);
-    final var problem = new Problem(
-        bananaMissionModel,
-        planningHorizon,
-        simulationFacade,
-        SimulationUtility.getBananaSchedulerModel()
-    );
+    final var problem = SimulationUtility.buildBananaProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances
@@ -1193,7 +1170,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(hor);
+    final var problem = buildFooProblem(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1266,7 +1243,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(18));
-    final var problem = buildProblemFromFoo(hor);
+    final var problem = buildFooProblem(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
@@ -1340,7 +1317,7 @@ public class TestApplyWhen {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(hor);
+    final var problem = buildFooProblem(hor);
 
     final var activityTypeIndependent = problem.getActivityType("BasicFooActivity");
     logger.debug("BasicFooActivity: " + activityTypeIndependent.toString());
