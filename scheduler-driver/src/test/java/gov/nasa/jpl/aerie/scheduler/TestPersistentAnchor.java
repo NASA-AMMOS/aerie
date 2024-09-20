@@ -10,8 +10,6 @@ import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -19,15 +17,12 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.*;
-import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.apache.commons.lang3.function.TriFunction;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -431,22 +426,8 @@ public class TestPersistentAnchor {
     var templateActsWithoutAnchorAnchored = new ArrayList<SchedulingActivityDirective>();
     var templateActsWithoutAnchorNotAnchored = new ArrayList<SchedulingActivityDirective>();
 
-    final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochHours(0), TestUtility.timeFromEpochHours(20));
-
-    final var simulationFacade = new CheckpointSimulationFacade(
-        bananaMissionModel,
-        SimulationUtility.getBananaSchedulerModel(),
-        new InMemoryCachedEngineStore(10),
-        planningHorizon,
-        new SimulationEngineConfiguration(Map.of(), Instant.now(), new MissionModelId(0)),
-        () -> false);
-    final var problem = new Problem(
-        bananaMissionModel,
-        planningHorizon,
-        simulationFacade,
-        SimulationUtility.getBananaSchedulerModel()
-    );
+    final var problem = SimulationUtility.buildBananaProblem(planningHorizon);
 
     //have some activity already present
     //  create a PlanInMemory, add ActivityInstances

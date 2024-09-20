@@ -90,7 +90,6 @@ import java.util.HashSet;
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  * @param simReuseStrategy how to reuse simulation results during/between scheduler runs (eg incremental sim)
  */
-//TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
     MerlinService.OwnerRole merlinService,

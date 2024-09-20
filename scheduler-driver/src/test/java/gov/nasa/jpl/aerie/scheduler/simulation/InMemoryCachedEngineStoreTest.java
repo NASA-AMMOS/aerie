@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
+import gov.nasa.jpl.aerie.foomissionmodel.Mission;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
@@ -19,6 +21,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InMemoryCachedEngineStoreTest {
+  private static final MissionModel<Mission> model = SimulationUtility.buildFooMissionModel();
   SimulationEngineConfiguration simulationEngineConfiguration;
   MissionModelId missionModelId;
   InMemoryCachedEngineStore store;
@@ -36,7 +39,6 @@ public class InMemoryCachedEngineStoreTest {
   }
 
   public static CachedSimulationEngine getCachedEngine1(){
-    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
@@ -51,7 +53,6 @@ public class InMemoryCachedEngineStoreTest {
   }
 
   public static CachedSimulationEngine getCachedEngine2(){
-    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
@@ -66,7 +67,6 @@ public class InMemoryCachedEngineStoreTest {
   }
 
   public static CachedSimulationEngine getCachedEngine3(){
-    final var model = SimulationUtility.getFooMissionModel();
     return new CachedSimulationEngine(
         Duration.SECOND,
         Map.of(
@@ -83,9 +83,9 @@ public class InMemoryCachedEngineStoreTest {
   @Test
   public void duplicateTest(){
     final var store = new InMemoryCachedEngineStore(2);
-    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
-    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
-    store.save(CachedSimulationEngine.empty(SimulationUtility.getFooMissionModel(), this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(model, this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(model, this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
+    store.save(CachedSimulationEngine.empty(model, this.simulationEngineConfiguration.simStartTime()), this.simulationEngineConfiguration);
     assertEquals(1, store.getCachedEngines(this.simulationEngineConfiguration).size());
   }
 

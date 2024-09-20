@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildProblemFromFoo;
+import static gov.nasa.jpl.aerie.scheduler.SimulationUtility.buildFooProblem;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRecurrenceGoalExtended {
@@ -23,7 +23,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrence() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -54,7 +54,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -82,7 +82,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testRecurrenceRepeatIntervalLargerThanGoalWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -110,7 +110,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalWindowLargerThanPlanHorizon() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(5),TestUtility.timeFromEpochSeconds(15));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     final var goalWindow = new Windows(false).set(List.of(
         Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
@@ -145,7 +145,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalDurationLargerGoalWindow() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -174,7 +174,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testGoalDurationLargerRepeatInterval() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -203,7 +203,7 @@ public class TestRecurrenceGoalExtended {
   @Test
   public void testAddActivityNonEmptyPlan() throws SchedulingInterruptedException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
-    final var problem = buildProblemFromFoo(planningHorizon);
+    final var problem = buildFooProblem(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
@@ -221,7 +221,7 @@ public class TestRecurrenceGoalExtended {
     var plan = solver.getNextSolution().orElseThrow();
 
     // Create a new problem with previous plan and add new goal interleaved two time units wrt original goal
-    final var problem2 = buildProblemFromFoo(planningHorizon);
+    final var problem2 = buildFooProblem(planningHorizon);
     problem2.setInitialPlan(plan);
     RecurrenceGoal goal2 = new RecurrenceGoal.Builder()
         .named("Test recurrence goal 2")

@@ -41,14 +41,15 @@ public class CheckpointSimulationFacadeTest {
   @BeforeEach
   public void before(){
     ThreadedTask.CACHE_READS = true;
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    final var fooMissionModel = SimulationUtility.buildFooMissionModel();
+    final var fooSchedulerModel = SimulationUtility.buildFooSchedulerModel();
     activityTypes = new HashMap<>();
     for(var taskType : fooMissionModel.getDirectiveTypes().directiveTypes().entrySet()){
-      activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), SimulationUtility.getFooSchedulerModel().getDurationTypes().get(taskType.getKey())));
+      activityTypes.put(taskType.getKey(), new ActivityType(taskType.getKey(), taskType.getValue(), fooSchedulerModel.getDurationTypes().get(taskType.getKey())));
     }
     newSimulationFacade = new CheckpointSimulationFacade(
         fooMissionModel,
-        SimulationUtility.getFooSchedulerModel(),
+        fooSchedulerModel,
         new InMemoryCachedEngineStore(10),
         H,
         new SimulationEngineConfiguration(Map.of(), Instant.EPOCH, new MissionModelId(1)),
