@@ -10,7 +10,9 @@ import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.IncrementalSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -20,6 +22,13 @@ import java.util.Map;
  * utility factory methods used to set up fixtures for testing the scheduler
  */
 public final class SimulationUtility {
+
+  /**
+   * choose which kind of simulation to use in the scheduler tests
+   * <p>
+   * just one at a time for now; could upgrade to vary and run tests with each
+   */
+  public static final SimulationReuseStrategy SIM_REUSE_STRATEGY = SimulationReuseStrategy.Incremental;
 
   /**
    * creates a new problem description for testing using the default foo model
@@ -70,18 +79,6 @@ public final class SimulationUtility {
   }
 
   /**
-   * creates a new simulation facade for testing using the default banana nation model
-   *
-   * @param planningHorizon horizon the scheduler will plan within
-   * @return a new simulation facade for testing using the default banana nation model
-   */
-  public static SimulationFacade buildBananaFacade(final PlanningHorizon planningHorizon) {
-    final var bananaMissionModel = SimulationUtility.buildBananaMissionModel();
-    final var bananaSchedulerModel = SimulationUtility.buildBananaSchedulerModel();
-    return buildFacade(planningHorizon,bananaMissionModel,bananaSchedulerModel);
-  }
-
-  /**
    * creates a new simulation facade for testing using the provided models
    *
    * @param planningHorizon horizon the scheduler will plan within
@@ -114,16 +111,20 @@ public final class SimulationUtility {
       final MissionModel<Model> missionModel,
       final SchedulerModel schedulerModel,
       final int simulationCacheSize) {
-    return new CheckpointSimulationFacade(
-        missionModel,
-        schedulerModel,
-        new InMemoryCachedEngineStore(simulationCacheSize),
-        planningHorizon,
-        new SimulationEngineConfiguration(
-            Map.of(),
-            Instant.EPOCH,
-            new MissionModelId(1)),
-        ()->false);
+    return switch (SIM_REUSE_STRATEGY) {
+      case Incremental -> new IncrementalSimulationFacade<>(
+          missionModel, schedulerModel, planningHorizon, ()->false);
+      case Checkpoint -> new CheckpointSimulationFacade(
+          missionModel,
+          schedulerModel,
+          new InMemoryCachedEngineStore(simulationCacheSize),
+          planningHorizon,
+          new SimulationEngineConfiguration(
+              Map.of(),
+              Instant.EPOCH,
+              new MissionModelId(1)),
+          () -> false);
+      };
   }
 
   /**
