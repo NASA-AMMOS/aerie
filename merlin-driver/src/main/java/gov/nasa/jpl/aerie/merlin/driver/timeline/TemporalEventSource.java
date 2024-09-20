@@ -725,7 +725,9 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
         // We've already applied all graphs; not doing it twice!
       } else {
         int maxStepIndex = Math.min(eventGraphList.size(),
-                                    cellTime.duration().isEqualTo(endTime.duration()) ? (endTime.index() == Integer.MAX_VALUE ? Integer.MAX_VALUE : endTime.index()+1) : Integer.MAX_VALUE);
+                                    cellTime.duration().isEqualTo(endTime.duration()) ? endTime.index() : Integer.MAX_VALUE);
+//        int maxStepIndex = Math.min(eventGraphList.size(),
+//                                    cellTime.duration().isEqualTo(endTime.duration()) ? (endTime.index() == Integer.MAX_VALUE ? Integer.MAX_VALUE : endTime.index()+1) : Integer.MAX_VALUE);
         var cellSteppedAtTime = cellTime.index();
         for (; cellSteppedAtTime < maxStepIndex; ++cellSteppedAtTime) {
           var eventGraph = eventGraphList.get(cellSteppedAtTime);

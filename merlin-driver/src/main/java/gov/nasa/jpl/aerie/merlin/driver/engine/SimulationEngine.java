@@ -68,6 +68,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.lang.Integer.max;
+
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
@@ -952,10 +954,8 @@ public final class SimulationEngine implements AutoCloseable {
         timeline.stepUp(tempCell, timeOfStaleReads, noop);
         timeline.putCellTime(tempCell, null);
 
-        Cell<?> oldCell = timeOfStaleReads.index() > 0 ?
-                          timeline.oldTemporalEventSource.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
-                                                                                                timeOfStaleReads.index()-1)) :
-                          timeline.oldTemporalEventSource.liveCells.getCells(topic).stream().findFirst().orElseThrow().cell;
+        Cell<?> oldCell = timeline.oldTemporalEventSource.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
+                                                                                                max(0, timeOfStaleReads.index()-1)));
         if (debug) System.out.println("rescheduleStaleTasks(): oldCell = " + oldCell + ", cell time = " + timeline.oldTemporalEventSource.getCellTime(oldCell));
         final Cell<?> tempOldCell = oldCell.duplicate();
         timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.oldTemporalEventSource.getCellTime(oldCell));
