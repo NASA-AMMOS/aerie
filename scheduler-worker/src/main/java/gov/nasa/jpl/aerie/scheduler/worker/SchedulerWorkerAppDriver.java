@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
+import gov.nasa.jpl.aerie.scheduler.simulation.SchedulerSimulationReuseStrategy;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
@@ -155,7 +155,7 @@ public final class SchedulerWorkerAppDriver {
         PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan"))),
         getEnv("HASURA_GRAPHQL_ADMIN_SECRET", ""),
         maxNbCachedSimulationEngine,
-        SimulationReuseStrategy.valueOf(getEnv(
-            "SCHEDULER_SIM_REUSE_STRATEGY",SimulationReuseStrategy.Incremental.name())));
+        SchedulerSimulationReuseStrategy.valueOf(getEnv(
+            "SCHEDULER_SIM_REUSE_STRATEGY", SchedulerSimulationReuseStrategy.Incremental.name())));
   }
 }

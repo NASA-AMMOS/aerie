@@ -26,7 +26,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
+import gov.nasa.jpl.aerie.scheduler.simulation.SchedulerSimulationReuseStrategy;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -98,7 +98,7 @@ public record SynchronousSchedulerAgent(
     PlanOutputMode outputMode,
     SchedulingDSLCompilationService schedulingDSLCompilationService,
     Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades,
-    SimulationReuseStrategy simReuseStrategy
+    SchedulerSimulationReuseStrategy simReuseStrategy
 )
     implements SchedulerAgent
 {
@@ -122,7 +122,7 @@ public record SynchronousSchedulerAgent(
       Path goalsJarPath,
       PlanOutputMode outputMode,
       SchedulingDSLCompilationService schedulingDSLCompilationService,
-      SimulationReuseStrategy simReuseStrategy) {
+      SchedulerSimulationReuseStrategy simReuseStrategy) {
     this(specificationService, merlinService, modelJarsDir, goalsJarPath, outputMode,
          schedulingDSLCompilationService, new HashMap<>(), simReuseStrategy);
   }

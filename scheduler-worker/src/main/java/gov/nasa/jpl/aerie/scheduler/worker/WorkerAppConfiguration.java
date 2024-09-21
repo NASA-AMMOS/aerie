@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.worker;
 import java.net.URI;
 import java.nio.file.Path;
 
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
+import gov.nasa.jpl.aerie.scheduler.simulation.SchedulerSimulationReuseStrategy;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 
@@ -20,5 +20,5 @@ public record WorkerAppConfiguration(
     PlanOutputMode outputMode,
     String hasuraGraphQlAdminSecret,
     int maxCachedSimulationEngines,
-    SimulationReuseStrategy simReuseStrategy
+    SchedulerSimulationReuseStrategy simReuseStrategy
 ) { }

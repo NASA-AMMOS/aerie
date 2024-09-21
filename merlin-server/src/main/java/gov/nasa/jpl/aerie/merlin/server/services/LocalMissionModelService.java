@@ -58,8 +58,6 @@ public final class LocalMissionModelService implements MissionModelService {
   private final MissionModelRepository missionModelRepository;
   private final Instant untruePlanStart;
 
-  private boolean doingIncrementalSim = true;
-
   private final Map<Triple<String, Instant, Duration>, SimulationDriver>
       simulationDrivers = new HashMap<Triple<String, Instant, Duration>, SimulationDriver>();
 
@@ -293,7 +291,7 @@ public final class LocalMissionModelService implements MissionModelService {
   protected static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
   /**
-   * Validate that a set of activity parameters conforms to the expectations of a named mission model.
+   * execute a simulation of the specified plan
    *
    * @param message The parameters defining the simulation to perform.
    * @return A set of samples over the course of the simulation.
@@ -304,7 +302,7 @@ public final class LocalMissionModelService implements MissionModelService {
       final CreateSimulationMessage message,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
-        final SimulationResourceManager resourceManager)
+      final SimulationResourceManager resourceManager)
   throws NoSuchMissionModelException
   {
     long accumulatedCpuTime = 0;  // nanoseconds
@@ -314,6 +312,12 @@ public final class LocalMissionModelService implements MissionModelService {
       log.warn(
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
+
+    //determine how to reuse prior simulations for this request
+    final var doingIncrementalSim = switch(message.simReuseStrategy()) {
+      case Incremental -> true;
+      case CachedResults -> false;
+      };
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     final MissionModel<?> missionModel = loadAndInstantiateMissionModel(

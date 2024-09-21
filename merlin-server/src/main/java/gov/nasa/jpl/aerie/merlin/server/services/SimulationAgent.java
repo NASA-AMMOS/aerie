@@ -22,12 +22,19 @@ public record SimulationAgent (
     MissionModelService missionModelService,
     long simulationProgressPollPeriod
 ) {
+
+  /**
+   * invokes simulation of the target plan
+   *
+   * @param simReuseStrategy how to reuse prior simulations to speed up the current simulation request
+   */
   public void simulate(
       final PlanId planId,
       final RevisionData revisionData,
       final ResultsProtocol.WriterRole writer,
       final Supplier<Boolean> canceledListener,
-      final SimulationResourceManager resourceManager
+      final SimulationResourceManager resourceManager,
+      final SimulationReuseStrategy simReuseStrategy
   ) {
     final Plan plan;
     try {
@@ -88,7 +95,8 @@ public record SimulationAgent (
                 plan.startTimestamp.toInstant(),
                 planDuration,
                 plan.activityDirectives,
-                plan.configuration),
+                plan.configuration,
+                simReuseStrategy),
             extentListener::updateValue,
             canceledListener,
             resourceManager);
