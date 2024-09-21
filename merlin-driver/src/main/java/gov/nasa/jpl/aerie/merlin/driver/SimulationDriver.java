@@ -76,6 +76,10 @@ public final class SimulationDriver<Model> {
     this.rerunning = this.engine != null && this.engine.timeline.commitsByTime.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
+    if (oldEngine != null && oldEngine.failed) {
+      oldEngine = oldEngine.oldEngine;
+      this.rerunning = this.rerunning && oldEngine != null;
+    }
 
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
 

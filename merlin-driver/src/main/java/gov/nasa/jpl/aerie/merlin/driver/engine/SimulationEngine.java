@@ -169,6 +169,9 @@ public final class SimulationEngine implements AutoCloseable {
   private final TemporalEventSource referenceTimeline;
   private Duration elapsedTime;
 
+  /** whether this engine failed its simulation, in which case it is not suitable for incremental simulation */
+  public boolean failed;
+
   public SimulationEngine(
       Instant startTime,
       MissionModel<?> missionModel,
@@ -203,6 +206,7 @@ public final class SimulationEngine implements AutoCloseable {
     spans = new LinkedHashMap<>();
     spanContributorCount = new LinkedHashMap<>();
     executor = Executors.newVirtualThreadPerTaskExecutor();
+    this.failed = false;
   }
 
   private SimulationEngine(SimulationEngine other) {
@@ -282,7 +286,7 @@ public final class SimulationEngine implements AutoCloseable {
     spanToSimulatedActivityId = other.spanToSimulatedActivityId == null ? null :
         new HashMap<>(other.spanToSimulatedActivityId);
     directiveToSimulatedActivityId = new HashMap<>(other.directiveToSimulatedActivityId);
-
+    this.failed = other.failed;
   }
 
   private void startDaemons(Duration time) {
@@ -332,6 +336,18 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
   public Status step(
+      final Duration maximumTime,
+      final Consumer<Duration> simulationExtentConsumer)
+  throws Throwable
+  {
+    try {
+      return reallyStep(maximumTime, simulationExtentConsumer);
+    } catch(Throwable t) {
+      this.failed = true;
+      throw t;
+    }
+  }
+  private Status reallyStep(
       final Duration maximumTime,
       final Consumer<Duration> simulationExtentConsumer)
       throws Throwable
