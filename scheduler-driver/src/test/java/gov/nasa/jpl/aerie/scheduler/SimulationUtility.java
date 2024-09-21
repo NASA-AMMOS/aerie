@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.IncrementalSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationReuseStrategy;
+import gov.nasa.jpl.aerie.scheduler.simulation.SchedulerSimulationReuseStrategy;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -28,7 +28,7 @@ public final class SimulationUtility {
    * <p>
    * just one at a time for now; could upgrade to vary and run tests with each
    */
-  public static final SimulationReuseStrategy SIM_REUSE_STRATEGY = SimulationReuseStrategy.Incremental;
+  public static final SchedulerSimulationReuseStrategy SIM_REUSE_STRATEGY = SchedulerSimulationReuseStrategy.Incremental;
 
   /**
    * creates a new problem description for testing using the default foo model

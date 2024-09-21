@@ -9,6 +9,11 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * message requests a simulation run
+ *
+ * @param simReuseStrategy how to reuse prior simulations to speed up the current simulation request
+ */
 public record CreateSimulationMessage(
   String missionModelId,
   Instant simulationStartTime,
@@ -16,7 +21,8 @@ public record CreateSimulationMessage(
   Instant planStartTime,
   Duration planDuration,
   Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-  Map<String, SerializedValue> configuration
+  Map<String, SerializedValue> configuration,
+  SimulationReuseStrategy simReuseStrategy
 )
 {
   public CreateSimulationMessage {
@@ -27,5 +33,6 @@ public record CreateSimulationMessage(
     Objects.requireNonNull(planDuration);
     Objects.requireNonNull(activityDirectives);
     Objects.requireNonNull(configuration);
+    Objects.requireNonNull(simReuseStrategy);
   }
 }
