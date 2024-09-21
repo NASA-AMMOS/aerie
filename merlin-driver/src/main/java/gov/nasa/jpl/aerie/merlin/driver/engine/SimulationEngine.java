@@ -34,7 +34,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -2166,15 +2165,15 @@ public final class SimulationEngine implements AutoCloseable {
                                  elapsedTime,
                                  this.topics,
                                  serializedTimeline);
-    return getCombinedSimulationResults(serializableTopics, resourceManager);
+    return getCombinedSimulationResults(serializableTopics, resourceManager, elapsedTime);
   }
 
   public SimulationResultsInterface getCombinedSimulationResults(
       final Map<Topic<?>, SerializableTopic<?>> serializableTopics,
-      final SimulationResourceManager resourceManager) {
+      final SimulationResourceManager resourceManager, final Duration until) {
     if (this.simulationResults == null ) {
       return computeResults(
-          this.startTime, this.elapsedTime,
+          this.startTime, until,
           defaultActivityTopic, serializableTopics, resourceManager);
       //      return computeResults(this.startTime, curTime(), defaultActivityTopic);
     }
@@ -2183,7 +2182,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
     return new CombinedSimulationResults(
         this.simulationResults,
-        oldEngine.getCombinedSimulationResults(serializableTopics, resourceManager),
+        oldEngine.getCombinedSimulationResults(serializableTopics, resourceManager, until),
         timeline);
   }
 
