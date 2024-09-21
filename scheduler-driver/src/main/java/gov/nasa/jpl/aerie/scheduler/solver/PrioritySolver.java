@@ -524,6 +524,9 @@ public class PrioritySolver implements Solver {
                                                     .stream()
                                                     .map(SchedulingActivityDirective::duration)
                                                     .reduce(Duration.ZERO, Duration::plus));
+            } else {
+              logger.info("Failed inserting activities into the plan");
+              break;
             }
           } else{
             logger.info("Conflict " + i + " could not be satisfied");
