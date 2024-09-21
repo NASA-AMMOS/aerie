@@ -2174,7 +2174,7 @@ public final class SimulationEngine implements AutoCloseable {
       final SimulationResourceManager resourceManager) {
     if (this.simulationResults == null ) {
       return computeResults(
-          this.startTime, Duration.MAX_VALUE,
+          this.startTime, this.elapsedTime,
           defaultActivityTopic, serializableTopics, resourceManager);
       //      return computeResults(this.startTime, curTime(), defaultActivityTopic);
     }
