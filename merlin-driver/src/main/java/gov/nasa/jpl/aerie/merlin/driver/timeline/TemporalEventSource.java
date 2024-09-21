@@ -633,9 +633,11 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     if (staleTime != null && map.get(staleTime)) {
       return Optional.of(earliestTimeOffset);
     }
-    var submap = map.subMap(earliestTimeOffset, true, latestTimeOffset, true);
-    for (Map.Entry<SubInstantDuration, Boolean> e : submap.entrySet()) {
-      if (e.getValue()) return Optional.of(e.getKey());
+    if (earliestTimeOffset.noLongerThan(latestTimeOffset)) {
+      var submap = map.subMap(earliestTimeOffset, true, latestTimeOffset, true);
+      for (Map.Entry<SubInstantDuration, Boolean> e : submap.entrySet()) {
+        if (e.getValue()) return Optional.of(e.getKey());
+      }
     }
     return Optional.empty();
   }
