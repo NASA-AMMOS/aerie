@@ -90,13 +90,21 @@ public final class LiveCells {
 
     // Otherwise, go ask our parent for the cell.
     if (this.parent == null) return Optional.empty();
-    if (this.parent.source instanceof TemporalEventSource && this.source instanceof TemporalEventSource) {
-      ((TemporalEventSource) this.parent.source).setCurTime( ((TemporalEventSource) source).curTime());
+    // First, update the time of the parent source
+    boolean bothTimeline = parent.source instanceof TemporalEventSource && source instanceof TemporalEventSource;
+    if (bothTimeline) {
+      ((TemporalEventSource)parent.source).setCurTime(((TemporalEventSource)source).curTime());
     }
     final var cell$ = this.parent.getCell(query);
     if (cell$.isEmpty()) return Optional.empty();
 
-    final var cell = put(query, cell$.get().duplicate());
+    // Add a duplicate of the parent cell to this LiveCells
+    final Cell<State> duplicate = cell$.get().duplicate();
+    final var cell = put(query, duplicate);
+    // Set the duplicate cell time to the parent cell time
+    if (bothTimeline) {
+      ((TemporalEventSource)source).putCellTime(duplicate, ((TemporalEventSource)parent.source).getCellTime(cell$.get()));
+    }
 
     return Optional.of(cell);
   }
