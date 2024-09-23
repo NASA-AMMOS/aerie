@@ -516,4 +516,4 @@ begin
 end
 $$;
 
-call migrations.mark_migration_applied('9');
+call migrations.mark_migration_applied('11');

@@ -9,4 +9,4 @@ DROP TABLE merlin.derivation_group CASCADE;
 DROP FUNCTION merlin.subtract_later_ranges CASCADE;
 DROP FUNCTION merlin.check_event_times CASCADE;
 
-call migrations.mark_migration_rolled_back('9');
+call migrations.mark_migration_rolled_back('11');
