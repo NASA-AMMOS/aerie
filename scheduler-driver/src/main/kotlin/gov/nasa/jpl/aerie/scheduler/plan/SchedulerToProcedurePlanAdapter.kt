@@ -60,11 +60,13 @@ data class SchedulerToProcedurePlanAdapter(
   }
 
   override fun events(query: EventQuery): ExternalEvents {
-    var result = if (query.derivationGroup != null) eventsByDerivationGroup[query.derivationGroup]
-      ?: throw Error("derivation group either doesn't exist or isn't associated with plan: ${query.derivationGroup}")
+    var result = if (query.derivationGroups != null) query.derivationGroups!!.flatMap {
+      eventsByDerivationGroup[it]
+        ?: throw Error("derivation group either doesn't exist or isn't associated with plan: $it")
+    }
     else eventsByDerivationGroup.values.flatten()
-    if (query.type != null) result = result.filter { it.type == query.type }
-    if (query.source != null) result = result.filter { it.source == query.source }
+    if (query.types != null) result = result.filter { it.type in query.types!! }
+    if (query.sources != null) result = result.filter { it.source in query.sources!! }
     return ExternalEvents(result)
   }
   override fun <V : Any, TL : SerialSegmentOps<V, TL>> resource(
