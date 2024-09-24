@@ -54,7 +54,7 @@ public class ExternalProfilesTests extends ProceduralSchedulingSetup {
     assertEquals(1, activities.size());
 
     assertTrue(activities.stream().anyMatch(
-        $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "03:00:00")
+        it -> Objects.equals(it.type(), "BiteBanana") && Objects.equals(it.startOffset(), "03:00:00")
     ));
   }
 }

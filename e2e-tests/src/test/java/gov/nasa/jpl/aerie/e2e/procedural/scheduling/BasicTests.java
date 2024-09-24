@@ -75,11 +75,11 @@ public class BasicTests extends ProceduralSchedulingSetup {
     assertEquals(2, activities.size());
 
     assertTrue(activities.stream().anyMatch(
-        $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "24:00:00")
+        it -> Objects.equals(it.type(), "BiteBanana") && Objects.equals(it.startOffset(), "24:00:00")
     ));
 
     assertTrue(activities.stream().anyMatch(
-        $ -> Objects.equals($.type(), "BiteBanana") && Objects.equals($.startOffset(), "30:00:00")
+        it -> Objects.equals(it.type(), "BiteBanana") && Objects.equals(it.startOffset(), "30:00:00")
     ));
   }
 

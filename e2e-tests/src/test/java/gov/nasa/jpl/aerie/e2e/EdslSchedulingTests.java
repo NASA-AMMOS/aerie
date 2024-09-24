@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class EdslSchedulingTests {
+class EdslSchedulingTests {
   // Requests
   private Playwright playwright;
   private HasuraRequests hasura;
@@ -166,10 +166,10 @@ public class EdslSchedulingTests {
                                         .add("growingDuration", 10800000L) // 3h
                                         .build());
     anchors.add(id1);
-    Integer id2 = hasura.insertActivityDirective(planId, "GrowBanana", "5h",
-                                                 Json.createObjectBuilder()
-                                                          .add("growingDuration", 10800000L) // 3h
-                                                          .build());
+    hasura.insertActivityDirective(planId, "GrowBanana", "5h",
+                                   Json.createObjectBuilder()
+                                       .add("growingDuration", 10800000L) // 3h
+                                       .build());
     anchors.add(id1);
     Integer id3 = hasura.insertActivityDirective(planId, "GrowBanana", "10h",
                                                  Json.createObjectBuilder()
@@ -276,7 +276,7 @@ public class EdslSchedulingTests {
   @Test
   void schedulingCoexistenceGoalWithAnchor() throws IOException {
     // Setup: Add Goal and Activities
-    ArrayList<Integer> anchors = insertAnchorActivities();
+    insertAnchorActivities();
     hasura.createSchedulingSpecGoal("Coexistence Scheduling Test Goal", coexistenceGoalWithAnchorsDefinition, schedulingSpecId, 0);
 
 
