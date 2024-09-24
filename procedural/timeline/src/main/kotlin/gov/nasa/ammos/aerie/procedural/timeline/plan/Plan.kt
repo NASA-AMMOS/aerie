@@ -40,5 +40,5 @@ interface Plan {
   /** Get external events belonging to a given derivation group associated with this plan. */
   fun events(derivationGroup: String) = events(EventQuery(derivationGroup, null, null))
   /** Get all external events in all derivation groups associated with this plan. */
-  fun events() = events(EventQuery(null, null, null))
+  fun events() = events(EventQuery())
 }
