@@ -1,0 +1,27 @@
+plugins {
+  id 'groovy-gradle-plugin'
+  id 'com.gradle.plugin-publish'
+}
+
+// adding this as an implementation dependency here allows usage in our convention plugin
+dependencies {
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.2")
+}
+
+tasks.publish {
+  dependsOn("check")
+}
+
+version = '1.0'
+
+gradlePlugin {
+  website = 'https://ammos.nasa.gov/aerie'
+  vcsUrl = 'https://github.com/NASA-AMMOS/aerie'
+
+  plugins {
+    proceduralPlugin {
+
+    }
+  }
+}
+
