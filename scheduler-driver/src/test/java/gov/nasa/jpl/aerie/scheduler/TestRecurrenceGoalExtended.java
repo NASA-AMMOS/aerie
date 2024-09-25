@@ -4,12 +4,14 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,7 +29,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that a number activities are placed in the plan. VV
    */
   @Test
-  public void testRecurrence() throws SchedulingInterruptedException {
+  public void testRecurrence() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -45,7 +47,7 @@ public class TestRecurrenceGoalExtended {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, SECONDS), activityType));
@@ -57,7 +59,7 @@ public class TestRecurrenceGoalExtended {
 
 
   @Test
-  public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() throws SchedulingInterruptedException {
+  public void testRecurrenceSecondGoalOutOfWindowAndPlanHorizon() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -76,7 +78,7 @@ public class TestRecurrenceGoalExtended {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, SECONDS), activityType));
@@ -88,7 +90,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the repeat interval is larger than the window where the goal can be placed, the scheduler still manages to place one activity. VV
    */
   @Test
-  public void testRecurrenceRepeatIntervalLargerThanGoalWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceRepeatIntervalLargerThanGoalWindow() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -106,7 +108,7 @@ public class TestRecurrenceGoalExtended {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, SECONDS), activityType));
@@ -116,7 +118,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the window where the goal can be placed is larger than the plan horizon, then the window is updated to the plan horizon size. xx
    */
   @Test
-  public void testGoalWindowLargerThanPlanHorizon() throws SchedulingInterruptedException {
+  public void testGoalWindowLargerThanPlanHorizon() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(5),TestUtility.timeFromEpochSeconds(15));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -139,7 +141,7 @@ public class TestRecurrenceGoalExtended {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, SECONDS), activityType));
@@ -151,7 +153,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks that in case the goal duration is larger than goal window, no activity is added to the plan. VV
    */
   @Test
-  public void testGoalDurationLargerGoalWindow() throws SchedulingInterruptedException {
+  public void testGoalDurationLargerGoalWindow() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -169,7 +171,7 @@ public class TestRecurrenceGoalExtended {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.emptyPlan(plan));
@@ -179,7 +181,7 @@ public class TestRecurrenceGoalExtended {
    * This test checks the behaviour when activity is added to a non-empty plan. How is distance preserved? What happens if activity already existing is deleted?
    */
   @Test
-  public void testAddActivityNonEmptyPlan() throws SchedulingInterruptedException {
+  public void testAddActivityNonEmptyPlan() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -196,7 +198,7 @@ public class TestRecurrenceGoalExtended {
         .build();
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
 
     // Create a new problem with previous plan and add new goal interleaved two time units wrt original goal
@@ -214,7 +216,7 @@ public class TestRecurrenceGoalExtended {
         .withinPlanHorizon(planningHorizon)
         .build();
     problem2.setGoals(List.of(goal2));
-    final var solver2 = new PrioritySolver(problem2);
+    final var solver2 = new NexusMetaSolver(problem2);
     var newplan = solver2.getNextSolution().orElseThrow();
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(0, SECONDS), activityType));
@@ -224,7 +226,7 @@ public class TestRecurrenceGoalExtended {
   }
 
   @Test
-  public void incompletePlan() throws SchedulingInterruptedException {
+  public void incompletePlan() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -244,7 +246,7 @@ public class TestRecurrenceGoalExtended {
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), activityType, Duration.ZERO, Duration.of(2, SECONDS), null, true, false));
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), activityType, SECONDS.times(10), Duration.of(2, SECONDS), null, true, false));
     problem.setInitialPlan(initialPlan);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(0, SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(5, SECONDS), activityType));
@@ -253,7 +255,7 @@ public class TestRecurrenceGoalExtended {
   }
 
   @Test
-  public void incompletePlanWithMutex() throws SchedulingInterruptedException {
+  public void incompletePlanWithMutex() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var controllableActivity = problem.getActivityType("ControllableDurationActivity");
@@ -276,7 +278,7 @@ public class TestRecurrenceGoalExtended {
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), basicActivity, SECONDS.times(5), Duration.of(2, SECONDS), null, true, false));
     problem.setInitialPlan(initialPlan);
     createMutex(controllableActivity, basicActivity).forEach(problem::add);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(0, SECONDS), controllableActivity));
     //second controllable activity cannot be inserted
@@ -288,7 +290,7 @@ public class TestRecurrenceGoalExtended {
   //the minimum number of activities to solve this goal is 1 (at time 10) but there is a mutex act at time [8,12] which prevents it
   //the missing recurrence solver will move to a network of 2 activities to solve and thus find the solution
   @Test
-  public void flexibilityWithMutex() throws SchedulingInterruptedException {
+  public void flexibilityWithMutex() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var controllableActivity = problem.getActivityType("ControllableDurationActivity");
@@ -310,7 +312,7 @@ public class TestRecurrenceGoalExtended {
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), basicActivity, SECONDS.times(8), Duration.of(4, SECONDS), null, true, false));
     problem.setInitialPlan(initialPlan);
     createMutex(controllableActivity, basicActivity).forEach(problem::add);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, SECONDS), controllableActivity));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, SECONDS), controllableActivity));
@@ -323,7 +325,7 @@ public class TestRecurrenceGoalExtended {
   //this test is exercising the behavior when only a part of an activity network has been scheduled, it is moving to a
   //higher number of activities while keeping the already inserted activities in.
   @Test
-  public void flexibilityWithMutex2() throws SchedulingInterruptedException {
+  public void flexibilityWithMutex2() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var controllableActivity = problem.getActivityType("ControllableDurationActivity");
@@ -345,7 +347,7 @@ public class TestRecurrenceGoalExtended {
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), basicActivity, SECONDS.times(13), Duration.of(3, SECONDS), null, true, false));
     problem.setInitialPlan(initialPlan);
     createMutex(controllableActivity, basicActivity).forEach(problem::add);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(5, SECONDS), controllableActivity));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(10, SECONDS), controllableActivity));
@@ -358,7 +360,7 @@ public class TestRecurrenceGoalExtended {
   //the mutex activity lasting 7 seconds prevents the goal from satisfying the 6 seconds maximum separation
   //the goal tries to increase the number of activities in the network but duplicate activities are being produced which triggers an exit
   @Test
-  public void unsolvableRecurrence() throws SchedulingInterruptedException {
+  public void unsolvableRecurrence() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var controllableActivity = problem.getActivityType("ControllableDurationActivity");
@@ -380,7 +382,7 @@ public class TestRecurrenceGoalExtended {
     initialPlan.add(SchedulingActivity.of(idGenerator.next(), basicActivity, SECONDS.times(7), Duration.of(7, SECONDS), null, true, false));
     problem.setInitialPlan(initialPlan);
     createMutex(controllableActivity, basicActivity).forEach(problem::add);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution().orElseThrow();
     //goal is unsolvable but we partially satisfied it and detected that it is unsatisfiable before exiting
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(5, SECONDS), controllableActivity));

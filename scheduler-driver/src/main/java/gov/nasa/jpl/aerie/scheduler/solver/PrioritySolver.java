@@ -1206,18 +1206,4 @@ public class PrioritySolver extends SubSolver {
     return this.dependentSolver.resolveConflict(goal, conflict);
   }
 
-
-  public void printEvaluation() {
-    final var evaluation = plan.getEvaluation();
-    logger.warn("Remaining conflicts for goals ");
-    for (var goalEval : evaluation.getGoals()) {
-      logger.warn(goalEval.getName() + " -> " + evaluation.forGoal(goalEval).getScore());
-      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(SchedulingActivity::toString).collect(
-          Collectors.joining(" ")));
-      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(
-          SchedulingActivity::toString).collect(
-          Collectors.joining(" ")));
-    }
-  }
-
 }

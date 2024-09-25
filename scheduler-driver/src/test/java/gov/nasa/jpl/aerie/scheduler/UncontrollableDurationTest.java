@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +47,7 @@ public class UncontrollableDurationTest {
     return new PlanInMemory();
   }
   @Test
-  public void testNonLinear() throws SchedulingInterruptedException {
+  public void testNonLinear() throws SchedulingInterruptedException, InstantiationException {
 
     //duration should be 300 seconds trapezoidal
     final var solarPanelActivityTrapezoidal = new ActivityExpression.Builder()
@@ -87,7 +89,7 @@ public class UncontrollableDurationTest {
 
     problem.setGoals(List.of(recurrenceTrapezoidal, coexistenceTriangle));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT11M40S"), planningHorizon.fromStart("PT16M40S"), problem.getActivityType("SolarPanelNonLinear")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT28M20S"), planningHorizon.fromStart("PT33M20S"), problem.getActivityType("SolarPanelNonLinear")));
@@ -97,7 +99,7 @@ public class UncontrollableDurationTest {
   }
 
   @Test
-  public void testTimeDependent() throws SchedulingInterruptedException {
+  public void testTimeDependent() throws SchedulingInterruptedException, InstantiationException {
 
     final var solarPanelActivityTrapezoidal = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("SolarPanelNonLinearTimeDependent"))
@@ -138,7 +140,7 @@ public class UncontrollableDurationTest {
 
     problem.setGoals(List.of(recurrenceTrapezoidal, coexistenceTriangle));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT0S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT11M57S"), planningHorizon.fromStart("PT16M40S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
@@ -149,7 +151,7 @@ public class UncontrollableDurationTest {
   }
 
   @Test
-  public void testBug() throws SchedulingInterruptedException {
+  public void testBug() throws SchedulingInterruptedException, InstantiationException {
     final var controllableDurationActivity = SchedulingActivity.of(idGenerator.next(), problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
                                                                    Duration.of(3, Duration.MICROSECONDS), null, true, false);
@@ -177,7 +179,7 @@ public class UncontrollableDurationTest {
     initialPlan.add(controllableDurationActivity);
     problem.setInitialPlan(initialPlan);
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     assertTrue(TestUtility.containsActivity(plan,
                                             planningHorizon.fromStart("PT0.000004S"),
@@ -186,7 +188,7 @@ public class UncontrollableDurationTest {
   }
 
   @Test
-  public void testScheduleExceptionThrowingTask() throws SchedulingInterruptedException {
+  public void testScheduleExceptionThrowingTask() throws SchedulingInterruptedException, InstantiationException {
     final var zeroDurationUncontrollableActivity = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("LateRiser"))
         .withTimingPrecision(Duration.of(1, Duration.MICROSECONDS))
@@ -211,7 +213,7 @@ public class UncontrollableDurationTest {
     final var initialPlan = new PlanInMemory();
     problem.setInitialPlan(initialPlan);
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     //Activity can be started in [0, 2m] but this activity will throw an exception if ran in [0, 1m] so it is scheduled at 2m (as being the second bounds the rootfinding tries before search).
     assertTrue(TestUtility.containsActivity(plan,

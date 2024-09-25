@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelative;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
@@ -16,6 +17,7 @@ import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +50,7 @@ public class FixedDurationTest {
   }
 
   @Test
-  public void testFieldAnnotation() throws SchedulingInterruptedException {
+  public void testFieldAnnotation() throws SchedulingInterruptedException, InstantiationException {
 
     final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("BananaNap"))
@@ -69,15 +71,15 @@ public class FixedDurationTest {
 
     problem.setGoals(List.of(coexistence));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
-    solver.printEvaluation(plan);
+    solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT1H1M"), problem.getActivityType("BananaNap")));
   }
 
 
   @Test
-  public void testMethodAnnotation() throws SchedulingInterruptedException {
+  public void testMethodAnnotation() throws SchedulingInterruptedException, InstantiationException {
 
     final var fixedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("RipenBanana"))
@@ -98,9 +100,9 @@ public class FixedDurationTest {
 
     problem.setGoals(List.of(coexistence));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
-    solver.printEvaluation(plan);
+    solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("P2DT1M"), problem.getActivityType("RipenBanana")));
   }
 

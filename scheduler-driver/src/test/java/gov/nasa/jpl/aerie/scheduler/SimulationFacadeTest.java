@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -19,6 +20,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -126,7 +128,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void associationToExistingSatisfyingActivity() throws SchedulingInterruptedException {
+  public void associationToExistingSatisfyingActivity() throws SchedulingInterruptedException, InstantiationException {
     final var plan = makeEmptyPlan();
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
@@ -148,7 +150,7 @@ public class SimulationFacadeTest {
 
     problem.setGoals(List.of(goal));
     problem.setInitialPlan(plan);
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan1 = solver.getNextSolution();
     assertTrue(plan1.isPresent());
 
@@ -156,7 +158,7 @@ public class SimulationFacadeTest {
     assertEquals(1, actAssociatedInFirstRun.size());
 
     problem.setInitialPlan(plan1.get());
-    final var solver2 = new PrioritySolver(problem);
+    final var solver2 = new NexusMetaSolver(problem);
     final var plan2 = solver2.getNextSolution();
     assertTrue(plan2.isPresent());
 
@@ -234,7 +236,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testCoexistenceGoalWithResourceConstraint() throws SchedulingInterruptedException {
+  public void testCoexistenceGoalWithResourceConstraint() throws SchedulingInterruptedException,
+                                                                 InstantiationException
+  {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     /**
@@ -267,13 +271,13 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(cg));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
   }
 
   @Test
-  public void testProceduralGoalWithResourceConstraint() throws SchedulingInterruptedException {
+  public void testProceduralGoalWithResourceConstraint() throws SchedulingInterruptedException, InstantiationException {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
@@ -306,7 +310,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
-    final var solver = new PrioritySolver(this.problem);
+    final var solver = new NexusMetaSolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
@@ -314,7 +318,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void testActivityTypeWithResourceConstraint() throws SchedulingInterruptedException {
+  public void testActivityTypeWithResourceConstraint() throws SchedulingInterruptedException, InstantiationException {
     problem.setInitialPlan(makeTestPlanP0B1());
 
     final var constraint = new And(
@@ -348,7 +352,7 @@ public class SimulationFacadeTest {
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assertTrue(TestUtility.containsExactlyActivity(plan, act2));
     assertTrue(TestUtility.doesNotContainActivity(plan, act1));

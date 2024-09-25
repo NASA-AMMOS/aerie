@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,11 +23,11 @@ public class RootfindingTest {
          EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
   {
     final var durationFunctionDiscontinuousAtEverySecond =
-        new EquationSolvingAlgorithms.Function<Duration, PrioritySolver.ActivityMetadata>() {
+        new EquationSolvingAlgorithms.Function<Duration, NexusMetaSolver.ActivityMetadata>() {
           @Override
           public Duration valueAt(
               final Duration x,
-              final EquationSolvingAlgorithms.History<Duration, PrioritySolver.ActivityMetadata> historyType)
+              final EquationSolvingAlgorithms.History<Duration, NexusMetaSolver.ActivityMetadata> historyType)
           throws EquationSolvingAlgorithms.DiscontinuityException
           {
             if (x.in(Duration.MICROSECONDS) % 2 != 0) {
@@ -37,8 +38,8 @@ public class RootfindingTest {
             return ret;
           }
         };
-    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
-    final var history = new PrioritySolver.HistoryWithActivity();
+    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<NexusMetaSolver.ActivityMetadata>();
+    final var history = new NexusMetaSolver.HistoryWithActivity();
     final var solution = alg.findRoot(
         durationFunctionDiscontinuousAtEverySecond,
         history,
@@ -62,15 +63,15 @@ public class RootfindingTest {
          EquationSolvingAlgorithms.ExceededMaxIterationException, EquationSolvingAlgorithms.DivergenceException,
          EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
   {
-    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
+    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<NexusMetaSolver.ActivityMetadata>();
 
     //function only discontinuous at x = 1
     final var durationFunctionDiscontinuousAtOne =
-        new EquationSolvingAlgorithms.Function<Duration, PrioritySolver.ActivityMetadata>() {
+        new EquationSolvingAlgorithms.Function<Duration, NexusMetaSolver.ActivityMetadata>() {
           @Override
           public Duration valueAt(
               final Duration x,
-              final EquationSolvingAlgorithms.History<Duration, PrioritySolver.ActivityMetadata> historyType)
+              final EquationSolvingAlgorithms.History<Duration, NexusMetaSolver.ActivityMetadata> historyType)
           throws EquationSolvingAlgorithms.DiscontinuityException
           {
             if (x.isEqualTo(oneSecond)) {
@@ -82,7 +83,7 @@ public class RootfindingTest {
           }
         };
 
-    final var history = new PrioritySolver.HistoryWithActivity();
+    final var history = new NexusMetaSolver.HistoryWithActivity();
     final var solution = alg.findRoot(
         durationFunctionDiscontinuousAtOne,
         history,
@@ -103,21 +104,21 @@ public class RootfindingTest {
          EquationSolvingAlgorithms.ExceededMaxIterationException,
          EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
   {
-    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
+    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<NexusMetaSolver.ActivityMetadata>();
     //f(x) = x^2
     final var squareFunc =
-        new EquationSolvingAlgorithms.Function<Duration, PrioritySolver.ActivityMetadata>() {
+        new EquationSolvingAlgorithms.Function<Duration, NexusMetaSolver.ActivityMetadata>() {
           @Override
           public Duration valueAt(
               final Duration x,
-              final EquationSolvingAlgorithms.History<Duration, PrioritySolver.ActivityMetadata> historyType) {
+              final EquationSolvingAlgorithms.History<Duration, NexusMetaSolver.ActivityMetadata> historyType) {
             final var ret = Duration.of((long) Math.pow(x.in(Duration.MICROSECONDS),2), Duration.MICROSECONDS);
             historyType.add(new EquationSolvingAlgorithms.FunctionCoordinate<>(x, ret), null);
             return ret;
           }
         };
 
-    final var history = new PrioritySolver.HistoryWithActivity();
+    final var history = new NexusMetaSolver.HistoryWithActivity();
     final var solution = alg.findRoot(
         squareFunc,
         history,
@@ -138,13 +139,13 @@ public class RootfindingTest {
          EquationSolvingAlgorithms.ExceededMaxIterationException,
          EquationSolvingAlgorithms.InfiniteDerivativeException, SchedulingInterruptedException
   {
-    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<PrioritySolver.ActivityMetadata>();
+    final var alg = new EquationSolvingAlgorithms.SecantDurationAlgorithm<NexusMetaSolver.ActivityMetadata>();
     final var floorFunc =
-        new EquationSolvingAlgorithms.Function<Duration, PrioritySolver.ActivityMetadata>() {
+        new EquationSolvingAlgorithms.Function<Duration, NexusMetaSolver.ActivityMetadata>() {
           @Override
           public Duration valueAt(
               final Duration x,
-              final EquationSolvingAlgorithms.History<Duration, PrioritySolver.ActivityMetadata> historyType)
+              final EquationSolvingAlgorithms.History<Duration, NexusMetaSolver.ActivityMetadata> historyType)
           throws EquationSolvingAlgorithms.DiscontinuityException
           {
             if(x.in(Duration.SECONDS) == 1) throw new EquationSolvingAlgorithms.DiscontinuityException();
@@ -154,7 +155,7 @@ public class RootfindingTest {
           }
         };
 
-    final var history = new PrioritySolver.HistoryWithActivity();
+    final var history = new NexusMetaSolver.HistoryWithActivity();
     final var solution = alg.findRoot(
         floorFunc,
         history,

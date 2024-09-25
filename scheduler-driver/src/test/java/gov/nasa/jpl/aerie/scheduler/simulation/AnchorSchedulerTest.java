@@ -674,6 +674,11 @@ public class AnchorSchedulerTest {
     }
 
     @Override
+    public Optional<Boolean> getDecompositionRule(){
+      return testDecompositionRule();
+    }
+
+    @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
@@ -696,6 +701,11 @@ public class AnchorSchedulerTest {
     @Override
     public OutputType<Object> getOutputType() {
       return testModelOutputType;
+    }
+
+    @Override
+    public Optional<Boolean> getDecompositionRule(){
+      return testDecompositionRule();
     }
 
     @Override
@@ -753,6 +763,10 @@ public class AnchorSchedulerTest {
       return List.of();
     }
   };
+
+  private static final Optional<Boolean> testDecompositionRule(){
+    return Optional.of(Boolean.TRUE);
+  }
 
   private static final OutputType<Object> testModelOutputType = new OutputType<>() {
     @Override

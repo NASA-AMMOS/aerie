@@ -41,7 +41,7 @@
 //  public void schedule(final boolean analysisOnly){
 //    smallProblem.setInitialPlan(plan);
 //    rules.getGlobalConstraints().forEach(smallProblem::add);
-//    var solver = new PrioritySolver(smallProblem, analysisOnly);
+//    var solver = new NexusMetaSolver(smallProblem, analysisOnly);
 //    plan = solver.getNextSolution().get();
 //    solver.printEvaluation();
 //    AerieLanderTestUtility.printPlan(plan);

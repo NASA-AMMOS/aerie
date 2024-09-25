@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
@@ -24,6 +25,7 @@ import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -36,10 +38,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PrioritySolverTest {
   private static final DirectiveIdGenerator idGenerator = new DirectiveIdGenerator(0);
-  private static PrioritySolver makeEmptyProblemSolver() {
+  private static NexusMetaSolver makeEmptyProblemSolver() {
     MissionModel<?> bananaMissionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    return new PrioritySolver(
+    return new NexusMetaSolver(
             new Problem(
                     bananaMissionModel,
                     h,
@@ -53,13 +55,13 @@ public class PrioritySolverTest {
                     schedulerModel));
   }
 
-  private static PrioritySolver makeProblemSolver(Problem problem) {
-    return new PrioritySolver(problem);
+  private static NexusMetaSolver makeProblemSolver(Problem problem) {
+    return new NexusMetaSolver(problem);
   }
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new Problem(null,h, null, null));
+    new NexusMetaSolver(new Problem(null,h, null, null));
   }
 
   @Test
@@ -69,7 +71,7 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_onEmptyProblemGivesEmptyPlanAndOneEmptyEvaluation()
-  throws SchedulingInterruptedException
+  throws SchedulingInterruptedException, InstantiationException
   {
     final var solver = makeEmptyProblemSolver();
     final var plan = solver.getNextSolution();
@@ -80,7 +82,9 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_givesNoSolutionOnSubsequentCall() throws SchedulingInterruptedException {
+  public void getNextSolution_givesNoSolutionOnSubsequentCall()
+  throws SchedulingInterruptedException, InstantiationException
+  {
     final var solver = makeEmptyProblemSolver();
     solver.getNextSolution();
     final var plan1 = solver.getNextSolution();
@@ -131,7 +135,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException {
+  public void getNextSolution_initialPlanInOutput() throws SchedulingInterruptedException, InstantiationException {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     problem.setInitialPlan(makePlanA012(problem));
@@ -144,7 +148,9 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalCreatesActivities() throws SchedulingInterruptedException {
+  public void getNextSolution_proceduralGoalCreatesActivities()
+  throws SchedulingInterruptedException, InstantiationException
+  {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
@@ -162,7 +168,9 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_proceduralGoalAttachesActivitiesToEvaluation() throws SchedulingInterruptedException {
+  public void getNextSolution_proceduralGoalAttachesActivitiesToEvaluation()
+  throws SchedulingInterruptedException, InstantiationException
+  {
     final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
@@ -183,7 +191,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_recurrenceGoalWorks() throws SchedulingInterruptedException {
+  public void getNextSolution_recurrenceGoalWorks() throws SchedulingInterruptedException, InstantiationException {
     final var problem = makeTestMissionAB();
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
@@ -211,7 +219,9 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void getNextSolution_coexistenceGoalOnActivityWorks() throws SchedulingInterruptedException {
+  public void getNextSolution_coexistenceGoalOnActivityWorks()
+  throws SchedulingInterruptedException, InstantiationException
+  {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA012(problem));
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
@@ -247,7 +257,7 @@ public class PrioritySolverTest {
    */
   @Test
   public void getNextSolution_coexistenceGoalOnActivityWorks_withInitialSimResults()
-  throws SimulationFacade.SimulationException, SchedulingInterruptedException
+  throws SimulationFacade.SimulationException, SchedulingInterruptedException, InstantiationException
   {
     final var problem = makeTestMissionAB();
     final var adHocFacade = new CheckpointSimulationFacade(
@@ -283,7 +293,7 @@ public class PrioritySolverTest {
   }
 
   @Test
-  public void testCardGoalWithApplyWhen() throws SchedulingInterruptedException {
+  public void testCardGoalWithApplyWhen() throws SchedulingInterruptedException, InstantiationException {
     final var problem = SimulationUtility.buildProblemFromFoo(h);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
@@ -310,7 +320,7 @@ public class PrioritySolverTest {
 
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(cardGoal));
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     //will insert an activity at the beginning of the plan in addition of the two already-present activities

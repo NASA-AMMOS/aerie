@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -141,6 +142,11 @@ public class InstantiateArgumentsTest {
     }
 
     @Override
+    public Optional<Boolean> getDecompositionRule(){
+      return testDecompositionRule();
+    }
+
+    @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
@@ -185,6 +191,9 @@ public class InstantiateArgumentsTest {
       return List.of();
     }
   };
+  private static final Optional<Boolean> testDecompositionRule(){
+    return Optional.of(Boolean.TRUE);
+  }
   private static final OutputType<Object> testModelOutputType = new OutputType<>() {
     @Override
     public ValueSchema getSchema() {

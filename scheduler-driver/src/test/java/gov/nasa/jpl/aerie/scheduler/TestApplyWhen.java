@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -40,6 +41,7 @@ import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,7 @@ public class TestApplyWhen {
 
   ////////////////////////////////////////////RECURRENCE////////////////////////////////////////////
   @Test
-  public void testRecurrenceCutoff1() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoff1() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -80,7 +82,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -93,7 +95,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceCutoff2() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoff2() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -111,7 +113,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -125,7 +127,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceShorterWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceShorterWindow() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -143,7 +145,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -157,7 +159,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceLongerWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceLongerWindow() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("ControllableDurationActivity");
@@ -175,7 +177,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -189,7 +191,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceBabyWindow() throws SchedulingInterruptedException {
+  public void testRecurrenceBabyWindow() throws SchedulingInterruptedException, InstantiationException {
     /*
     The plan horizon ranges from [0,20).
     The recurrent activities can be placed inside the following window: [1,2). That is, there is exactly 1 unit of time where an activity can be placed
@@ -221,7 +223,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -235,7 +237,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindows() throws SchedulingInterruptedException {
+  public void testRecurrenceWindows() throws SchedulingInterruptedException, InstantiationException {
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [++++++----+++++++---]
     // RESULT:            [++--------++--------]
@@ -263,7 +265,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -277,7 +279,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsCutoffMidInterval() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsCutoffMidInterval() throws SchedulingInterruptedException, InstantiationException {
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [++++------+++-------]
     // RESULT:            [++--------++--------]
@@ -306,7 +308,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -320,7 +322,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsGlobalCheck() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsGlobalCheck() throws SchedulingInterruptedException, InstantiationException {
     //                     123456789012345678901
     // RECURRENCE WINDOW: [++-++-++-++-++-++-++-] (if global)
     // GOAL WINDOW:       [+++++--++++++++-++++-] (if interval is same length as recurrence interval, fails)
@@ -350,7 +352,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -364,7 +366,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testRecurrenceWindowsCutoffMidActivity() throws SchedulingInterruptedException, InstantiationException {
     //                     12345678901234567890
     // RECURRENCE WINDOW: [++---++---++---++---]
     // GOAL WINDOW:       [+-----+++-+++-------]
@@ -394,7 +396,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -408,7 +410,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testRecurrenceCutoffUncontrollable() throws SchedulingInterruptedException {
+  public void testRecurrenceCutoffUncontrollable() throws SchedulingInterruptedException, InstantiationException {
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(21));
     final var problem = buildProblemFromFoo(planningHorizon);
     final var activityType = problem.getActivityType("BasicActivity");
@@ -425,7 +427,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -442,7 +444,7 @@ public class TestApplyWhen {
   ////////////////////////////////////////////CARDINALITY////////////////////////////////////////////
 
   @Test
-  public void testCardinality() throws SchedulingInterruptedException {
+  public void testCardinality() throws SchedulingInterruptedException, InstantiationException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
 
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -466,7 +468,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString());
@@ -479,7 +481,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityWindows() throws SchedulingInterruptedException {
+  public void testCardinalityWindows() throws SchedulingInterruptedException, InstantiationException {
     // DURATION:    [++]
     // GOAL WINDOW: [++++------++++------]
     // RESULT:      [++++------++++------]
@@ -511,7 +513,7 @@ public class TestApplyWhen {
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -525,7 +527,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testCardinalityWindowsCutoffMidActivity() throws SchedulingInterruptedException, InstantiationException {
     // DURATION:    [++]
     // GOAL WINDOW: [+-----++--+++-------]
     // RESULT:      [------++--++--------]
@@ -558,7 +560,7 @@ public class TestApplyWhen {
     TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivity a : plan.getActivitiesByTime()){
@@ -572,7 +574,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCardinalityUncontrollable() throws SchedulingInterruptedException { //ruled unpredictable for now
+  public void testCardinalityUncontrollable() throws SchedulingInterruptedException, InstantiationException { //ruled unpredictable for now
     /*
       Expect 5 to get scheduled just in a row, as basicactivity's duration should allow that.
      */
@@ -599,7 +601,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString());
@@ -617,7 +619,7 @@ public class TestApplyWhen {
   ////////////////////////////////////////////COEXISTENCE////////////////////////////////////////////
 
   @Test
-  public void testCoexistenceWindowCutoff() throws SchedulingInterruptedException {
+  public void testCoexistenceWindowCutoff() throws SchedulingInterruptedException, InstantiationException {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
@@ -655,7 +657,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -664,7 +666,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceJustFits() throws SchedulingInterruptedException {
+  public void testCoexistenceJustFits() throws SchedulingInterruptedException, InstantiationException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = buildProblemFromFoo(planningHorizon);
@@ -700,7 +702,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -709,7 +711,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceUncontrollableCutoff() throws SchedulingInterruptedException { //ruled unpredictable for now
+  public void testCoexistenceUncontrollableCutoff() throws SchedulingInterruptedException, InstantiationException { //ruled unpredictable for now
     /*
                      123456789012345678901234
        GOAL WINDOW: [+++++++++++++-- ---------]
@@ -754,7 +756,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -763,7 +765,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindows() throws SchedulingInterruptedException {
+  public void testCoexistenceWindows() throws SchedulingInterruptedException, InstantiationException {
     // COEXISTENCE LATCH POINTS:
     //    (seek to add Duration 2 activities to each of these)
     //               1234567890123456789012
@@ -814,7 +816,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -826,7 +828,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsCutoffMidActivity() throws SchedulingInterruptedException {
+  public void testCoexistenceWindowsCutoffMidActivity() throws SchedulingInterruptedException, InstantiationException {
     // COEXISTENCE LATCH POINTS:
     //    (seek to add Duration [++] activities to each of these)
     //               1234567890123456789012345678
@@ -882,7 +884,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
 
 
@@ -898,7 +900,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsBisect() throws SchedulingInterruptedException { //bad, should fail completely. worth investigating.
+  public void testCoexistenceWindowsBisect() throws SchedulingInterruptedException, InstantiationException { //bad, should fail completely. worth investigating.
     /*
        COEXISTENCE LATCH POINTS:
        (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
@@ -951,7 +953,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -963,7 +965,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWindowsBisect2() throws SchedulingInterruptedException { //corrected. Bisection does work successfully.
+  public void testCoexistenceWindowsBisect2() throws SchedulingInterruptedException, InstantiationException { //corrected. Bisection does work successfully.
     /*
        COEXISTENCE LATCH POINTS:
           (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
@@ -1014,7 +1016,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -1027,7 +1029,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceUncontrollableJustFits() throws SchedulingInterruptedException {
+  public void testCoexistenceUncontrollableJustFits() throws SchedulingInterruptedException, InstantiationException {
 
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
@@ -1065,7 +1067,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -1074,7 +1076,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceExternalResource() throws SchedulingInterruptedException {
+  public void testCoexistenceExternalResource() throws SchedulingInterruptedException, InstantiationException {
     Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(25, Duration.SECONDS));
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
     final var problem = SimulationUtility.buildProblemFromFoo(planningHorizon);
@@ -1113,7 +1115,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -1128,7 +1130,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void testCoexistenceWithAnchors() throws SchedulingInterruptedException {
+  public void testCoexistenceWithAnchors() throws SchedulingInterruptedException, InstantiationException {
     final var period = Interval.betweenClosedOpen(Duration.of(0, Duration.HOURS), Duration.of(20, Duration.HOURS));
 
     final var bananaMissionModel = SimulationUtility.getBananaMissionModel();
@@ -1180,7 +1182,7 @@ public class TestApplyWhen {
 
     problem.setGoals(List.of(goal));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
@@ -1189,7 +1191,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void changingForAllTimeIn() throws SchedulingInterruptedException {
+  public void changingForAllTimeIn() throws SchedulingInterruptedException, InstantiationException {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
@@ -1241,7 +1243,7 @@ public class TestApplyWhen {
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE
     problem.setGoals(List.of(addRecurringActivityModifyingResource, whenActivitiesGreaterThan2)); //ORDER SENSITIVE
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
@@ -1262,7 +1264,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void changingForAllTimeInCutoff() throws SchedulingInterruptedException {
+  public void changingForAllTimeInCutoff() throws SchedulingInterruptedException, InstantiationException {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(18));
@@ -1316,7 +1318,7 @@ public class TestApplyWhen {
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE
     problem.setGoals(List.of(addRecurringActivityModifyingResource, whenActivitiesGreaterThan2)); //ORDER SENSITIVE
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
@@ -1337,7 +1339,7 @@ public class TestApplyWhen {
   }
 
   @Test
-  public void changingForAllTimeInAlternativeCutoff() throws SchedulingInterruptedException {
+  public void changingForAllTimeInAlternativeCutoff() throws SchedulingInterruptedException, InstantiationException {
 
     //basic setup
     PlanningHorizon hor = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(20));
@@ -1397,7 +1399,7 @@ public class TestApplyWhen {
     //problem.setGoals(List.of(whenActivitiesGreaterThan2, addRecurringActivityModifyingResource)); ORDER SENSITIVE
     problem.setGoals(List.of(addRecurringActivityModifyingResource, whenActivitiesGreaterThan2)); //ORDER SENSITIVE
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());

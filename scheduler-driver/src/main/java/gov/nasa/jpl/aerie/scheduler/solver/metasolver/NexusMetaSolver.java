@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -652,6 +653,19 @@ public class NexusMetaSolver implements Solver {
     }
      */
     return conflicts;
+  }
+
+  public void printEvaluation() {
+    final var evaluation = plan.getEvaluation();
+    logger.warn("Remaining conflicts for goals ");
+    for (var goalEval : evaluation.getGoals()) {
+      logger.warn(goalEval.getName() + " -> " + evaluation.forGoal(goalEval).getScore());
+      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(SchedulingActivity::toString).collect(
+          Collectors.joining(" ")));
+      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(
+          SchedulingActivity::toString).collect(
+          Collectors.joining(" ")));
+    }
   }
 }
 

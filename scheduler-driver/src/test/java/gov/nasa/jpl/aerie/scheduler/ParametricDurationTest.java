@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.simulation.InMemoryCachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.CheckpointSimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.scheduler.solver.metasolver.NexusMetaSolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +47,7 @@ public class ParametricDurationTest {
   }
 
   @Test
-  public void testStartConstraint() throws SchedulingInterruptedException {
+  public void testStartConstraint() throws SchedulingInterruptedException, InstantiationException {
 
     final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))
@@ -67,14 +69,14 @@ public class ParametricDurationTest {
 
     problem.setGoals(List.of(coexistence));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M"), planningHorizon.fromStart("PT2M"), problem.getActivityType("DownloadBanana")));
   }
 
   @Test
-  public void testEndConstraint() throws SchedulingInterruptedException {
+  public void testEndConstraint() throws SchedulingInterruptedException, InstantiationException {
 
     final var parameterizedDurationActivityTemplate = new ActivityExpression.Builder()
         .ofType(problem.getActivityType("DownloadBanana"))
@@ -96,7 +98,7 @@ public class ParametricDurationTest {
 
     problem.setGoals(List.of(coexistence));
 
-    final var solver = new PrioritySolver(problem);
+    final var solver = new NexusMetaSolver(problem);
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT2M"), planningHorizon.fromStart("PT12M"), problem.getActivityType("DownloadBanana")));
