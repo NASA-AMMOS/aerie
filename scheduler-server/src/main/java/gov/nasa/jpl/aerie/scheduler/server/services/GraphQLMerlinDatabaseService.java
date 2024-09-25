@@ -582,6 +582,8 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
           .add("start_offset", act.startOffset().toString())
           .add("anchored_to_start", act.anchoredToStart());
 
+      if (act.name() != null) insertionObject = insertionObject.add("name", act.name());
+
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
