@@ -143,10 +143,9 @@ public class NexusDecomposer extends SubSolver {
 
     if (candidateDecompositions != null && !candidateDecompositions.isEmpty()) {
       final ActivityType at = problem.getActivityType(actRef.activityType());
-      //TODO jd uncommnent
-      /*final var instantiatedActivity =
+      final var instantiatedActivity =
           at.getSpecType().getInputType().instantiate(actRef.parameters());
-      return Optional.ofNullable(candidateDecompositions.getFirst().generateTemplate(instantiatedActivity));*/
+      return Optional.ofNullable(candidateDecompositions.getFirst().generateTemplate(instantiatedActivity));
     }
     return Optional.empty();
   }
@@ -155,16 +154,18 @@ public class NexusDecomposer extends SubSolver {
       TaskNetTemplateData decomposition) throws SchedulingInterruptedException
   {
 
+    Optional<TaskNetworkAdapter> taskNetworkAdapter = this.constructTaskNetwork(conflict, decomposition);
+    if(taskNetworkAdapter.isEmpty()){
+      //TODO Adrien what to do if we cannot construct task network. I can return optional conflict. to be discussed
+    }
+    final var activitiesToSchedule = taskNetworkAdapter.get().getOrderedTasks();
+
     return new MissingActivityNetworkConflict(
         null,
         conflict.getEvaluationEnvironment(),
         this.constructTaskNetwork(conflict, decomposition).get(),
         this.constructMap(decomposition),
-        //TODO jd uncommnet activitiesToSchedule,
-        null,
-        //TODO Adrien: how to get the windows:
-        //new Windows(false).set(Interval.betweenClosedOpen(missingRecurrenceConflict.validWindow.start,
-        // Windows(false).set(Interval.betweenClosedOpen(conflict.startInterval.start(), conflict.endInterval.end())
+        activitiesToSchedule,
         new Windows(false).set(Interval.betweenClosedOpen(conflict.startInterval.start, conflict.endInterval.end),
                                true)
     );

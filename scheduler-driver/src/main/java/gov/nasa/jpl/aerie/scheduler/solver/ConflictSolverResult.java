@@ -22,7 +22,7 @@ public class ConflictSolverResult {
   //private Deque<Conflict> newConflicts;
 
   public ConflictSolverResult(){
-    this.satisfaction = ConflictSatisfaction.NOT_SAT;
+    this.satisfaction = ConflictSatisfaction.SAT;
     this.activitiesCreated = new HashSet<>();
     this.decompositionsCreated = new ArrayList<>();
     //this.newConflicts = new ArrayDeque<>();

@@ -323,16 +323,6 @@ public class PrioritySolver extends SubSolver {
     } else if(!analysisOnly && conflict instanceof MissingRecurrenceConflict missingRecurrenceConflict){
       conflictSolverReturn = solveMissingRecurrenceConflict(missingRecurrenceConflict, goal.get());
     }
-    // Add new decomposition conflicts if any of the new activities added is compound
-    final var conflicts = new LinkedList<Conflict>();
-    for(SchedulingActivity newActivity : conflictSolverReturn.activitiesCreated()){
-      if(newActivity.getType().isCompound()){
-        conflicts.add(new MissingDecompositionConflict(null,
-                                                       conflict.getEvaluationEnvironment(),
-                                                       newActivity));
-      }
-    }
-    //conflictSolverReturn.setNewConflicts(conflicts);
     return conflictSolverReturn;
   }
 
@@ -966,21 +956,40 @@ public class PrioritySolver extends SubSolver {
         envelopes);
 
     if(reduced.isEmpty()) return solverResults;
-    //TODO jd I can use this solved variable
     final var solved = reduced.get();
 
     if(activityExpression.type().isCompound()){
-      //TODO jd remove commentfinal var instantiatedArguments = SchedulingActivity.instantiateArguments(activityExpression.arguments(), ZERO, simulationResults, evaluationEnvironment,type);
+      Optional<SimulationData> simData = this.createFakeSimulationData();
+      if(simData.isEmpty()){
+        throw new IllegalArgumentException("Plan could not be grounded");
+      }
+      final var instantiatedArguments = SchedulingActivity.instantiateArguments(
+          activityExpression.arguments(),
+          ZERO,
+          simData.get().constraintsResults(),
+          evaluationEnvironment,
+          activityExpression.type());
 
-      //TODO jd uncommnet
-      /*Conflict conflict = new MissingDecompositionConflict(null,
+      Conflict conflict = new MissingDecompositionConflict(null,
                                                            evaluationEnvironment,
-
                                                            new ActivityReference(activityExpression.type().getName(),
-                                                                                 convertProfileToReference(activityExpression.arguments())),
+                                                                                 instantiatedArguments),
                                                            solved.start(), solved.end());
-      solverResults.mergeConflictSolverResult(this.solveDependencyConflict(null, conflict));*/
-      //TODO jd if not satisfied return not satisfied
+      solverResults = this.solveDependencyConflict(Optional.empty(), conflict);
+      if(solverResults.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
+        return solverResults;
+      }
+      // Decomposition can be either satisfied or not satisfied
+      else {
+        //all
+        //TODO jd check activity with earliest time and assign to start time of compound. same for the end.
+        /*
+        for(final var act  : solverResults.activitiesCreated()){
+          if(act.)
+        }
+        SchedulingActivity compoundAct = new SchedulingActivity.of(idGenerator.next(), activityExpression.type(),
+                                                                   solverResults.activitiesCreated())*/
+      }
     }
 
     //Extract resource names to lighten the computation of simulation results
@@ -1141,6 +1150,7 @@ public class PrioritySolver extends SubSolver {
       throw new UnsupportedOperationException("Unsupported duration type found: " + activityExpression.type().getDurationType());
     }
     solverResults.activitiesCreated().add(activity.get());
+    solverResults.setSatisfaction(ConflictSatisfaction.SAT);
     return solverResults;
   }
 
@@ -1196,17 +1206,6 @@ public class PrioritySolver extends SubSolver {
     return this.dependentSolver.resolveConflict(goal, conflict);
   }
 
-  //TODO Adrien how to convert from profileexpression to ActivityRefernce
-  //final var instantiatedArguments = SchedulingActivity.instantiateArguments(arguments, act.interval().start, simulationResults, evaluationEnvironment, type);
-  // use createFakeSimulationData
-  //
-  public static Map<String, SerializedValue> convertProfileToReference(Map<String, ProfileExpression<?>> arguments) {
-    Map<String, SerializedValue> parameters = new HashMap<>();
-    for (Map.Entry<String, ProfileExpression<?>> entry : arguments.entrySet()) {
-      //TODO jd remove commentsparameters.put(entry.getKey(), entry.getValue().);
-    }
-    return parameters;
-  }
 
   public void printEvaluation() {
     final var evaluation = plan.getEvaluation();

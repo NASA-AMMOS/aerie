@@ -277,8 +277,8 @@ public class NexusMetaSolver implements Solver {
       assert goal != null;
 
       //update the output solution plan directly to satisfy goal
-      satisfyDecompositions();
       satisfyGoal(goal);
+      satisfyDecompositions();
     }
   }
 
@@ -519,7 +519,9 @@ public class NexusMetaSolver implements Solver {
     assert plan != null;
     //continue creating activities as long as goal wants more and we can do so
     logger.info("Starting conflict detection before goal " + goal.getName());
+    // Resolve first
     var missingConflicts = getConflicts(goal);
+    var missingConflictsHTN = getConflictsDecomposition();
     plan.getEvaluation().forGoal(goal).addConflicts(missingConflicts);
     logger.info("Found "+ missingConflicts.size() +" conflicts in conflict detection");
     //setting the number of conflicts detected at first evaluation, will be used at backtracking
@@ -527,7 +529,8 @@ public class NexusMetaSolver implements Solver {
     final var alreadyTried = new ArrayList<Conflict>();
     int i = 0;
     final var itConflicts = missingConflicts.iterator();
-    //create new activity instances for each missing conflict
+
+    // Resolve goal conflicts
     while (itConflicts.hasNext()) {
       final var missing = itConflicts.next();
       assert missing != null;
@@ -536,16 +539,8 @@ public class NexusMetaSolver implements Solver {
       //determine the best activities to satisfy the conflict
       ConflictSolverResult conflictSolverReturn = null;
 
-      if(missing instanceof MissingDecompositionConflict){
-        this.decomposer.resolveConflict(Optional.of(goal), missing);
-        //TODO jd check where to remove conflict
-      }
-      else {
-        this.scheduler.resolveConflict(Optional.of(goal), missing);
-      }
+      this.scheduler.resolveConflict(Optional.of(goal), missing);
 
-      //TODO jd add evaulation for decompostion
-      //TODO jd check where to add to the plan decompositions
       if(conflictSolverReturn.satisfaction() == ConflictSatisfaction.SAT) itConflicts.remove();
       //missing association is the only one associating directly
       if(!(missing instanceof MissingAssociationConflict)){
@@ -553,6 +548,26 @@ public class NexusMetaSolver implements Solver {
       }
       plan.getEvaluation().forGoal(goal).setConflictSatisfaction(missing, conflictSolverReturn.satisfaction());
     }
+
+    // Resolve conflicts from non-decomposed compound SchedulingActivities added manually to the plan
+    while (itConflicts.hasNext()) {
+      final var missing = itConflicts.next();
+      assert missing != null;
+      logger.info("Processing conflict " + (++i));
+      logger.info(missing.toString());
+      //determine the best activities to satisfy the conflict
+      ConflictSolverResult conflictSolverReturn = null;
+
+      this.decomposer.resolveConflict(Optional.of(goal), missing);
+
+      if(conflictSolverReturn.satisfaction() == ConflictSatisfaction.SAT) itConflicts.remove();
+      //missing association is the only one associating directly
+      if(!(missing instanceof MissingAssociationConflict)){
+        plan.getEvaluation().forGoal(goal).associate(conflictSolverReturn.activitiesCreated(), true, missing);
+      }
+      plan.getEvaluation().forGoal(goal).setConflictSatisfaction(missing, conflictSolverReturn.satisfaction());
+    }
+
     if(!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()){
       logger.warn("Rolling back changes for "+goal.getName());
       rollback(goal);
