@@ -1156,5 +1156,22 @@ public class SchedulingTests {
 
       assertEquals(52, activities.size());
     }
+
+    /**
+     * Run a spec with one procedure and make sure the activity names are saved to the database
+     */
+    @Test
+    void saveActivityName() throws IOException {
+      final var args = Json.createObjectBuilder().add("quantity", 2).build();
+      hasura.updateSchedulingSpecGoalArguments(procedureId.invocationId(), args);
+
+      final var resp = hasura.awaitScheduling(specId);
+
+      final var plan = hasura.getPlan(planId);
+      final var activities = plan.activityDirectives();
+
+      assertEquals(2, activities.size());
+      assertEquals("It's a bite banana activity", activities.getFirst().name());
+    }
   }
 }
