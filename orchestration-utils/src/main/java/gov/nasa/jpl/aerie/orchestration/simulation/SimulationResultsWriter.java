@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.orchestration.simulation;
 
+import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
 import gov.nasa.jpl.aerie.types.ActivityInstance;
 import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener;
 import gov.nasa.jpl.aerie.types.Plan;
 import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
