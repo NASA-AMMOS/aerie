@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.solver;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.htn.TaskNetTemplateData;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 
 import java.util.ArrayDeque;
@@ -19,6 +20,7 @@ public class ConflictSolverResult {
   private ConflictSatisfaction satisfaction;
   private Set<SchedulingActivity> activitiesCreated;
   private List<TaskNetTemplateData> decompositionsCreated;
+  public Plan plan;
   //private Deque<Conflict> newConflicts;
 
   public ConflictSolverResult(){
@@ -32,7 +34,6 @@ public class ConflictSolverResult {
     this.satisfaction = conflictSatisfaction;
     this.activitiesCreated = new HashSet<>();
     this.decompositionsCreated = new ArrayList<>();
-    //this.newConflicts = new ArrayDeque<>();
   }
 
   public ConflictSolverResult(
@@ -60,6 +61,7 @@ public class ConflictSolverResult {
     this.satisfaction = this.satisfaction.ordinal() <= other.satisfaction.ordinal() ? this.satisfaction : other.satisfaction;
     this.activitiesCreated.addAll(other.activitiesCreated());
     this.decompositionsCreated.addAll(other.decompositionsCreated());
+    this.plan = other.plan;
     //this.newConflicts.addAll(other.getNewConflicts());
   }
 

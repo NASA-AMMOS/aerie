@@ -142,7 +142,7 @@ public class PrioritySolver extends SubSolver {
    * @param problem IN, STORED description of the planning problem to be
    *     solved, which must not change
    */
-  public PrioritySolver(final Problem problem, final Plan plan, final boolean analysisOnly,
+  public PrioritySolver(final Problem problem,  final boolean analysisOnly,
                         DirectiveIdGenerator idGenerator, Solver metaSolver) {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = true;
@@ -157,7 +157,7 @@ public class PrioritySolver extends SubSolver {
   }
 
   public PrioritySolver(final Problem problem, final Plan plan, DirectiveIdGenerator idGenerator, Solver metaSolver) {
-    this(problem, plan,false, idGenerator, metaSolver);
+    this(problem, false, idGenerator, metaSolver);
   }
 
   public void setDependentSolver(NexusDecomposer solver) {
@@ -306,9 +306,10 @@ public class PrioritySolver extends SubSolver {
 
 
   @Override
-  public ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
+  public ConflictSolverResult resolveConflict(Plan plan, Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException
   {
+    this.plan = plan;
     ConflictSolverResult conflictSolverReturn = null;
     if(!goal.isPresent())
       throw new SchedulingInterruptedException("No goal provided");
@@ -323,6 +324,7 @@ public class PrioritySolver extends SubSolver {
     } else if(!analysisOnly && conflict instanceof MissingRecurrenceConflict missingRecurrenceConflict){
       conflictSolverReturn = solveMissingRecurrenceConflict(missingRecurrenceConflict, goal.get());
     }
+    conflictSolverReturn.plan = plan;
     return conflictSolverReturn;
   }
 
@@ -721,10 +723,6 @@ public class PrioritySolver extends SubSolver {
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
         logger.info("Instantiating activity in windows " + startWindows.trueSegmentsToString());
-
-
-
-
         solverResult = createOneActivity(
             missingTemplate,
             goal.getName() + "_" + UUID.randomUUID(),
@@ -831,7 +829,15 @@ public class PrioritySolver extends SubSolver {
     }
     return Optional.empty();
   }
-  public SimulationData getLatestSimResultsUpTo(final Duration time, final Set<String> resourceNames) throws SchedulingInterruptedException {
+
+  public SimulationData getLatestSimResultsUpTo(final Plan plan, final Duration time,
+                                                final Set<String> resourceNames) throws SchedulingInterruptedException {
+    this.plan = plan;
+    return getLatestSimResultsUpTo(time, resourceNames);
+  }
+
+  private SimulationData getLatestSimResultsUpTo(final Duration time,
+                                                final Set<String> resourceNames) throws SchedulingInterruptedException {
     //if no resource is needed, build the results from the current plan
     if(resourceNames.isEmpty()) {
       final var groundedPlan = SchedulePlanGrounder.groundSchedule(
@@ -878,6 +884,7 @@ public class PrioritySolver extends SubSolver {
   private Windows narrowGlobalConstraints(
       final MissingActivityConflict mac,
       final Windows windows,
+
       final Collection<GlobalConstraintWithIntrospection> constraints,
       final EvaluationEnvironment evaluationEnvironment) throws SchedulingInterruptedException {
     Windows tmp = windows;
@@ -1203,7 +1210,7 @@ public class PrioritySolver extends SubSolver {
   public ConflictSolverResult solveDependencyConflict(Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException
   {
-    return this.dependentSolver.resolveConflict(goal, conflict);
+    return this.dependentSolver.resolveConflict(plan, goal, conflict);
   }
 
 }

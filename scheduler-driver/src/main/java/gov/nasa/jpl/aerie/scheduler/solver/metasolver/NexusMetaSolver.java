@@ -59,8 +59,8 @@ public class NexusMetaSolver implements Solver {
   private boolean atLeastOneSimulateAfter;
 
   private SimulationData cachedSimulationResultsBeforeGoalEvaluation;
-  private final NexusDecomposer decomposer;
-  private final PrioritySolver scheduler;
+  private NexusDecomposer decomposer;
+  private PrioritySolver scheduler;
 
   /**
    * boolean stating whether only conflict analysis should be performed or not
@@ -152,16 +152,18 @@ public class NexusMetaSolver implements Solver {
             .orElse(-1L)
         + 1
     );
-    this.decomposer = new NexusDecomposer(this.problem, this.plan, this.analysisOnly, this.idGenerator, this);
-    //TODO jd check if that's ok to pass problem here
-    this.scheduler = new PrioritySolver(this.problem, this.plan, this.analysisOnly, this.idGenerator, this);
-
-    this.decomposer.setDependentSolver(scheduler);
-    this.scheduler.setDependentSolver(decomposer);
   }
 
   public NexusMetaSolver(final Problem problem) {
     this(problem, false);
+  }
+
+  public void initializeSubSolvers(){
+    this.decomposer = new NexusDecomposer(this.problem, this.analysisOnly, this.idGenerator, this);
+    this.scheduler = new PrioritySolver(this.problem, this.analysisOnly, this.idGenerator, this);
+
+    this.decomposer.setDependentSolver(scheduler);
+    this.scheduler.setDependentSolver(decomposer);
   }
 
   /**
@@ -239,6 +241,7 @@ public class NexusMetaSolver implements Solver {
    **/
   public void initializePlan() throws SimulationFacade.SimulationException, SchedulingInterruptedException {
     plan = new PlanInMemory();
+    this.initializeSubSolvers();
 
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
@@ -338,11 +341,11 @@ public class NexusMetaSolver implements Solver {
       //determine the best activities to satisfy the conflict
 
       if(missing instanceof MissingDecompositionConflict){
-        this.decomposer.resolveConflict(null, missing);
+        this.decomposer.resolveConflict(plan,null, missing);
         //TODO jd check where to remove conflict
       }
       else {
-        this.scheduler.resolveConflict(null, missing);
+        this.scheduler.resolveConflict(plan,null, missing);
       }
     }//for(missing)
     logger.info("Finishing decomposition satisfaction" +":"+ (missingConflicts.size() == 0 ?
@@ -538,9 +541,8 @@ public class NexusMetaSolver implements Solver {
       logger.info("Processing conflict " + (++i));
       logger.info(missing.toString());
       //determine the best activities to satisfy the conflict
-      ConflictSolverResult conflictSolverReturn = null;
-
-      this.scheduler.resolveConflict(Optional.of(goal), missing);
+      ConflictSolverResult conflictSolverReturn = this.scheduler.resolveConflict(plan, Optional.of(goal), missing);
+      this.plan = conflictSolverReturn.plan;
 
       if(conflictSolverReturn.satisfaction() == ConflictSatisfaction.SAT) itConflicts.remove();
       //missing association is the only one associating directly
@@ -557,9 +559,8 @@ public class NexusMetaSolver implements Solver {
       logger.info("Processing conflict " + (++i));
       logger.info(missing.toString());
       //determine the best activities to satisfy the conflict
-      ConflictSolverResult conflictSolverReturn = null;
-
-      this.decomposer.resolveConflict(Optional.of(goal), missing);
+      ConflictSolverResult conflictSolverReturn = this.decomposer.resolveConflict(plan, Optional.of(goal), missing);
+      this.plan = conflictSolverReturn.plan;
 
       if(conflictSolverReturn.satisfaction() == ConflictSatisfaction.SAT) itConflicts.remove();
       //missing association is the only one associating directly
@@ -593,7 +594,8 @@ public class NexusMetaSolver implements Solver {
     logger.debug("Computing simulation results until "+ this.problem.getPlanningHorizon().getEndAerie() + " (planning horizon end) in order to compute conflicts");
     final var resources = new HashSet<String>();
     goal.extractResources(resources);
-    final var simulationResults = this.scheduler.getLatestSimResultsUpTo(this.problem.getPlanningHorizon().getEndAerie(),
+    final var simulationResults =
+        this.scheduler.getLatestSimResultsUpTo(this.plan, this.problem.getPlanningHorizon().getEndAerie(),
                                                                          resources);
     final var evaluationEnvironment = new EvaluationEnvironment(this.problem.getRealExternalProfiles(), this.problem.getDiscreteExternalProfiles());
     final var rawConflicts = goal.getConflicts(

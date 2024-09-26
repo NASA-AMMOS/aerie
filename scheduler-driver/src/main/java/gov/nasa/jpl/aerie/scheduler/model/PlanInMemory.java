@@ -42,7 +42,6 @@ public class PlanInMemory implements Plan {
   private final TreeMap<Duration, List<SchedulingActivity>> actsByTime;
   private List<TaskNetTemplateData> pendingDecompositions;
   private List<TaskNetTemplateData> solvedDecompositions;
-
   /**
    * ctor creates a new empty solution plan
    *

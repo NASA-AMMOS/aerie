@@ -49,7 +49,7 @@ public abstract class SubSolver {
    * solution for all requests thereafter, but some algorithms may optionally
    * support further solutions (eg on some input/configuration modification)
    */
-  public abstract ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
+  public abstract ConflictSolverResult resolveConflict(Plan plan, Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException;
 
   public void setDependentSolver(SubSolver solver) {

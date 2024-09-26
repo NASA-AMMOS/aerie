@@ -68,14 +68,12 @@ public class NexusDecomposer extends SubSolver {
    *
    * @param problem IN, STORED description of the planning problem to be
    *     solved, which must not change
-   * @param plan IN, description of the current list of activities, constraints and tasknets
    *
    * @throws SchedulingInterruptedException
    */
-  public NexusDecomposer(final Problem problem, final Plan plan, final boolean analysisOnly,
+  public NexusDecomposer(final Problem problem, final boolean analysisOnly,
                          final DirectiveIdGenerator idGenerator, Solver metaSolver) {
     this.problem = problem;
-    this.plan = plan;
     this.analysisOnly = analysisOnly;
     this.idGenerator = idGenerator;
     this.metaSolver = metaSolver;
@@ -88,12 +86,14 @@ public class NexusDecomposer extends SubSolver {
    * @throws SchedulingInterruptedException
    */
   @Override
-  public ConflictSolverResult resolveConflict(Optional<Goal> goal, Conflict conflict)
+  public ConflictSolverResult resolveConflict(Plan plan, Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException
   {
     ConflictSolverResult solverResult;
-
-    return solveMissingDecompositionConflict((MissingDecompositionConflict) conflict);
+    this.plan = plan;
+    ConflictSolverResult conflictSolverReturn = solveMissingDecompositionConflict((MissingDecompositionConflict) conflict);
+    conflictSolverReturn.plan = plan;
+    return conflictSolverReturn;
   }
 
   private ConflictSolverResult solveMissingDecompositionConflict(final MissingDecompositionConflict conflict)
@@ -257,7 +257,7 @@ public class NexusDecomposer extends SubSolver {
 
   public ConflictSolverResult solveDependencyConflict(Optional<Goal> goal, Conflict conflict)
   throws SchedulingInterruptedException, InstantiationException{
-    return this.dependentSolver.resolveConflict(goal, conflict);
+    return this.dependentSolver.resolveConflict(plan, goal, conflict);
   }
 
 }
