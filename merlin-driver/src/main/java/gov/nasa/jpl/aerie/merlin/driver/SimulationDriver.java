@@ -193,7 +193,7 @@ public final class SimulationDriver<Model> {
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
-        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
+        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, getEngine().scheduledDirectives).compute();
         if (!resolved.isEmpty()) {
           resolved.put(
               null,
@@ -359,7 +359,9 @@ public final class SimulationDriver<Model> {
     for (final Pair<ActivityDirectiveId, Duration> directivePair : resolved.get(null)) {
       final var directiveId = directivePair.getLeft();
       final var startOffset = directivePair.getRight();
-      final var serializedDirective = schedule.get(directiveId).serializedActivity();
+      ActivityDirective d = schedule.get(directiveId);
+      if (d == null) continue;
+      final var serializedDirective = d.serializedActivity();
 
       final TaskFactory<?> task = deserializeActivity(missionModel, serializedDirective);
 
