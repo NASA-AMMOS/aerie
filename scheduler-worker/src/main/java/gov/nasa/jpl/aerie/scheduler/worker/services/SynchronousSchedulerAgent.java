@@ -26,6 +26,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.scheduler.simulation.SchedulerSimulationReuseStrategy;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
@@ -143,6 +144,7 @@ public record SynchronousSchedulerAgent(
       final Supplier<Boolean> canceledListener,
       final int sizeCachedEngineStore
   ) {
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
     try(final var cachedEngineStore = new InMemoryCachedEngineStore(sizeCachedEngineStore)) {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
@@ -335,6 +337,8 @@ public record SynchronousSchedulerAgent(
           .type("OTHER_EXCEPTION")
           .message(e.toString())
           .trace(e));
+    } finally {
+      TemporalEventSource.freezable  = TemporalEventSource.alwaysfreezable;
     }
   }
 

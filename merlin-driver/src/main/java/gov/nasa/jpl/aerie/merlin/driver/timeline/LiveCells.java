@@ -2,10 +2,12 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +58,7 @@ public final class LiveCells {
   public Set<LiveCell<?>> getCells(final Topic<?> topic) {
     var c4t = cellsForTopic.get(topic);
     if (c4t != null && !c4t.isEmpty()) return c4t; // assumes one cell per topic; TODO: give up on multiple cells per topic and change signature to getCell(topic)->LiveCell ?
-    Set<LiveCell<?>> cells = new HashSet<>();
+    Set<LiveCell<?>> cells = new LinkedHashSet<>();
     if (parent == null) return cells;
     var parentCells = parent.getCells(topic);
     // Need to get the duplicated cell in cells corresponding to each matching parent cell
@@ -91,26 +93,42 @@ public final class LiveCells {
     // Otherwise, go ask our parent for the cell.
     if (this.parent == null) return Optional.empty();
     // First, update the time of the parent source
-    boolean bothTimeline = parent.source instanceof TemporalEventSource && source instanceof TemporalEventSource;
+    boolean isTimeline = source instanceof TemporalEventSource;
+    boolean parentIsTimeline = parent.source instanceof TemporalEventSource;
+    boolean bothTimeline = isTimeline && parentIsTimeline;
     if (bothTimeline) {
       ((TemporalEventSource)parent.source).setCurTime(((TemporalEventSource)source).curTime());
+    }
+    if (!parentIsTimeline) {
+      SubInstantDuration time = isTimeline ? ((TemporalEventSource)source).curTime() : SubInstantDuration.ZERO;
+      parent.source.freeze(time);
     }
     final var cell$ = this.parent.getCell(query);
     if (cell$.isEmpty()) return Optional.empty();
 
-    // Add a duplicate of the parent cell to this LiveCells
-    final Cell<State> duplicate = cell$.get().duplicate();
-    final var cell = put(query, duplicate);
-    // Set the duplicate cell time to the parent cell time
-    if (bothTimeline) {
-      ((TemporalEventSource)source).putCellTime(duplicate, ((TemporalEventSource)parent.source).getCellTime(cell$.get()));
+    // Get the parent cell and store a duplicate if it is done stepping in the parent; else return the parent cell so that it can continue stepping
+    final LiveCell cell;
+    if (TemporalEventSource.freezable &&
+        !parent.isCellDoneStepping(cell$.get())) {
+      return parent.getLiveCell(query);
+    } else {
+      final Cell<State> duplicate = cell$.get().duplicate();
+      cell = put(query, duplicate);
+      // Set the duplicate cell time to the parent cell time
+      if (bothTimeline) {
+        ((TemporalEventSource)source).putCellTime(duplicate, ((TemporalEventSource)parent.source).getCellTime(cell$.get()));
+      }
     }
 
     return Optional.of(cell);
   }
 
-  public void freeze() {
-    if (this.parent != null) this.parent.freeze();
-    this.source.freeze();
+  public void freeze(SubInstantDuration time) {
+    if (this.parent != null) this.parent.freeze(time);
+    if (!this.source.isFrozen()) this.source.freeze(time);
+  }
+
+  public boolean isCellDoneStepping(Cell<?> cell) {
+    return cell.doneStepping;
   }
 }

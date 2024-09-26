@@ -14,6 +14,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -34,6 +36,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FooSimulationDuplicationTest {
+  public static boolean debug = false;
   CachedEngineStore store;
   final private class InfiniteCapacityEngineStore implements CachedEngineStore{
     private final Map<SimulationEngineConfiguration, List<CachedSimulationEngine>> store = new HashMap<>();
@@ -57,11 +60,14 @@ public class FooSimulationDuplicationTest {
   }
 
   public static SimulationEngineConfiguration mockConfiguration(){
-    return new SimulationEngineConfiguration(
+    TemporalEventSource.freezable = !TemporalEventSource.neverfreezable;
+    var c = new SimulationEngineConfiguration(
         Map.of(),
         Instant.EPOCH,
         new MissionModelId(0)
     );
+    TemporalEventSource.freezable = TemporalEventSource.alwaysfreezable;
+    return c;
   }
 
   @BeforeEach
@@ -77,7 +83,9 @@ public class FooSimulationDuplicationTest {
   private static MissionModel<Mission> makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
     final var factory = new GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
+    TemporalEventSource.freezable = !TemporalEventSource.neverfreezable;
     final var model = factory.instantiate(planStart, config, builder);
+    TemporalEventSource.freezable = TemporalEventSource.alwaysfreezable;
     return builder.build(model, registry);
   }
 
@@ -115,6 +123,9 @@ public class FooSimulationDuplicationTest {
         activityFrom(1, MINUTE, "foo", Map.of("z", SerializedValue.of(123))),
         activityFrom(7, MINUTES, "foo", Map.of("z", SerializedValue.of(999)))
     );
+
+    if (debug) System.out.println("\n\n-- simulateWithCheckpoints 1 --\n\n");
+
     final var results = simulateWithCheckpoints(
         missionModel,
         List.of(Duration.of(5, MINUTES)),
@@ -122,6 +133,8 @@ public class FooSimulationDuplicationTest {
         store,
         mockConfiguration()
     );
+    if (debug) System.out.println("\n\n-- expected simulation 1 --\n\n");
+
     final SimulationResultsInterface expected = SimulationDriver.simulate(
         missionModel,
         schedule,
@@ -130,9 +143,13 @@ public class FooSimulationDuplicationTest {
         Instant.EPOCH,
         Duration.HOUR,
         () -> false);
+    if (debug) System.out.println("\n\nexpected results 1 = \n" + expected);
+    if (debug) System.out.println("\n\nactual results 1 = \n" + results);
     assertResultsEqual(expected, results);
 
     assertEquals(Duration.of(5, MINUTES), store.getCachedEngines(mockConfiguration()).getFirst().endsAt());
+
+    if (debug) System.out.println("\n\n-- simulateWithCheckpoints 2 --\n\n");
 
     final var results2 = simulateWithCheckpoints(
         missionModel,
@@ -142,6 +159,8 @@ public class FooSimulationDuplicationTest {
         store,
         mockConfiguration()
     );
+    if (debug) System.out.println("\n\nexpected results 2 (and 1) = \n" + expected);
+    if (debug) System.out.println("\n\nactual results 2 = \n" + results2);
 
     assertResultsEqual(expected, results2);
   }
@@ -397,6 +416,7 @@ public class FooSimulationDuplicationTest {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration simulationEngineConfiguration
   ) {
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
     return CheckpointSimulationDriver.simulateWithCheckpoints(
         missionModel,
         schedule,

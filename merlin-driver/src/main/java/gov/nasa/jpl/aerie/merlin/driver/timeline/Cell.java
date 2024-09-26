@@ -16,6 +16,8 @@ public final class Cell<State> {
   private final GenericCell<?, State> inner;
   private final State state;
 
+  public boolean doneStepping = false;
+
   private <Effect> Cell(final GenericCell<Effect, State> inner, final State state) {
     this.inner = inner;
     this.state = state;

@@ -75,8 +75,8 @@ import static java.lang.Integer.max;
 public final class SimulationEngine implements AutoCloseable {
   private boolean closed = false;
 
-  private static boolean debug = false;
-  private static boolean trace = false;
+  public static boolean debug = false;
+  public static boolean trace = false;
 
   /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
   public final SimulationEngine oldEngine;
@@ -209,10 +209,15 @@ public final class SimulationEngine implements AutoCloseable {
     this.failed = false;
   }
 
+  public void freeze() {
+    SubInstantDuration freezeTime = SubInstantDuration.max(curTime(), new SubInstantDuration(elapsedTime, 0));
+    if (!timeline.isFrozen()) timeline.freeze(freezeTime);
+    if (!referenceTimeline.isFrozen()) referenceTimeline.freeze(freezeTime);
+    cells.freeze(freezeTime);
+  }
+
   private SimulationEngine(SimulationEngine other) {
-    other.timeline.freeze();
-    other.referenceTimeline.freeze();
-    other.cells.freeze();
+    other.freeze();
 
     elapsedTime = other.elapsedTime;
 
@@ -249,7 +254,10 @@ public final class SimulationEngine implements AutoCloseable {
     startTime = other.startTime;
     stepIndexAtTime = other.stepIndexAtTime;
     missionModel = other.missionModel;
-    referencedTopics = new HashMap<>(other.referencedTopics);
+    referencedTopics = new HashMap<>();
+    for (final var entry : other.referencedTopics.entrySet()) {
+      referencedTopics.put(entry.getKey(), new HashSet<>(entry.getValue()));
+    }
     cellReadHistory = new HashMap<>();
     for (final var entry : other.cellReadHistory.entrySet()) {
       var newVal = new TreeMap<SubInstantDuration, HashMap<TaskId, Event>>();
@@ -355,7 +363,10 @@ public final class SimulationEngine implements AutoCloseable {
     if (debug) System.out.println("step(): begin -- time = " + curTime() + ", step " + stepIndexAtTime);
     if (stepIndexAtTime == Integer.MAX_VALUE) stepIndexAtTime = 0;
     var timeOfNextJobs = timeOfNextJobs();
-    timeOfNextJobs = new SubInstantDuration(timeOfNextJobs.duration(), Math.max(timeOfNextJobs.index(), stepIndexAtTime));
+    if (timeOfNextJobs.index() == 0 && timeOfNextJobs.duration().isEqualTo(curTime().duration())) {
+      timeOfNextJobs = new SubInstantDuration(timeOfNextJobs.duration(), stepIndexAtTime);
+    }
+
     var nextTime = timeOfNextJobs;
 
     Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
@@ -479,10 +490,14 @@ public final class SimulationEngine implements AutoCloseable {
       for (final var tip : results.commits()) {
 
         if (!(tip instanceof EventGraph.Empty) ||
-            (!batch.jobs().isEmpty() && batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId)) {
+            (!batch.jobs().isEmpty() && (batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId ||
+                                         batch.jobs().stream().findFirst().get() instanceof JobId.SignalJobId ))) {
           this.timeline.add(tip, curTime().duration(), stepIndexAtTime, MissionModel.queryTopic);
           //updateTaskInfo(tip);
-          if (stepIndexAtTime < Integer.MAX_VALUE) stepIndexAtTime += 1;
+          if (stepIndexAtTime < Integer.MAX_VALUE) {
+            stepIndexAtTime += 1;
+            setCurTime(new SubInstantDuration(curTime().duration(), stepIndexAtTime));
+          }
           else throw new RuntimeException(
               "Only Resource jobs (not Task jobs) should be run at step index Integer.MAX_VALUE");
         }
@@ -491,17 +506,19 @@ public final class SimulationEngine implements AutoCloseable {
         throw results.error.get();
       }
       // Serialize the resources updated in this batch
-      for (final var update : results.resourceUpdates.updates()) {
-        final var name = update.resourceId().id();
-        final var schema = update.resource().getOutputType().getSchema();
+      if (curTime().noShorterThan(getElapsedTime())) {
+        for (final var update : results.resourceUpdates.updates()) {
+          final var name = update.resourceId().id();
+          final var schema = update.resource().getOutputType().getSchema();
 
-        switch (update.resource.getType()) {
-          case "real" -> realResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractRealDynamics(update)));
-          case "discrete" -> dynamicResourceUpdates.put(
-              name,
-              Pair.of(
-                  schema,
-                  SimulationEngine.extractDiscreteDynamics(update)));
+          switch (update.resource.getType()) {
+            case "real" -> realResourceUpdates.put(name, Pair.of(schema, SimulationEngine.extractRealDynamics(update)));
+            case "discrete" -> dynamicResourceUpdates.put(
+                name,
+                Pair.of(
+                    schema,
+                    SimulationEngine.extractDiscreteDynamics(update)));
+          }
         }
       }
     }
@@ -1206,7 +1223,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
     // remove span from spanInfo data structures
     SpanId spanId = getSpanId(taskId);
-    if (spanId != null) spanInfo.removeSpan(spanId);
+    if (spanId != null) spanInfo.removeSpan(spanId); // TODO -- REVIEW -- should this have no effect and be unnecessary since it would be in the old engine?
 
     // Remove children, too!
     var children = this.oldEngine.getTaskChildren(taskId);
@@ -1710,8 +1727,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
   @Override
   public void close() {
-    cells.freeze();
-    timeline.freeze();
+    freeze();
 
     for (final var task : this.tasks.values()) {
       task.state().release();

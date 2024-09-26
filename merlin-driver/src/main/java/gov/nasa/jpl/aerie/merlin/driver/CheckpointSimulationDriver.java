@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SpanId;
 import gov.nasa.jpl.aerie.merlin.driver.resources.InMemorySimulationResourceManager;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -175,6 +176,7 @@ public class CheckpointSimulationDriver {
       final CachedEngineStore cachedEngineStore,
       final SimulationEngineConfiguration configuration
   ) {
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
     final boolean duplicationIsOk = cachedEngineStore.capacity() > 1;
     final var activityToSpan = new HashMap<ActivityDirectiveId, SpanId>();
     final var activityTopic = cachedEngine.activityTopic();
@@ -314,6 +316,8 @@ public class CheckpointSimulationDriver {
     } catch (Throwable ex) {
       elapsedTime = engine.getElapsedTime();
       throw new SimulationException(elapsedTime, simulationStartTime, ex);
+    } finally {
+      TemporalEventSource.freezable = TemporalEventSource.alwaysfreezable;
     }
     return new SimulationResultsComputerInputs(
         engine,

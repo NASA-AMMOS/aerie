@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
@@ -41,6 +42,7 @@ public class CheckpointSimulationFacadeTest {
   @BeforeEach
   public void before(){
     ThreadedTask.CACHE_READS = true;
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
     final var fooMissionModel = SimulationUtility.buildFooMissionModel();
     final var fooSchedulerModel = SimulationUtility.buildFooSchedulerModel();
     activityTypes = new HashMap<>();
@@ -55,6 +57,7 @@ public class CheckpointSimulationFacadeTest {
         new SimulationEngineConfiguration(Map.of(), Instant.EPOCH, new MissionModelId(1)),
         () -> false);
     newSimulationFacade.addActivityTypes(activityTypes.values());
+    TemporalEventSource.freezable  = TemporalEventSource.alwaysfreezable;
   }
 
   /**

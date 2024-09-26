@@ -328,12 +328,14 @@ public final class IncrementalSimTest {
     final List<ProfileSegment<RealDynamics>> correctFruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     //String correctResProfile = driver.getEngine().getResources().get(new ResourceId("/fruit")).profile().segments().toString();
 
-    if (debug) System.out.println("schedule = " + simulationResults.getSimulatedActivities());
+    if (debug) System.out.println("\n\nsim activities for baseline schedule = " + simulationResults.getSimulatedActivities() + "\n\n");
 
 
     // create a new driver to start over
     driver = SimulationUtility.getDriver(simDuration, true);
     simulationResults = driver.simulate(emptySchedule, startTime, simDuration, startTime, simDuration);
+
+    if (debug) System.out.println("\n\nempty schedule sim activities = " + simulationResults.getSimulatedActivities() + "\n\n");
 
     var fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();
     //String fruitResProfile = driver.getEngine().getResources().get(new ResourceId("/fruit")).profile().segments().toString();
@@ -342,7 +344,7 @@ public final class IncrementalSimTest {
     driver.initSimulation(simDuration);
     simulationResults = driver.simulate(schedule, startTime, simDuration, startTime, simDuration);
     //String fruitResProfile2 = driver.getEngine().getResources().get(new ResourceId("/fruit")).profile().segments().toString();
-    if (debug) System.out.println("correct        fruit profile = " + correctFruitProfile);
+    if (debug) System.out.println("\n\ncorrect        fruit profile = " + correctFruitProfile);
     if (debug) System.out.println("empty schedule fruit profile = " + fruitProfile);
 
     fruitProfile = simulationResults.getRealProfiles().get("/fruit").segments();

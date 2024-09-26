@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -50,8 +51,10 @@ public final class SimulationUtility {
   public static Problem buildFooProblemWithCacheSize(
       final PlanningHorizon planningHorizon,
       final int simulationCacheSize){
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
     final var fooMissionModel = SimulationUtility.buildFooMissionModel();
     final var fooSchedulerModel = SimulationUtility.buildFooSchedulerModel();
+    TemporalEventSource.freezable  = TemporalEventSource.alwaysfreezable;
     return new Problem(
         fooMissionModel,
         planningHorizon,
@@ -111,7 +114,8 @@ public final class SimulationUtility {
       final MissionModel<Model> missionModel,
       final SchedulerModel schedulerModel,
       final int simulationCacheSize) {
-    return switch (SIM_REUSE_STRATEGY) {
+    TemporalEventSource.freezable  = !TemporalEventSource.neverfreezable;
+    var facade = switch (SIM_REUSE_STRATEGY) {
       case Incremental -> new IncrementalSimulationFacade<>(
           missionModel, schedulerModel, planningHorizon, ()->false);
       case Checkpoint -> new CheckpointSimulationFacade(
@@ -125,6 +129,8 @@ public final class SimulationUtility {
               new MissionModelId(1)),
           () -> false);
       };
+    TemporalEventSource.freezable  = TemporalEventSource.alwaysfreezable;
+    return facade;
   }
 
   /**
