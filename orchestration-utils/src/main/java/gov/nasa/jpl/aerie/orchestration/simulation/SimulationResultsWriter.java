@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.orchestration.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.types.ActivityInstance;
 import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -61,14 +62,14 @@ public class SimulationResultsWriter {
    * @param plan The Plan simulated
    * @param rfs The ResourceFileStreamer used during the simulation
    */
-  public SimulationResultsWriter(SimulationResults results, Plan plan, ResourceFileStreamer rfs) {
+  public SimulationResultsWriter(SimulationResultsInterface results, Plan plan, ResourceFileStreamer rfs) {
     this.plan = plan;
-    this.extent = results.duration;
+    this.extent = results.getDuration();
     this.profilesTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
         try {
-          return buildProfiles(results.realProfiles, results.discreteProfiles, rfs);
+          return buildProfiles(results.getRealProfiles(), results.getDiscreteProfiles(), rfs);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -77,13 +78,13 @@ public class SimulationResultsWriter {
     this.eventsTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
-        return buildEvents(results.events,results.topics);
+        return buildEvents(results.getEvents(),results.getTopics());
       }
     };
     this.spansTask = new RecursiveTask<>() {
       @Override
       protected JsonObject compute() {
-        return buildSpans(results.simulatedActivities,results.unfinishedActivities, plan.simulationStartTimestamp);
+        return buildSpans(results.getSimulatedActivities(),results.getUnfinishedActivities(), plan.simulationStartTimestamp);
       }
     };
     this.simConfigTask = new RecursiveTask<>() {
