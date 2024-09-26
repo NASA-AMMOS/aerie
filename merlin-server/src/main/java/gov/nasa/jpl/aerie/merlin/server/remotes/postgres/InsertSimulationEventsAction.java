@@ -4,13 +4,14 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.EventRecord;
 import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       statement.setString(5, causalTime);
       statement.setInt(6, event.topicId());
       statement.setString(7, serializedValueP.unparse(event.value()).toString());
-      statement.setLong(8, event.spanId().isPresent() ? event.spanId().get() : null);
+      statement.setObject(8, event.spanId().orElse(null), Types.INTEGER);
       statement.addBatch();
     }
   }

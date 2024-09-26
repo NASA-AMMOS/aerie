@@ -9,6 +9,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -261,7 +263,7 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
   private Map<String, ResourceProfile<SerializedValue>> _discreteProfiles = null;
 
   @Override
-  public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+  public Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities() {
     var combined = new HashMap<>(or.getSimulatedActivities());
     nr.getRemovedActivities().forEach(simActId -> combined.remove(simActId));
     combined.putAll(nr.getSimulatedActivities());
@@ -272,14 +274,14 @@ public class CombinedSimulationResults implements SimulationResultsInterface {
    * @return
    */
   @Override
-  public Set<SimulatedActivityId> getRemovedActivities() {
+  public Set<ActivityInstanceId> getRemovedActivities() {
     var combined = new HashSet<>(or.getRemovedActivities());
     combined.addAll(nr.getRemovedActivities());
     return combined;
   }
 
   @Override
-  public Map<SimulatedActivityId, UnfinishedActivity> getUnfinishedActivities() {
+  public Map<ActivityInstanceId, UnfinishedActivity> getUnfinishedActivities() {
     var combined = new HashMap<>(or.getUnfinishedActivities());
     combined.putAll(nr.getUnfinishedActivities());
     return combined;

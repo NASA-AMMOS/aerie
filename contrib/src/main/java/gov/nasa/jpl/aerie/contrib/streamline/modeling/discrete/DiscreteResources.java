@@ -18,7 +18,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.autoEffects;
 import static gov.nasa.jpl.aerie.contrib.streamline.core.CellRefV2.testing;
@@ -199,15 +198,17 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Boolean>> all(Resource<Discrete<Boolean>>... operands) {
-    return all(stream(operands));
+    return all(stream(operands).toList());
   }
 
   /**
    * Reduce operands using short-circuiting logical "and"
    */
-  public static Resource<Discrete<Boolean>> all(Stream<? extends Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> all(Collection<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting and to improve efficiency
-    return reduce(operands, constant(true), DiscreteResources::and, "All");
+    // Unlike most reductions, we explicitly want to add intermediate nodes by using Resources.reduce instead of ResourceMonad.reduce.
+    // Those intermediate nodes allow us to short-circuit, truncating our dependencies.
+    return Resources.reduce(operands, constant(true), DiscreteResources::and, "All");
   }
 
   /**
@@ -225,15 +226,17 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Boolean>> any(Resource<Discrete<Boolean>>... operands) {
-    return any(stream(operands));
+    return any(stream(operands).toList());
   }
 
   /**
    * Reduce operands using short-circuiting logical "or"
    */
-  public static Resource<Discrete<Boolean>> any(Stream<? extends Resource<Discrete<Boolean>>> operands) {
+  public static Resource<Discrete<Boolean>> any(Collection<? extends Resource<Discrete<Boolean>>> operands) {
     // Reduce using the short-circuiting or to improve efficiency
-    return reduce(operands, constant(false), DiscreteResources::or, "Any");
+    // Unlike most reductions, we explicitly want to add intermediate nodes by using Resources.reduce instead of ResourceMonad.reduce.
+    // Those intermediate nodes allow us to short-circuit, truncating our dependencies.
+    return Resources.reduce(operands, constant(false), DiscreteResources::or, "Any");
   }
 
   /**
@@ -278,14 +281,14 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Integer>> addInt(Resource<Discrete<Integer>>... operands) {
-    return sumInt(Arrays.stream(operands));
+    return sumInt(Arrays.stream(operands).toList());
   }
 
   /**
    * Add integer resources
    */
-  public static Resource<Discrete<Integer>> sumInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return reduce(operands, constant(0), map(Integer::sum), "Sum");
+  public static Resource<Discrete<Integer>> sumInt(Collection<? extends Resource<Discrete<Integer>>> operands) {
+    return reduce(operands, 0, Integer::sum, "Sum");
   }
 
   /**
@@ -302,14 +305,14 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Integer>> multiplyInt(Resource<Discrete<Integer>>... operands) {
-    return productInt(Arrays.stream(operands));
+    return productInt(Arrays.stream(operands).toList());
   }
 
   /**
    * Multiply integer resources
    */
-  public static Resource<Discrete<Integer>> productInt(Stream<? extends Resource<Discrete<Integer>>> operands) {
-    return reduce(operands, constant(1), map((x, y) -> x * y), "Product");
+  public static Resource<Discrete<Integer>> productInt(Collection<? extends Resource<Discrete<Integer>>> operands) {
+    return reduce(operands, 1, (x, y) -> x * y, "Product");
   }
 
   /**
@@ -328,14 +331,14 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Double>> add(Resource<Discrete<Double>>... operands) {
-    return sum(Arrays.stream(operands));
+    return sum(Arrays.stream(operands).toList());
   }
 
   /**
    * Add double resources
    */
-  public static Resource<Discrete<Double>> sum(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return reduce(operands, constant(0.0), map(Double::sum), "Sum");
+  public static Resource<Discrete<Double>> sum(Collection<? extends Resource<Discrete<Double>>> operands) {
+    return reduce(operands, 0.0, Double::sum, "Sum");
   }
 
   /**
@@ -352,14 +355,14 @@ public final class DiscreteResources {
    */
   @SafeVarargs
   public static Resource<Discrete<Double>> multiply(Resource<Discrete<Double>>... operands) {
-    return product(Arrays.stream(operands));
+    return product(Arrays.stream(operands).toList());
   }
 
   /**
    * Multiply double resources
    */
-  public static Resource<Discrete<Double>> product(Stream<? extends Resource<Discrete<Double>>> operands) {
-    return reduce(operands, constant(1.0), map((x, y) -> x * y), "Product");
+  public static Resource<Discrete<Double>> product(Collection<? extends Resource<Discrete<Double>>> operands) {
+    return reduce(operands, 1.0, (x, y) -> x * y, "Product");
   }
 
   /**

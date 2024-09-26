@@ -74,7 +74,7 @@ public record ForEachActivitySpans(
   public record MatchType(String type) implements TriFunction<ActivityInstance, SimulationResults, EvaluationEnvironment, Boolean> {
     @Override
     public Boolean apply(ActivityInstance act, SimulationResults results, EvaluationEnvironment env) {
-      return Objects.equals(act.type, type);
+      return Objects.equals(act.type(), type);
     }
   }
 }

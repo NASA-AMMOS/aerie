@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.Range;
@@ -14,9 +13,9 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.BidiMap;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * Activities inserted so far to satisfy this goal
    */
-  private final Set<SchedulingActivityDirectiveId> insertedSoFar = new HashSet<>();
+  private final Set<ActivityDirectiveId> insertedSoFar = new HashSet<>();
   /**
    * Current number of steps without inserting an activity with non-zero duration
    */
@@ -129,7 +128,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   public Collection<Conflict> getConflicts(
       final Plan plan,
       final SimulationResults simulationResults,
-      final Optional<BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>> mapSchedulingIdsToActivityIds,
       final EvaluationEnvironment evaluationEnvironment,
       final SchedulerModel schedulerModel) {
 
@@ -141,13 +139,13 @@ public class CardinalityGoal extends ActivityTemplateGoal {
 
     for(Interval subInterval : windows.iterateEqualTo(true)) {
       final var subIntervalWindows = new Windows(false).set(subInterval, true);
-      final var acts = new LinkedList<SchedulingActivityDirective>();
+      final var acts = new LinkedList<SchedulingActivity>();
       for(final var window : subIntervalWindows.iterateEqualTo(true)){
         final var actTB =
             new ActivityExpression.Builder().basedOn(this.matchActTemplate).startsIn(window).build();
         acts.addAll(plan.find(actTB, simulationResults, evaluationEnvironment));
       }
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
+      acts.sort(Comparator.comparing(SchedulingActivity::startOffset));
       int nbActs = 0;
       Duration total = Duration.ZERO;
       var planEvaluation = plan.getEvaluation();
@@ -209,7 +207,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
             nbToSchedule,
             Optional.empty(),
             Optional.empty(),
-            durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty()));
+            durToSchedule.isPositive() ? Optional.of(durToSchedule) : Optional.empty(),
+            ScheduleAt.EARLIEST));
       }
     }
 
@@ -219,7 +218,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   private boolean stuckInsertingZeroDurationActivities(final Plan plan, final boolean occurrencePartIsSatisfied){
     if(this.durationRange != null && occurrencePartIsSatisfied){
       final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
-      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
+      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.id())).toList();
       final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.duration()), Duration::plus);
       if(durationNewlyInserted.isZero()) {
         this.stepsWithoutProgress++;
@@ -230,7 +229,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if(stepsWithoutProgress > maxNoProgressSteps){
         return true;
       }
-      newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.getId()));
+      newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.id()));
     }
     return false;
   }

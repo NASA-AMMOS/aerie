@@ -18,12 +18,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
-import kotlin.DeepRecursiveFunction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;
@@ -104,6 +103,11 @@ public record ActivityExpression(
 
     public Builder withArgument(String argument, ProfileExpression<?> val) {
       arguments.put(argument, val);
+      return getThis();
+    }
+
+    public Builder withArguments(Map<String, ProfileExpression<?>> arguments){
+      arguments.forEach((name, value) -> withArgument(name, value));
       return getThis();
     }
 
@@ -203,7 +207,7 @@ public record ActivityExpression(
      *     prototype for the new search criteria. must not be null.
      * @return the same builder object updated with new criteria
      */
-    public @NotNull Builder basedOn(@NotNull SchedulingActivityDirective existingAct) {
+    public @NotNull Builder basedOn(@NotNull SchedulingActivity existingAct) {
       type = existingAct.getType();
 
       if (existingAct.startOffset() != null) {
@@ -298,7 +302,7 @@ public record ActivityExpression(
    *     the template criteria
    */
   public boolean matches(
-      final @NotNull SchedulingActivityDirective act,
+      final @NotNull SchedulingActivity act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly) {
@@ -311,20 +315,20 @@ public record ActivityExpression(
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly) {
-    boolean match = (type == null || type.getName().equals(act.type));
+    boolean match = (type == null || type.getName().equals(act.type()));
 
     if (match && startRange != null) {
-      final var startT = act.interval.start;
+      final var startT = act.interval().start;
       match = (startT != null) && startRange.contains(startT);
     }
 
     if (match && endRange != null) {
-      final var endT = act.interval.end;
+      final var endT = act.interval().end;
       match = (endT != null) && endRange.contains(endT);
     }
 
     if (match && durationRange != null) {
-      final var dur = act.interval.duration();
+      final var dur = act.interval().duration();
       final Optional<Duration> durRequirementLower = this.durationRange.getLeft()
           .evaluate(simulationResults, evaluationEnvironment)
           .valueAt(ZERO)
@@ -346,9 +350,9 @@ public record ActivityExpression(
 
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
-      Map<String, SerializedValue> actInstanceArguments = act.parameters;
-      final var instantiatedArguments = SchedulingActivityDirective
-          .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+      Map<String, SerializedValue> actInstanceArguments = act.parameters();
+      final var instantiatedArguments = SchedulingActivity
+          .instantiateArguments(arguments, act.interval().start, simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
           if (actInstanceArguments.containsKey(param.getKey())) {
@@ -366,7 +370,7 @@ public record ActivityExpression(
   }
 
   public boolean matches(
-      final @NotNull SchedulingActivityDirective act,
+      final @NotNull SchedulingActivity act,
       final SimulationResults simulationResults,
       final EvaluationEnvironment evaluationEnvironment,
       final boolean matchArgumentsExactly,
@@ -407,7 +411,7 @@ public record ActivityExpression(
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = SchedulingActivityDirective
+      final var instantiatedArguments = SchedulingActivity
           .instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
       if(matchArgumentsExactly){
         for (var param : instantiatedArguments.entrySet()) {
@@ -432,7 +436,7 @@ public record ActivityExpression(
       final EvaluationEnvironment environment)
   {
     final var spans = new Spans();
-    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval));
+    results.activities.stream().filter(x -> matches(x, results, environment, false)).forEach(x -> spans.add(x.interval()));
     return spans;
   }
 
@@ -453,11 +457,11 @@ public record ActivityExpression(
     this.arguments.forEach((name, pe)-> pe.extractResources(names));
   }
 
-  public Interval instantiateDurationInterval(
+  public Optional<Interval> instantiateDurationInterval(
       final PlanningHorizon planningHorizon,
       final EvaluationEnvironment evaluationEnvironment
       ){
-    if(durationRange == null) return null;
+    if(durationRange == null) return Optional.empty();
     Optional<Duration> durRequirementLower = Optional.empty();
     Optional<Duration> durRequirementUpper = Optional.empty();
     try {
@@ -473,9 +477,9 @@ public record ActivityExpression(
       throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
     }
     if(durRequirementLower.isPresent() && durRequirementUpper.isPresent()) {
-      return Interval.between(durRequirementLower.get(), durRequirementUpper.get());
+      return Optional.of(Interval.between(durRequirementLower.get(), durRequirementUpper.get()));
     }
-    return null;
+    return Optional.empty();
   }
 
   public Optional<TaskNetworkAdapter.TNActData> reduceTemporalConstraints(
@@ -497,9 +501,9 @@ public record ActivityExpression(
 
     var instantiateDurationInterval = this.instantiateDurationInterval(planningHorizon, evaluationEnvironment);
     var minimumDuration = ZERO;
-    if(instantiateDurationInterval != null){
-      minimumDuration = Duration.max(minimumDuration, instantiateDurationInterval.start);
-      maximumDuration = Duration.min(maximumDuration, instantiateDurationInterval.end);
+    if(instantiateDurationInterval.isPresent()){
+      minimumDuration = Duration.max(minimumDuration, instantiateDurationInterval.get().start);
+      maximumDuration = Duration.min(maximumDuration, instantiateDurationInterval.get().end);
     }
 
     final var durationInterval = Interval.between(minimumDuration, maximumDuration);

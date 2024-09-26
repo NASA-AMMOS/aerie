@@ -8,6 +8,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -37,11 +39,11 @@ public interface SimulationResultsInterface {
 
   Map<String, ResourceProfile<SerializedValue>> getDiscreteProfiles();
 
-  Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities();
+  Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities();
 
-  Set<SimulatedActivityId> getRemovedActivities();
+  Set<ActivityInstanceId> getRemovedActivities();
 
-  Map<SimulatedActivityId, UnfinishedActivity> getUnfinishedActivities();
+  Map<ActivityInstanceId, UnfinishedActivity> getUnfinishedActivities();
 
   List<Triple<Integer, String, ValueSchema>> getTopics();
 

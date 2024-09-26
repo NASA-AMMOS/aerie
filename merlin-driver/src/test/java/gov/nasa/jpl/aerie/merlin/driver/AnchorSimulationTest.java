@@ -2,6 +2,11 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -496,7 +501,7 @@ public final class AnchorSimulationTest {
         int currentLevel,
         long parentNode,
         Map<ActivityDirectiveId, ActivityDirective> activitiesToSimulate,
-        Map<SimulatedActivityId, SimulatedActivity> simulatedActivities)
+        Map<ActivityInstanceId, ActivityInstance> simulatedActivities)
     {
       if (currentLevel > maxLevel) return;
       for (int i = 1; i <= 5; i++) {
@@ -505,8 +510,8 @@ public final class AnchorSimulationTest {
             new ActivityDirectiveId(curElement),
             new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(parentNode), false));
         simulatedActivities.put(
-            new SimulatedActivityId(curElement),
-            new SimulatedActivity(
+            new ActivityInstanceId(curElement),
+            new ActivityInstance(
                 serializedDelayDirective.getTypeName(),
                 Map.of(),
                 Instant.EPOCH.plus(currentLevel, ChronoUnit.MINUTES),
@@ -523,7 +528,7 @@ public final class AnchorSimulationTest {
       }
     }
 
-    private static void assertEqualsAsideFromChildren(SimulatedActivity expected, SimulatedActivity actual) {
+    private static void assertEqualsAsideFromChildren(ActivityInstance expected, ActivityInstance actual) {
       assertEquals(expected.type(), actual.type());
       assertEquals(expected.arguments(), actual.arguments());
       assertEquals(expected.start(), actual.start());
@@ -538,7 +543,7 @@ public final class AnchorSimulationTest {
     public void activitiesAnchoredToPlan() {
       final var minusOneMinute = Duration.of(-60, Duration.SECONDS);
       final var resolveToPlanStartAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(415);
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>(415);
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities = new HashMap<>(415);
 
       // Anchored to Plan Start (only positive is allowed)
       for (long l = 0; l < 5; l++) {
@@ -546,7 +551,7 @@ public final class AnchorSimulationTest {
         resolveToPlanStartAnchors.put(
             activityDirectiveId,
             new ActivityDirective(Duration.of(l, Duration.SECONDS), serializedDelayDirective, null, true));
-        simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
+        simulatedActivities.put(new ActivityInstanceId(l), new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             Instant.EPOCH.plus(l, ChronoUnit.SECONDS),
@@ -568,7 +573,7 @@ public final class AnchorSimulationTest {
                 serializedDelayDirective,
                 null,
                 false));
-        simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
+        simulatedActivities.put(new ActivityInstanceId(l), new ActivityInstance(
             serializedDelayDirective.getTypeName(),
             Map.of(),
             Instant.EPOCH.plus(10, ChronoUnit.DAYS).minus(l, ChronoUnit.MINUTES),
@@ -584,7 +589,7 @@ public final class AnchorSimulationTest {
       resolveToPlanStartAnchors.put(
           new ActivityDirectiveId(15),
           new ActivityDirective(Duration.ZERO, serializedDelayDirective, new ActivityDirectiveId(0), true));
-      simulatedActivities.put(new SimulatedActivityId(15), new SimulatedActivity(
+      simulatedActivities.put(new ActivityInstanceId(15), new ActivityInstance(
           serializedDelayDirective.getTypeName(),
           Map.of(),
           Instant.EPOCH,
@@ -601,7 +606,7 @@ public final class AnchorSimulationTest {
           resolveToPlanStartAnchors.put(
               activityDirectiveId,
               new ActivityDirective(oneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
-          simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
+          simulatedActivities.put(new ActivityInstanceId(l), new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -615,7 +620,7 @@ public final class AnchorSimulationTest {
           resolveToPlanStartAnchors.put(
               activityDirectiveId,
               new ActivityDirective(minusOneMinute, serializedDelayDirective, new ActivityDirectiveId(l - 1), true));
-          simulatedActivities.put(new SimulatedActivityId(l), new SimulatedActivity(
+          simulatedActivities.put(new ActivityInstanceId(l), new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -656,7 +661,7 @@ public final class AnchorSimulationTest {
     public void activitiesAnchoredToOtherActivities() {
       final var allEndTimeAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
       final var endTimeAnchorEveryFifth = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities = new HashMap<>(800);
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities = new HashMap<>(800);
       final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(800);
 
       allEndTimeAnchors.put(
@@ -666,8 +671,8 @@ public final class AnchorSimulationTest {
           new ActivityDirectiveId(400),
           new ActivityDirective(oneMinute, serializedDelayDirective, null, true));
       simulatedActivities.put(
-          new SimulatedActivityId(0),
-          new SimulatedActivity(
+          new ActivityInstanceId(0),
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -677,8 +682,8 @@ public final class AnchorSimulationTest {
               Optional.of(new ActivityDirectiveId(0)),
               computedAttributes));
       simulatedActivities.put(
-          new SimulatedActivityId(400),
-          new SimulatedActivity(
+          new ActivityInstanceId(400),
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -700,8 +705,8 @@ public final class AnchorSimulationTest {
                 new ActivityDirectiveId(l - 1),
                 false));
         simulatedActivities.put(
-            new SimulatedActivityId(l),
-            new SimulatedActivity(
+            new ActivityInstanceId(l),
+            new ActivityInstance(
                 serializedDelayDirective.getTypeName(),
                 Map.of(),
                 Instant.EPOCH.plus((2 * l) + 1, ChronoUnit.MINUTES),
@@ -730,8 +735,8 @@ public final class AnchorSimulationTest {
                   true));
         }
         simulatedActivities.put(
-            new SimulatedActivityId(k),
-            new SimulatedActivity(
+            new ActivityInstanceId(k),
+            new ActivityInstance(
                 serializedDelayDirective.getTypeName(),
                 Map.of(),
                 Instant.EPOCH.plus(l + c, ChronoUnit.MINUTES),
@@ -779,7 +784,7 @@ public final class AnchorSimulationTest {
       final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(23);
       // NOTE: This list is intentionally keyed on ActivityDirectiveId, not on SimulatedActivityId.
       // Additionally, because we do not know the order the child activities will generate in, DecompositionDirectives will have a List.of() rather than the correct value
-      final var topLevelSimulatedActivities = new HashMap<ActivityDirectiveId, SimulatedActivity>(23);
+      final var topLevelSimulatedActivities = new HashMap<ActivityDirectiveId, ActivityInstance>(23);
       final var threeMinutes = Duration.of(3, Duration.MINUTES);
 
       // ND <-s- D <-s- D
@@ -800,7 +805,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(1),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -811,7 +816,7 @@ public final class AnchorSimulationTest {
               computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(2),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -822,7 +827,7 @@ public final class AnchorSimulationTest {
               computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(3),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -841,7 +846,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(4),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -860,7 +865,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(5),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -879,7 +884,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(6),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -904,7 +909,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(7),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -915,7 +920,7 @@ public final class AnchorSimulationTest {
               computedAttributes));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(8),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -934,7 +939,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(9),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
@@ -953,7 +958,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(10),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -972,7 +977,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(11),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
@@ -991,7 +996,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(12),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -1010,7 +1015,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(13),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -1029,7 +1034,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(14),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -1048,7 +1053,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(15),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -1067,7 +1072,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(16),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -1086,7 +1091,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(17),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(6, ChronoUnit.MINUTES),
@@ -1105,7 +1110,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(18),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -1124,7 +1129,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(19),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(6, ChronoUnit.MINUTES),
@@ -1143,7 +1148,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(20),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,
@@ -1162,7 +1167,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(21),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(1, ChronoUnit.MINUTES),
@@ -1181,7 +1186,7 @@ public final class AnchorSimulationTest {
                                 true));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(22),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(3, ChronoUnit.MINUTES),
@@ -1200,7 +1205,7 @@ public final class AnchorSimulationTest {
                                 false));
       topLevelSimulatedActivities.put(
           new ActivityDirectiveId(23),
-          new SimulatedActivity(
+          new ActivityInstance(
               serializedDecompositionDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH.plus(4, ChronoUnit.MINUTES),
@@ -1228,8 +1233,8 @@ public final class AnchorSimulationTest {
         assertEquals(modelTopicList.get(i), actualSimResults.getTopics().get(i));
       }
 
-      final var childSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(28);
-      final var otherSimulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(23);
+      final var childSimulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>(28);
+      final var otherSimulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>(23);
       assertEquals(51, actualSimResults.getSimulatedActivities().size()); // 23 + 2*(14 Decomposing activities)
 
       for (final var entry : actualSimResults.getSimulatedActivities().entrySet()) {
@@ -1260,7 +1265,7 @@ public final class AnchorSimulationTest {
 
           if (firstChild.start().isBefore(secondChild.start())) {
             assertEqualsAsideFromChildren(
-                new SimulatedActivity(
+                new ActivityInstance(
                     serializedDelayDirective.getTypeName(),
                     Map.of(),
                     entry.getValue().start(),
@@ -1271,7 +1276,7 @@ public final class AnchorSimulationTest {
                     computedAttributes),
                 firstChild);
             assertEqualsAsideFromChildren(
-                new SimulatedActivity(
+                new ActivityInstance(
                     serializedDelayDirective.getTypeName(),
                     Map.of(),
                     entry.getValue().start().plus(2, ChronoUnit.MINUTES),
@@ -1283,7 +1288,7 @@ public final class AnchorSimulationTest {
                 secondChild);
           } else {
             assertEqualsAsideFromChildren(
-                new SimulatedActivity(
+                new ActivityInstance(
                     serializedDelayDirective.getTypeName(),
                     Map.of(),
                     entry.getValue().start().plus(2, ChronoUnit.MINUTES),
@@ -1294,7 +1299,7 @@ public final class AnchorSimulationTest {
                     computedAttributes),
                 firstChild);
             assertEqualsAsideFromChildren(
-                new SimulatedActivity(
+                new ActivityInstance(
                     serializedDelayDirective.getTypeName(),
                     Map.of(),
                     entry.getValue().start(),
@@ -1319,14 +1324,14 @@ public final class AnchorSimulationTest {
       // Number of activity directives = 5^0 + 5^1 + 5^2 + 5^3 + 5^4 + 5^5 = 3906
 
       final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(3906);
-      final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>(3906);
+      final var simulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>(3906);
 
       activitiesToSimulate.put(
           new ActivityDirectiveId(0),
           new ActivityDirective(Duration.ZERO, serializedDelayDirective, null, true));
       simulatedActivities.put(
-          new SimulatedActivityId(0),
-          new SimulatedActivity(
+          new ActivityInstanceId(0),
+          new ActivityInstance(
               serializedDelayDirective.getTypeName(),
               Map.of(),
               Instant.EPOCH,

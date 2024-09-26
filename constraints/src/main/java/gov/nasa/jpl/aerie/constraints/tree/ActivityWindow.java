@@ -21,7 +21,7 @@ public final class ActivityWindow implements Expression<Windows> {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new Windows(
         Segment.of(bounds, false),
-        Segment.of(activity.interval, true)
+        Segment.of(activity.interval(), true)
     );
   }
 

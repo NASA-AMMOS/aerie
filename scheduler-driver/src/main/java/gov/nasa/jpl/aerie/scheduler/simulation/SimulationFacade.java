@@ -1,15 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.BidiMap;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -30,7 +28,7 @@ public interface SimulationFacade {
 
   SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
       Plan plan,
-      SchedulingActivityDirective activity) throws SimulationException, SchedulingInterruptedException;
+      SchedulingActivity activity) throws SimulationException, SchedulingInterruptedException;
 
   AugmentedSimulationResultsComputerInputs simulateNoResults(
       Plan plan,
@@ -45,6 +43,8 @@ public interface SimulationFacade {
       Duration until,
       Set<String> resourceNames) throws SimulationException, SchedulingInterruptedException;
 
+  Optional<SimulationData> getLatestSimulationData();
+
   class SimulationException extends Exception {
     SimulationException(final String message, final Throwable cause) {
       super(message, cause);
@@ -57,7 +57,6 @@ public interface SimulationFacade {
   ) {}
 
   record PlanSimCorrespondence(
-      BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
       Map<ActivityDirectiveId, ActivityDirective> directiveIdActivityDirectiveMap){
     @Override
     public boolean equals(Object other){

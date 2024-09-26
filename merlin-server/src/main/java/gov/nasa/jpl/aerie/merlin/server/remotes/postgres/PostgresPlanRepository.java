@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -9,12 +7,15 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.sql.DataSource;
@@ -50,7 +51,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
             plans.put(planId, new Plan(
                 record.name(),
-                Long.toString(record.missionModelId()),
+                new MissionModelId(record.missionModelId()),
                 record.startTime(),
                 record.endTime(),
                 activities
@@ -88,7 +89,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       return new Plan(
           planRecord.name(),
-          Long.toString(planRecord.missionModelId()),
+          new MissionModelId(planRecord.missionModelId()),
           planRecord.startTime(),
           planRecord.endTime(),
           activities,
@@ -109,7 +110,7 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       return new Plan(
           planRecord.name(),
-          Long.toString(planRecord.missionModelId()),
+          new MissionModelId(planRecord.missionModelId()),
           planRecord.startTime(),
           planRecord.endTime(),
           activities
@@ -277,7 +278,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws DatabaseException {
     try (final var connection = this.dataSource.getConnection()) {
       final var planDatasets = ProfileRepository.getPlanDatasetsForPlan(connection, planId, simulationDatasetId);
       final var result = new HashMap<String, ValueSchema>();

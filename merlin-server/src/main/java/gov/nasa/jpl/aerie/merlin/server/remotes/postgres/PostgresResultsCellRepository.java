@@ -1,8 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -20,8 +19,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -314,7 +314,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Pair<Map<SimulatedActivityId, SimulatedActivity>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
+  private static Pair<Map<ActivityInstanceId, ActivityInstance>, Map<ActivityInstanceId, UnfinishedActivity>> getActivities(
       final Connection connection,
       final long datasetId,
       final Timestamp startTime
@@ -324,22 +324,22 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var activityRecords = getActivitiesAction.get(datasetId, startTime);
 
       // Remap all activity IDs to reflect lifted directive IDs
-      final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
-      final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
+      final var simulatedActivities = new HashMap<ActivityInstanceId, ActivityInstance>();
+      final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
       for (final var entry : activityRecords.entrySet()) {
         final var pgId = entry.getKey();
         final var record = entry.getValue();
-        final var activityInstanceId = new SimulatedActivityId(pgId);
+        final var activityInstanceId = new ActivityInstanceId(pgId);
 
         // Only records with duration and computed attributes represent simulated activities
         if (record.duration().isPresent() && record.attributes().computedAttributes().isPresent()) {
-          simulatedActivities.put(activityInstanceId, new SimulatedActivity(
+          simulatedActivities.put(activityInstanceId, new ActivityInstance(
               record.type(),
               record.attributes().arguments(),
               record.start(),
               record.duration().get(),
-              record.parentId().map(SimulatedActivityId::new).orElse(null),
-              record.childIds().stream().map(SimulatedActivityId::new).collect(Collectors.toList()),
+              record.parentId().map(ActivityInstanceId::new).orElse(null),
+              record.childIds().stream().map(ActivityInstanceId::new).collect(Collectors.toList()),
               record.attributes().directiveId().map(ActivityDirectiveId::new),
               record.attributes().computedAttributes().get()
           ));
@@ -348,8 +348,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               record.type(),
               record.attributes().arguments(),
               record.start(),
-              record.parentId().map(SimulatedActivityId::new).orElse(null),
-              record.childIds().stream().map(SimulatedActivityId::new).collect(Collectors.toList()),
+              record.parentId().map(ActivityInstanceId::new).orElse(null),
+              record.childIds().stream().map(ActivityInstanceId::new).collect(Collectors.toList()),
               record.attributes().directiveId().map(ActivityDirectiveId::new)
           ));
         }
@@ -406,13 +406,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postActivities(
       final Connection connection,
       final long datasetId,
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+      final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
-    try (
-        final var postActivitiesAction = new PostSpansAction(connection);
-    ) {
+    try (final var postActivitiesAction = new PostSpansAction(connection)) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
           .collect(Collectors.toMap(
               e -> e.getKey().id(),
@@ -466,13 +464,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     return sortedMap;
   }
 
-  private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity) {
+  private static SpanRecord simulatedActivityToRecord(final ActivityInstance activity) {
     return new SpanRecord(
         activity.type(),
         activity.start(),
         Optional.of(activity.duration()),
-        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
-        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
+        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
           activity.directiveId().map(ActivityDirectiveId::id),
           activity.arguments(),
@@ -484,8 +482,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activity.type(),
         activity.start(),
         Optional.empty(),
-        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
-        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
+        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
             activity.directiveId().map(ActivityDirectiveId::id),
             activity.arguments(),
@@ -686,7 +684,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+    public Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities() {
       try (final var connection = this.dataSource.getConnection()) {
         final var activities = getActivities(
             connection,

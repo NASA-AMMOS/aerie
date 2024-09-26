@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSchedulingGoalException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingConditionRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalInvocationRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
@@ -25,7 +29,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   {
     final SpecificationRecord specificationRecord;
     final PlanId planId;
-    final List<GoalRecord> goals;
+    final List<GoalInvocationRecord> goals;
     final List<SchedulingConditionRecord> schedulingConditions;
     try (final var connection = this.dataSource.getConnection();
          final var getSpecificationAction = new GetSpecificationAction(connection);
@@ -67,6 +71,30 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
             .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
 
         return new SpecificationRevisionData(spec.revision(), spec.planRevision());
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get scheduling specification revision data", ex);
+    }
+  }
+
+  @Override
+  public GoalType getGoal(final GoalId goalId) throws NoSuchSchedulingGoalException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var getGoalAction = new GetSchedulingGoalAction(connection)) {
+        return getGoalAction
+            .get(goalId)
+            .orElseThrow(() -> new NoSuchSchedulingGoalException(goalId));
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get scheduling specification revision data", ex);
+    }
+  }
+
+  @Override
+  public void updateGoalParameterSchema(final GoalId goalId, final ValueSchema schema) {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var getGoalAction = new UpdateSchedulingGoalParameterSchemaAction(connection)) {
+        getGoalAction.update(goalId, schema);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification revision data", ex);

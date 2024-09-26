@@ -101,7 +101,7 @@ public class InMemoryCachedEngineStore implements AutoCloseable, CachedEngineSto
     for(final var cached: cachedEngines.entrySet()){
       final var savedEngine = cached.getKey();
       final var metadata = cached.getValue();
-      if(engine.endsAt().isEqualTo(savedEngine.endsAt()) &&
+      if(engine.endsAt().equals(savedEngine.endsAt()) &&
          engine.activityDirectives().equals(savedEngine.activityDirectives()) &&
          metadata.configuration.equals(configuration)){
         return false;

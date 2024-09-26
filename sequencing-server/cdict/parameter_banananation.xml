@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<param-def>
+  <header mission_name="Banana Nation" version="1.0.0.1" schema_version="1.0">
+    <spacecraft_ids>
+      <spacecraft_id value="62"/>
+    </spacecraft_ids>
+  </header>
+  <enum_definitions>
+    <enum_table name="BANANA">
+      <values>
+        <enum symbol="BANANA_YELLOW" numeric="0"/>
+        <enum symbol="BANANA_GREEN" numeric="1"/>
+      </values>
+    </enum_table>
+  </enum_definitions>
+  <param param_id="0x6260" param_name="BANANA_COLOR_RATE" parameter_version="1" units="shade/second" location="TREE" managed_by="Ground">
+    <sysdesc>The rate that the banana changes form green to yellow</sysdesc>
+    <when_applied applied="IMMEDIATELY"/>
+    <categories>
+      <module>banana_mgr</module>
+      <ops_category>BANANA</ops_category>
+    </categories>
+    <parameter_type>
+      <unsigned_int_param bit_length="8">
+        <range_of_values>
+          <include min="1" max="4"/>
+        </range_of_values>
+      </unsigned_int_param>
+    </parameter_type>
+    <param_validation custom_validation_required="No"/>
+    <default_value>1</default_value>
+    <rationale>This is the rate that the banana can change color for all bananas</rationale>
+  </param>
+</param-def>

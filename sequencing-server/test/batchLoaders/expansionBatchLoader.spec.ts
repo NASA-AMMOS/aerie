@@ -2,18 +2,31 @@ import type { GraphQLClient } from 'graphql-request';
 import { insertExpansion, removeExpansion } from '../testUtils/Expansion';
 import { expansionBatchLoader } from '../../src/lib/batchLoaders/expansionBatchLoader';
 import { getGraphQLClient } from '../testUtils/testUtils';
-import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
+import { insertDictionary, removeDictionary } from '../testUtils/Dictionary';
 import { insertParcel, removeParcel } from '../testUtils/Parcel';
+import { DictionaryType } from '../../src/types/types';
 
 let graphqlClient: GraphQLClient;
 let expansionId: number;
 let commandDictionaryId: number;
+let channelDictionaryId: number;
+let parameterDictionaryId: number;
 let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
-  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionBatchLoaderTestParcel')).parcelId;
+  commandDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.COMMAND)).id;
+  channelDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.CHANNEL)).id;
+  parameterDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.PARAMETER)).id;
+  parcelId = (
+    await insertParcel(
+      graphqlClient,
+      commandDictionaryId,
+      channelDictionaryId,
+      parameterDictionaryId,
+      'expansionBatchLoaderTestParcel',
+    )
+  ).parcelId;
 
   expansionId = await insertExpansion(
     graphqlClient,
@@ -32,7 +45,9 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeExpansion(graphqlClient, expansionId);
   await removeParcel(graphqlClient, parcelId);
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeDictionary(graphqlClient, commandDictionaryId, DictionaryType.COMMAND);
+  await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+  await removeDictionary(graphqlClient, parameterDictionaryId, DictionaryType.PARAMETER);
 });
 
 it('should load expansion data', async () => {

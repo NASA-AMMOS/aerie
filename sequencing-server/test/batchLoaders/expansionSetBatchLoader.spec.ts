@@ -2,21 +2,34 @@ import type { GraphQLClient } from 'graphql-request';
 import { expansionSetBatchLoader } from '../../src/lib/batchLoaders/expansionSetBatchLoader.js';
 import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
 import { insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from '../testUtils/Expansion';
-import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
+import { insertDictionary, removeDictionary } from '../testUtils/Dictionary';
 import { getGraphQLClient } from '../testUtils/testUtils.js';
 import { insertParcel, removeParcel } from '../testUtils/Parcel';
+import { DictionaryType } from '../../src/types/types';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let expansionId: number;
 let expansionSetId: number;
 let commandDictionaryId: number;
+let channelDictionaryId: number;
+let paramaterDictionaryId: number;
 let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
-  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'expansionSetBatchLoaderTestParcel')).parcelId;
+  commandDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.COMMAND)).id;
+  channelDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.CHANNEL)).id;
+  paramaterDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.PARAMETER)).id;
+  parcelId = (
+    await insertParcel(
+      graphqlClient,
+      commandDictionaryId,
+      channelDictionaryId,
+      paramaterDictionaryId,
+      'expansionSetBatchLoaderTestParcel',
+    )
+  ).parcelId;
 });
 
 beforeAll(async () => {
@@ -38,7 +51,9 @@ afterAll(async () => {
   await removeExpansionSet(graphqlClient, expansionSetId);
   await removeExpansion(graphqlClient, expansionId);
   await removeParcel(graphqlClient, parcelId);
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeDictionary(graphqlClient, commandDictionaryId, DictionaryType.COMMAND);
+  await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+  await removeDictionary(graphqlClient, paramaterDictionaryId, DictionaryType.PARAMETER);
   await removeMissionModel(graphqlClient, missionModelId);
   await removeMissionModel(graphqlClient, missionModelId);
 });

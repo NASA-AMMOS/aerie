@@ -14,6 +14,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SubInstantDuration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 
@@ -232,9 +235,14 @@ public final class SimulationDriver<Model> {
       } catch (SpanException ex) {
         // Swallowing the spanException as the internal `spanId` is not user meaningful info.
         final var topics = missionModel.getTopics();
-        final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
-        if(directiveId.isPresent()) {
-          throw new SimulationException(engine.getElapsedTime(), simulationStartTime, directiveId.get(), ex.cause);
+        final var directiveDetail = engine.getDirectiveDetailsFromSpan(activityTopic, topics, ex.spanId);
+        if(directiveDetail.directiveId().isPresent()) {
+          throw new SimulationException(
+              engine.getElapsedTime(),
+              simulationStartTime,
+              directiveDetail.directiveId().get(),
+              directiveDetail.activityStackTrace(),
+              ex.cause);
         }
         throw new SimulationException(engine.getElapsedTime(), simulationStartTime, ex.cause);
       } catch (Throwable ex) {

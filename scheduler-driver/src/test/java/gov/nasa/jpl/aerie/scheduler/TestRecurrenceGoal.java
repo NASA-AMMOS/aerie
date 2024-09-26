@@ -69,7 +69,7 @@ public class TestRecurrenceGoal {
       //minimum is checked first so that's the output, even though the value for repeatingEvery is set as both the min
       //    and max possible duration
       assertTrue(e.getMessage()
-                  .contains("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!"));
+                  .contains("Duration passed to RecurrenceGoal as the goal's maximum recurrence interval cannot be negative!"));
     }
     catch (Exception e) {
       fail(e.getMessage());

@@ -173,7 +173,6 @@ services:
       SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
@@ -198,7 +197,6 @@ services:
       SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
       JAVA_OPTS: >
         -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
@@ -245,7 +243,7 @@ services:
       SCHEDULER_DB_PASSWORD: "${SCHEDULER_PASSWORD}"
       SEQUENCING_DB_USER: "${SEQUENCING_USERNAME}"
       SEQUENCING_DB_PASSWORD: "${SEQUENCING_PASSWORD}"
-    image: postgres:16.2
+    image: postgres:16.4
     ports: ['5432:5432']
     restart: always
     volumes:

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -328,10 +328,10 @@ public final class MerlinBindings implements Plugin {
       final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
 
       final var plan = this.planService.getPlanForValidation(planId);
-      final var activities = plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
+      final var activities = plan.activityDirectives().entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
           e -> e.getValue().serializedActivity()));
-      final var failures = this.missionModelService.validateActivityInstantiations(plan.missionModelId, activities);
+      final var failures = this.missionModelService.validateActivityInstantiations(plan.missionModelId(), activities);
 
       ctx.result(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
     } catch (final InvalidJsonException ex) {

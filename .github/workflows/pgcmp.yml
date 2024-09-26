@@ -5,10 +5,14 @@ on:
     paths:
       - "deployment/hasura/migrations/**"
       - "deployment/postgres-init-db/sql/**"
+      - ".github/workflows/pgcmp.yml"
+      - ".github/workflows/scripts/compareDatabases*"
   push:
     paths:
       - "deployment/hasura/migrations/**"
       - "deployment/postgres-init-db/sql/**"
+      - ".github/workflows/pgcmp.yml"
+      - ".github/workflows/scripts/compareDatabases*"
     branches:
       - develop
       - dev-[0-9]+.[0-9]+.[0-9]+
@@ -66,7 +70,7 @@ jobs:
         run: sudo curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
       - name: Start Postgres
         run: |
-          sed -i 's/postgres:14.8/postgres:16.2/' docker-compose.yml
+          sed -i 's/postgres:14.8/postgres:16.4/' docker-compose.yml
           docker compose up -d postgres hasura
           docker images
           docker ps -a
@@ -251,7 +255,7 @@ jobs:
           sudo apt update
           sudo apt -y install postgresql-client-16
       - name: Start Postgres
-        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
+        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.4
       - name: Sleep for 5 Seconds
         run: sleep 5s
         shell: bash
@@ -267,6 +271,7 @@ jobs:
       - name: Compare Databases
         id: dbcmp
         run: |
+          cp ./.github/scripts/explanations pgcmp
           cp ./.github/scripts/compareDatabasesUp.sh pgcmp/compareDatabases.sh
           cd pgcmp
           ./compareDatabases.sh
@@ -312,7 +317,7 @@ jobs:
           sudo apt update
           sudo apt -y install postgresql-client-16
       - name: Start Postgres
-        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.2
+        run: docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust --name=postgres postgres:16.4
       - name: Sleep for 5 Seconds
         run: sleep 5s
         shell: bash
@@ -328,6 +333,7 @@ jobs:
       - name: Compare Databases
         id: dbcmp
         run: |
+          cp ./.github/scripts/explanations pgcmp
           cp ./.github/scripts/compareDatabasesDown.sh pgcmp/compareDatabases.sh
           cd pgcmp
           ./compareDatabases.sh

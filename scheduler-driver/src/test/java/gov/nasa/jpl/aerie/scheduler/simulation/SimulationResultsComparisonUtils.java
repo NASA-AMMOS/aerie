@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -157,10 +156,10 @@ public class SimulationResultsComparisonUtils {
   // Representation of simulated activities as trees of activities
   public record TreeSimulatedActivity(StrippedSimulatedActivity activity,
                                       Set<TreeSimulatedActivity> children){
-    public static TreeSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity, SimulationResultsInterface simulationResults){
-      final var stripped = StrippedSimulatedActivity.fromSimulatedActivity(simulatedActivity);
+    public static TreeSimulatedActivity fromSimulatedActivity(ActivityInstance activityInstance, SimulationResultsInterface simulationResults){
+      final var stripped = StrippedSimulatedActivity.fromSimulatedActivity(activityInstance);
       final HashSet<TreeSimulatedActivity> children = new HashSet<>();
-      for(final var childId: simulatedActivity.childIds()) {
+      for(final var childId: activityInstance.childIds()) {
         final var child = fromSimulatedActivity(simulationResults.getSimulatedActivities().get(childId), simulationResults);
         children.add(child);
       }
@@ -177,13 +176,13 @@ public class SimulationResultsComparisonUtils {
       Duration duration,
       SerializedValue computedAttributes
   ){
-    public static StrippedSimulatedActivity fromSimulatedActivity(SimulatedActivity simulatedActivity){
+    public static StrippedSimulatedActivity fromSimulatedActivity(ActivityInstance activityInstance){
       return new StrippedSimulatedActivity(
-          simulatedActivity.type(),
-          simulatedActivity.arguments(),
-          simulatedActivity.start(),
-          simulatedActivity.duration(),
-          simulatedActivity.computedAttributes()
+          activityInstance.type(),
+          activityInstance.arguments(),
+          activityInstance.start(),
+          activityInstance.duration(),
+          activityInstance.computedAttributes()
       );
     }
   }

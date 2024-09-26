@@ -9,14 +9,17 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SumParsers;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
@@ -58,19 +61,23 @@ public class SchedulingDSL {
               $ -> tuple($.duration(), $.occurrence()));
 
   private static JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
-      MerlinService.MissionModelTypes activityTypes)
+      MerlinDatabaseService.MissionModelTypes activityTypes)
   {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
         .optionalField("activityFinder", activityExpressionP)
-        .field("interval", durationP)
+        .field("separatedByAtMost", durationP)
+        .field("separatedByAtLeast", durationP)
+        .optionalField("previousActivityStartedAt", durationP)
         .field("shouldRollbackIfUnsatisfied", boolP)
         .map(
             untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
             goalDefinition -> tuple(
                 goalDefinition.activityTemplate(),
                 goalDefinition.activityFinder(),
-                goalDefinition.interval(),
+                goalDefinition.separatedByAtMost(),
+                goalDefinition.separatedByAtLeast(),
+                goalDefinition.lastActivityStartedAt(),
                 goalDefinition.shouldRollbackIfUnsatisfied()));
   }
   private static final JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
@@ -113,7 +120,7 @@ public class SchedulingDSL {
               (TimingConstraint.ActivityTimingConstraintFlexibleRange $) -> tuple($.lowerBound(), $.upperBound(), $.singleton()));
 
   private static JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
-          MerlinService.MissionModelTypes activityTypes)
+          MerlinDatabaseService.MissionModelTypes activityTypes)
   {
     return
         productP
@@ -148,7 +155,7 @@ public class SchedulingDSL {
   }
 
   private static JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
-          MerlinService.MissionModelTypes activityTypes) {
+          MerlinDatabaseService.MissionModelTypes activityTypes) {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
@@ -197,7 +204,7 @@ public class SchedulingDSL {
   }
 
 
-  private static JsonParser<GoalSpecifier> goalSpecifierF(MerlinService.MissionModelTypes missionModelTypes) {
+  private static JsonParser<GoalSpecifier> goalSpecifierF(MerlinDatabaseService.MissionModelTypes missionModelTypes) {
     return recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
         SumParsers.variant(
             "ActivityRecurrenceGoal",
@@ -245,7 +252,7 @@ public class SchedulingDSL {
             globalSchedulingConditionP)
   )));
 
-  public static JsonParser<GoalSpecifier> schedulingJsonP(MerlinService.MissionModelTypes missionModelTypes){
+  public static JsonParser<GoalSpecifier> schedulingJsonP(MerlinDatabaseService.MissionModelTypes missionModelTypes){
     return goalSpecifierF(missionModelTypes);
   }
 
@@ -264,7 +271,9 @@ public class SchedulingDSL {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
         Optional<ConstraintExpression.ActivityExpression> activityFinder,
-        Duration interval,
+        Duration separatedByAtMost,
+        Duration separatedByAtLeast,
+        Optional<Duration> lastActivityStartedAt,
         boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
@@ -290,6 +299,10 @@ public class SchedulingDSL {
     record GoalApplyWhen(
         GoalSpecifier goal,
         Expression<Windows> windows
+    ) implements GoalSpecifier {}
+    record Procedure(
+        Path jarPath,
+        Map<String, SerializedValue> arguments
     ) implements GoalSpecifier {}
   }
 

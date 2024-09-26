@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.ConstraintsTypescriptCodeGenerationHelper;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
 import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 
@@ -51,13 +51,13 @@ public class SchedulingDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
-  public SchedulingDSLCompilationResult<SchedulingDSL.ConditionSpecifier> compileGlobalSchedulingCondition(final MerlinService.ReaderRole merlinService, final PlanId planId, final String conditionTypescript, final
+  public SchedulingDSLCompilationResult<SchedulingDSL.ConditionSpecifier> compileGlobalSchedulingCondition(final MerlinDatabaseService.ReaderRole merlinDatabaseService, final PlanId planId, final String conditionTypescript, final
                                                                                                            Collection<ResourceType> additionalResourceTypes) {
     try{
-      final var missionModelTypes = merlinService.getMissionModelTypes(planId);
+      final var missionModelTypes = merlinDatabaseService.getMissionModelTypes(planId);
       final var aggregatedResourceTypes = new ArrayList<>(missionModelTypes.resourceTypes());
       aggregatedResourceTypes.addAll(additionalResourceTypes);
-      final var planTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
+      final var planTypes = new MerlinDatabaseService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
       return compile(planTypes,  conditionTypescript, SchedulingDSL.conditionSpecifierP, "GlobalSchedulingCondition");
     } catch (IOException | MerlinServiceException e) {
         throw new Error(e);
@@ -65,26 +65,26 @@ public class SchedulingDSLCompilationService {
   }
 
   public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(
-      final MerlinService.ReaderRole merlinService,
+      final MerlinDatabaseService.ReaderRole merlinDatabaseService,
       final PlanId planId,
       final String goalTypescript){
-    return compileSchedulingGoalDSL(merlinService, planId, goalTypescript, List.of());
+    return compileSchedulingGoalDSL(merlinDatabaseService, planId, goalTypescript, List.of());
   }
 
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
   public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(
-      final MerlinService.ReaderRole merlinService,
+      final MerlinDatabaseService.ReaderRole merlinDatabaseService,
       final PlanId planId,
       final String goalTypescript,
       final Collection<ResourceType> additionalResourceTypes)
   {
     try {
-      final var missionModelTypes = merlinService.getMissionModelTypes(planId);
+      final var missionModelTypes = merlinDatabaseService.getMissionModelTypes(planId);
       final var aggregatedResourceTypes = new ArrayList<>(missionModelTypes.resourceTypes());
       aggregatedResourceTypes.addAll(additionalResourceTypes);
-      final var augmentedMissionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
+      final var augmentedMissionModelTypes = new MerlinDatabaseService.MissionModelTypes(missionModelTypes.activityTypes(), aggregatedResourceTypes);
       return compile(augmentedMissionModelTypes, goalTypescript, SchedulingDSL.schedulingJsonP(augmentedMissionModelTypes), "Goal");
     } catch (IOException | MerlinServiceException e) {
       throw new Error(e);
@@ -92,7 +92,7 @@ public class SchedulingDSLCompilationService {
   }
 
   private <T> SchedulingDSLCompilationResult<T> compile(
-      final MerlinService.MissionModelTypes missionModelTypes,
+      final MerlinDatabaseService.MissionModelTypes missionModelTypes,
       final String goalTypescript,
       final JsonParser<T> parser,
       final String expectedReturnType)

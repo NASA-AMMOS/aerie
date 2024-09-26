@@ -2,6 +2,7 @@ plugins {
   id 'java-library'
   id 'jacoco'
   id 'maven-publish'
+  id 'org.jetbrains.kotlin.jvm' version '1.9.23'
 }
 
 java {
@@ -33,9 +34,16 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.13.0'
   implementation 'com.google.guava:guava:32.1.2-jre'
   implementation 'org.jgrapht:jgrapht-core:1.5.2'
+  implementation 'org.jgrapht:jgrapht-io:1.5.2'
+  implementation 'org.jgrapht:jgrapht-ext:1.5.2'
   implementation 'org.slf4j:slf4j-simple:2.0.7'
   implementation 'org.apache.commons:commons-collections4:4.4'
   implementation project(':merlin-framework')
+  implementation project(':type-utils')
+
+
+  implementation project(':procedural:scheduling')
+  implementation project(':procedural:timeline')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
@@ -43,6 +51,7 @@ dependencies {
   testImplementation project(':examples:foo-missionmodel')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
   testImplementation 'com.google.guava:guava-testlib:32.1.2-jre'
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -67,4 +76,7 @@ publishing {
       }
     }
   }
+}
+repositories {
+  mavenCentral()
 }

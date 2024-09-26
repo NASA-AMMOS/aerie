@@ -36,4 +36,11 @@ public final class VariableClockEffects {
   public static void restart(MutableResource<VariableClock> stopwatch) {
     stopwatch.emit("Restart", effect(c -> runningStopwatch(ZERO)));
   }
+
+  /**
+   * Start counting down from current value.
+   */
+  public static void startCountdown(MutableResource<VariableClock> timer) {
+    timer.emit("Start Countdown", effect(c -> runningTimer(c.extract())));
+  }
 }

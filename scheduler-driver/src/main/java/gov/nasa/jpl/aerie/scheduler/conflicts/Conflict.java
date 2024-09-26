@@ -59,7 +59,7 @@ public abstract class Conflict {
    *
    * used to hint at how to best solve the conflict
    */
-  private final Goal goal;
+  protected final Goal goal;
 
   /**
    * the evaluation environment is used to pass information to the scheduler

@@ -21,6 +21,14 @@ public class TaskNetworkAdapter {
     this.tw = tw;
   }
 
+  public TaskNetworkAdapter(final Duration planningHorizonDuration){
+    this.tw = new TaskNetwork(0, toDouble(planningHorizonDuration));
+  }
+
+  public void removeTask(final String name){
+    tw.removeTask(name);
+  }
+
   public record TNActData(Interval start, Interval end, Interval duration) {}
 
   public void addDurationInterval(String nameAct, Duration lb, Duration ub){
@@ -63,16 +71,34 @@ public class TaskNetworkAdapter {
    tw.addEndInterval(actName,toDouble(lb),toDouble(ub));
   }
 
+  public void changeStartInterval(String actName, Duration lb, Duration ub){
+    //we can use addStartInterval because the underlying will not create new edges
+    tw.addStartInterval(actName, toDouble(lb), toDouble(ub));
+  }
+
+  public void changeEndInterval(String actName, Duration lb, Duration ub){
+    //we can use addStartInterval because the underlying will not create new edges
+    tw.addEndInterval(actName, toDouble(lb), toDouble(ub));
+  }
+
+  public void startsAfterStart(
+      final String actBefore,
+      final String actAfter,
+      final Duration lb,
+      final Duration ub){
+    tw.startsAfterStart(actBefore, actAfter, toDouble(lb), toDouble(ub));
+  }
+
+  public String toDOT() {
+    return this.tw.toDOT();
+  }
+
   public void startsAfterEnd(String actBefore, String actAfter){
     tw.startsAfterEnd(actBefore,actAfter);
   }
 
   public void addAct(String name){
     tw.addAct(name);
-  }
-
-  public void print(){
-    tw.print();
   }
 
   public boolean solveConstraints(){

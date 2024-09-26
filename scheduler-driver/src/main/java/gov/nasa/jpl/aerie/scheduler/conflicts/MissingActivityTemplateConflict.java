@@ -5,7 +5,9 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.solver.ScheduleAt;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Optional;
 
@@ -24,18 +26,19 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    * @param template  desired activity template
    * @param evaluationEnvironment the evaluation environment at the time of creation so variables can be retrieved later at instantiation
    * @param cardinality the desired number of times the activity template should be inserted
-   * @param anchorIdTo  represents the id of the activty to which we need to create an anchor
+   * @param anchorIdTo  represents the id of the activity to which we need to create an anchor
    * @param totalDuration the desired total duration
    */
   public MissingActivityTemplateConflict(
-      ActivityTemplateGoal goal,
+      Goal goal,
       Windows temporalContext,
       ActivityExpression template,
       EvaluationEnvironment evaluationEnvironment,
       int cardinality,
-      Optional<SchedulingActivityDirectiveId> anchorIdTo,
+      Optional<ActivityDirectiveId> anchorIdTo,
       Optional<Boolean> anchorToStart,
-      Optional<Duration> totalDuration)
+      Optional<Duration> totalDuration,
+      ScheduleAt scheduleAtEarliest)
   {
     super(goal, evaluationEnvironment);
 
@@ -49,14 +52,15 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
     this.anchorIdTo = anchorIdTo;
     this.anchorToStart = anchorToStart;
     this.totalDuration = totalDuration;
+    this.scheduleAt = scheduleAtEarliest;
   }
 
   //the number of times the activity needs to be inserted
   int cardinality;
-  Optional<SchedulingActivityDirectiveId> anchorIdTo;
+  Optional<ActivityDirectiveId> anchorIdTo;
   Optional<Boolean> anchorToStart;
 
-  public Optional<SchedulingActivityDirectiveId> getAnchorId(){
+  public Optional<ActivityDirectiveId> getAnchorId(){
     return anchorIdTo;
   }
 
@@ -66,12 +70,19 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
   //the desired total duration over the number of activities needed
   Optional<Duration> totalDuration;
 
+  ScheduleAt scheduleAt;
+
   public int getCardinality(){
     return cardinality;
   }
 
   public Optional<Duration> getTotalDuration(){
     return totalDuration;
+  }
+
+  @Override
+  public ScheduleAt scheduleAt() {
+    return scheduleAt;
   }
 
   /**

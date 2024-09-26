@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import com.google.common.collect.MoreCollectors;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -14,9 +11,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,28 +25,21 @@ import java.util.Optional;
 
 public class SimulationFacadeUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SimulationFacadeUtils.class);
-  private static int itSimActivityId = 0;
 
   public static SimulationFacade.PlanSimCorrespondence scheduleFromPlan(final Plan plan, final SchedulerModel schedulerModel){
     final var activities = plan.getActivities();
-    final var planActDirectiveIdToSimulationActivityDirectiveId = new DualHashBidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId>();
-    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(new DualHashBidiMap<>(), Map.of());
+    if(activities.isEmpty()) return new SimulationFacade.PlanSimCorrespondence(Map.of());
     //filter out child activities
     final var activitiesWithoutParent = activities.stream().filter(a -> a.topParent() == null).toList();
     final Map<ActivityDirectiveId, ActivityDirective> directivesToSimulate = new HashMap<>();
 
-    for(final var activity : activitiesWithoutParent){
-      final var activityIdSim = new ActivityDirectiveId(itSimActivityId++);
-      planActDirectiveIdToSimulationActivityDirectiveId.put(activity.getId(), activityIdSim);
-    }
-
     for(final var activity : activitiesWithoutParent) {
-      final var activityDirective = schedulingActToActivityDir(activity, planActDirectiveIdToSimulationActivityDirectiveId, schedulerModel);
+      final var activityDirective = schedulingActToActivityDir(activity, schedulerModel);
       directivesToSimulate.put(
-          planActDirectiveIdToSimulationActivityDirectiveId.get(activity.getId()),
+          activity.id(),
           activityDirective);
     }
-    return new SimulationFacade.PlanSimCorrespondence(planActDirectiveIdToSimulationActivityDirectiveId, directivesToSimulate);
+    return new SimulationFacade.PlanSimCorrespondence(directivesToSimulate);
   }
 
   /**
@@ -60,17 +51,15 @@ public class SimulationFacadeUtils {
       final SimulationFacade.PlanSimCorrespondence correspondence,
       final SimulationEngine.SimulationActivityExtract activityExtract
   ) {
-    final var toReplace = new HashMap<SchedulingActivityDirective, SchedulingActivityDirective>();
+    final var toReplace = new HashMap<SchedulingActivity, SchedulingActivity>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
         final var activityDirective = findSimulatedActivityById(
             activityExtract.simulatedActivities().values(),
-            correspondence.planActDirectiveIdToSimulationActivityDirectiveId().get(activity.getId()));
+            activity.id()
+        );
         if (activityDirective.isPresent()) {
-          final var replacementAct = SchedulingActivityDirective.copyOf(
-              activity,
-              activityDirective.get().duration()
-          );
+          final var replacementAct = activity.withNewDuration(activityDirective.get().duration());
           toReplace.put(activity, replacementAct);
         }
         //if not, maybe the activity is not finished
@@ -79,8 +68,8 @@ public class SimulationFacadeUtils {
     toReplace.forEach(plan::replaceActivity);
   }
 
-  private static Optional<SimulatedActivity> findSimulatedActivityById(
-      Collection<SimulatedActivity> simulatedActivities,
+  private static Optional<ActivityInstance> findSimulatedActivityById(
+      Collection<ActivityInstance> simulatedActivities,
       final ActivityDirectiveId activityDirectiveId
   ){
     return simulatedActivities.stream()
@@ -92,7 +81,6 @@ public class SimulationFacadeUtils {
       final SimulationEngine.SimulationActivityExtract activityExtract,
       final Map<String, ActivityType> activityTypes,
       final Plan plan,
-      final SimulationFacade.PlanSimCorrespondence planSimCorrespondence,
       final PlanningHorizon planningHorizon)
   {
     //remove all activities with parents
@@ -103,14 +91,17 @@ public class SimulationFacadeUtils {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(activityExtract, activityInstanceId);
       if(rootParent.isPresent()) {
-        final var activityInstance = SchedulingActivityDirective.of(
+        final var activityInstance = SchedulingActivity.of(
+            null,
             activityTypes.get(activity.type()),
             planningHorizon.toDur(activity.start()),
             activity.duration(),
             activity.arguments(),
-            planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId().getKey(rootParent.get()),
+            rootParent.get(),
             null,
-            true);
+            true,
+            false
+        );
         plan.add(activityInstance);
       }
     });
@@ -119,7 +110,7 @@ public class SimulationFacadeUtils {
 
   private static Optional<ActivityDirectiveId> getIdOfRootParent(
       final SimulationEngine.SimulationActivityExtract results,
-      final SimulatedActivityId instanceId){
+      final ActivityInstanceId instanceId){
     if(!results.simulatedActivities().containsKey(instanceId)){
       if(!results.unfinishedActivities().containsKey(instanceId)){
         LOGGER.debug("The simulation of the parent of activity with id "+ instanceId.id() + " has been finished");
@@ -143,12 +134,11 @@ public class SimulationFacadeUtils {
     return simulationResults.getSimulatedActivities().values().stream()
         .filter(simAct->simAct.directiveId().map(activityDirectiveId::equals).orElse(false))
         .collect(MoreCollectors.toOptional()) //throws if multiple
-        .map(SimulatedActivity::duration);
+        .map(ActivityInstance::duration);
   }
 
   public static ActivityDirective schedulingActToActivityDir(
-      final SchedulingActivityDirective activity,
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActDirectiveIdToSimulationActivityDirectiveId,
+      final SchedulingActivity activity,
       final SchedulerModel schedulerModel) {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
@@ -159,12 +149,10 @@ public class SimulationFacadeUtils {
       if (durationType instanceof DurationType.Controllable dt) {
         arguments.put(dt.parameterName(), schedulerModel.serializeDuration(activity.duration()));
       } else if (
-          durationType instanceof DurationType.Uncontrollable
+          !(durationType instanceof DurationType.Uncontrollable
           || durationType instanceof DurationType.Fixed
-          || durationType instanceof DurationType.Parametric
+          || durationType instanceof DurationType.Parametric)
       ) {
-        // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
-      } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);
       }
     }
@@ -172,7 +160,7 @@ public class SimulationFacadeUtils {
     return new ActivityDirective(
         activity.startOffset(),
         serializedActivity,
-        planActDirectiveIdToSimulationActivityDirectiveId.get(activity.anchorId()),
+        activity.anchorId(),
         activity.anchoredToStart());
   }
 }

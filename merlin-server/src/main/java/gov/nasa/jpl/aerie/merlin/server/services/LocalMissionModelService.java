@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.*;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
@@ -19,7 +19,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.apache.commons.lang3.tuple.Triple;
@@ -58,8 +57,8 @@ public final class LocalMissionModelService implements MissionModelService {
   private final MissionModelRepository missionModelRepository;
   private final Instant untruePlanStart;
 
-  private final Map<Triple<String, Instant, Duration>, SimulationDriver>
-      simulationDrivers = new HashMap<Triple<String, Instant, Duration>, SimulationDriver>();
+  private final Map<Triple<MissionModelId, Instant, Duration>, SimulationDriver>
+      simulationDrivers = new HashMap<>();
 
   public LocalMissionModelService(
       final Path missionModelDataPath,
@@ -72,21 +71,21 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, MissionModelJar> getMissionModels() {
+  public Map<MissionModelId, MissionModelJar> getMissionModels() {
     return this.missionModelRepository.getAllMissionModels();
   }
 
   @Override
-  public MissionModelJar getMissionModelById(final String id) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModelById(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try {
-      return this.missionModelRepository.getMissionModel(id);
+      return this.missionModelRepository.getMissionModel(missionModelId);
     } catch (MissionModelRepository.NoSuchMissionModelException ex) {
-      throw new NoSuchMissionModelException(id, ex);
+      throw new NoSuchMissionModelException(missionModelId, ex);
     }
   }
 
   @Override
-  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId)
+  public Map<String, ValueSchema> getResourceSchemas(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
@@ -109,7 +108,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String missionModelId)
+  public Map<String, ActivityType> getActivityTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -130,7 +129,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    */
   @Override
-  public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
+  public List<ValidationNotice> validateActivityArguments(final MissionModelId missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException, MissionModelLoadException, InstantiationException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
@@ -142,12 +141,12 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   public List<BulkArgumentValidationResponse> validateActivityArgumentsBulk(
-      final MissionModelId modelId,
+      final MissionModelId missionModelId,
       final List<ActivityDirectiveForValidation> activities) {
     // load mission model once for all activities
     ModelType<?, ?> modelType;
     try {
-      modelType = this.loadMissionModelType(modelId.toString());
+      modelType = this.loadMissionModelType(missionModelId);
       // try and catch NoSuchMissionModel here, so we can serialize it out to each activity validation
       // rather than catching it at a higher level in the workerLoop itself
     } catch (NoSuchMissionModelException e) {
@@ -199,7 +198,7 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public Map<ActivityDirectiveId, ActivityInstantiationFailure>
-  validateActivityInstantiations(final String missionModelId,
+  validateActivityInstantiations(final MissionModelId missionModelId,
                                  final Map<ActivityDirectiveId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
@@ -229,7 +228,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
   @Override
   public List<BulkEffectiveArgumentResponse> getActivityEffectiveArgumentsBulk(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final List<SerializedActivity> serializedActivities)
   throws NoSuchMissionModelException, MissionModelLoadException {
       final var modelType = this.loadMissionModelType(missionModelId);
@@ -260,7 +259,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public List<ValidationNotice> validateModelArguments(final MissionModelId missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
          InstantiationException
@@ -271,14 +270,14 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<Parameter> getModelParameters(final String missionModelId)
+  public List<Parameter> getModelParameters(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return this.loadMissionModelType(missionModelId).getConfigurationType().getParameters();
   }
 
   @Override
-  public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public Map<String, SerializedValue> getModelEffectiveArguments(final MissionModelId missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
          InstantiationException
@@ -293,64 +292,65 @@ public final class LocalMissionModelService implements MissionModelService {
   /**
    * execute a simulation of the specified plan
    *
-   * @param message The parameters defining the simulation to perform.
+   * @param plan The plan to be simulated. Contains the parameters defining the simulation to perform.
    * @return A set of samples over the course of the simulation.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
   public SimulationResultsInterface runSimulation(
-      final CreateSimulationMessage message,
+      final Plan plan,
       final Consumer<Duration> simulationExtentConsumer,
       final Supplier<Boolean> canceledListener,
-      final SimulationResourceManager resourceManager)
+      final SimulationResourceManager resourceManager,
+      SimulationReuseStrategy simReuseStrategy)
   throws NoSuchMissionModelException
   {
     long accumulatedCpuTime = 0;  // nanoseconds
     long initialCpuTime = threadMXBean.getCurrentThreadCpuTime();  // nanoseconds
-    final var config = message.configuration();
+    final var config = plan.simulationConfiguration();
     if (config.isEmpty()) {
       log.warn(
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
     //determine how to reuse prior simulations for this request
-    final var doingIncrementalSim = switch(message.simReuseStrategy()) {
+    final var doingIncrementalSim = switch(simReuseStrategy) {
       case Incremental -> true;
       case CachedResults -> false;
       };
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     final MissionModel<?> missionModel = loadAndInstantiateMissionModel(
-        message.missionModelId(),
-        message.simulationStartTime(),
+        plan.missionModelId(),
+        plan.planStartInstant(),
         SerializedValue.of(config));
 
-    final var planInfo = Triple.of(message.missionModelId(), message.planStartTime(), message.planDuration());
+    final var planInfo = Triple.of(plan.missionModelId(), plan.planStartInstant(), plan.duration());
     //TODO: cache key should include sim configuration, otherwise may get incorrect sim
     //may also want to use planId in cache key to tie one driver to each plan for maximum similarity
     SimulationDriver<?> driver = simulationDrivers.get(planInfo);
 
     SimulationResultsInterface results;
     if (driver == null || !doingIncrementalSim) {
-      driver = new SimulationDriver<>(missionModel, message.planStartTime(), message.planDuration());
+      driver = new SimulationDriver<>(missionModel, plan.planStartInstant(), plan.duration());
       simulationDrivers.put(planInfo, driver);
       results = driver.simulate(
-          message.activityDirectives(),
-          message.simulationStartTime(),
-          message.simulationDuration(),
-          message.planStartTime(),
-          message.planDuration(),
+          plan.activityDirectives(),
+          plan.simulationStartInstant(),
+          plan.simulationDuration(),
+          plan.planStartInstant(),
+          plan.duration(),
           canceledListener,
           simulationExtentConsumer);
     } else {
       // Try to reuse past simulation.
-      driver.initSimulation(message.simulationDuration());
+      driver.initSimulation(plan.simulationDuration());
       results = driver.diffAndSimulate(
-          message.activityDirectives(),
-          message.simulationStartTime(),
-          message.simulationDuration(),
-          message.planStartTime(),
-          message.planDuration(),
+          plan.activityDirectives(),
+          plan.simulationStartInstant(),
+          plan.simulationDuration(),
+          plan.planStartInstant(),
+          plan.duration(),
           true,
           canceledListener,
           simulationExtentConsumer,
@@ -390,7 +390,7 @@ public final class LocalMissionModelService implements MissionModelService {
     return formatTimestamp(Instant.ofEpochSecond(0L, nanoseconds));
   }
   @Override
-  public void refreshModelParameters(final String missionModelId)
+  public void refreshModelParameters(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -401,7 +401,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshActivityTypes(final String missionModelId)
+  public void refreshActivityTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException
   {
     try {
@@ -424,7 +424,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshResourceTypes(final String missionModelId)
+  public void refreshResourceTypes(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException {
     try {
       final var model = this.loadAndInstantiateMissionModel(missionModelId);
@@ -434,7 +434,7 @@ public final class LocalMissionModelService implements MissionModelService {
     }
   }
 
-  private ModelType<?, ?> loadMissionModelType(final String missionModelId)
+  private ModelType<?, ?> loadMissionModelType(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
@@ -456,7 +456,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModel<?> loadAndInstantiateMissionModel(final String missionModelId)
+  private MissionModel<?> loadAndInstantiateMissionModel(final MissionModelId missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return loadAndInstantiateMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
@@ -473,7 +473,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   private MissionModel<?> loadAndInstantiateMissionModel(
-      final String missionModelId,
+      final MissionModelId missionModelId,
       final Instant planStart,
       final SerializedValue configuration)
   throws NoSuchMissionModelException, MissionModelLoadException

@@ -1,12 +1,12 @@
 import type { GraphQLClient } from 'graphql-request';
 import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { FallibleStatus } from '../src/types/types';
+import { DictionaryType, FallibleStatus } from '../src/types/types';
 import {
   convertActivityDirectiveIdToSimulatedActivityId,
   insertActivityDirective,
   removeActivityDirective,
 } from './testUtils/ActivityDirective.js';
-import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
+import { insertDictionary, removeDictionary } from './testUtils/Dictionary';
 import {
   expand,
   insertExpansion,
@@ -32,12 +32,24 @@ let planId: number;
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
 let commandDictionaryId: number;
+let channelDictionaryId: number;
+let parameterDictionaryId: number;
 let parcelId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
-  parcelId = (await insertParcel(graphqlClient, commandDictionaryId, 'sequenceGenerationTestParcel')).parcelId;
+  commandDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.COMMAND)).id;
+  channelDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.CHANNEL)).id;
+  parameterDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.PARAMETER)).id;
+  parcelId = (
+    await insertParcel(
+      graphqlClient,
+      commandDictionaryId,
+      channelDictionaryId,
+      parameterDictionaryId,
+      'sequenceGenerationTestParcel',
+    )
+  ).parcelId;
 });
 
 beforeEach(async () => {
@@ -52,7 +64,9 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await removeParcel(graphqlClient, parcelId);
-  await removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeDictionary(graphqlClient, commandDictionaryId, DictionaryType.COMMAND);
+  await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+  await removeDictionary(graphqlClient, parameterDictionaryId, DictionaryType.PARAMETER);
 });
 
 afterEach(async () => {
@@ -65,6 +79,7 @@ describe('sequence generation', () => {
   let expansionId2: number;
   let expansionId3: number;
   let expansionId4: number;
+  let expansionId5: number;
 
   beforeEach(async () => {
     expansionId1 = await insertExpansion(
@@ -153,6 +168,25 @@ describe('sequence generation', () => {
           A("2022-204T00:00:00").ACTIVATE("BACKGROUND-B"),
           R("00:00:90").ADD_WATER
           ];
+      }
+    `,
+      parcelId,
+    );
+
+    expansionId5 = await insertExpansion(
+      graphqlClient,
+      'BananaNap',
+      `
+      export default function MyExpansion(props: {
+        activityInstance: ActivityType,
+        channelDictionary: ChannelDictionary | null
+        parameterDictionaries : ParameterDictionary[]
+      }): ExpansionReturn {
+        const { activityInstance, channelDictionary, parameterDictionaries } = props;
+        return [
+          ...(channelDictionary ? channelDictionary.telemetries.map(t => C.ECHO('Telemetry Name: '+t.name)) : []),
+          ...parameterDictionaries[0].params.map(p => C.ECHO('Parameter Name: '+p.param_name))
+        ];
       }
     `,
       parcelId,
@@ -1145,7 +1179,7 @@ describe('sequence generation', () => {
   it('should work for throwing expansions', async () => {
     /** Begin Setup */
     // Add throwing expansion
-    const expansionId5 = await insertExpansion(
+    const localExpansionId = await insertExpansion(
       graphqlClient,
       'BiteBanana',
       `
@@ -1161,7 +1195,7 @@ describe('sequence generation', () => {
       expansionId1,
       expansionId2,
       expansionId3,
-      expansionId5,
+      localExpansionId,
     ]);
 
     // Create Activity Directives
@@ -1482,14 +1516,14 @@ describe('sequence generation', () => {
       removeActivityDirective(graphqlClient, activityId2, planId),
       removeActivityDirective(graphqlClient, activityId3, planId),
     ]);
-    await removeExpansion(graphqlClient, expansionId5);
+    await removeExpansion(graphqlClient, localExpansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     /** End Cleanup */
   }, 30000);
 
   it('should work for throwing expansions in bulk', async () => {
     /** Begin Setup */
-    const expansionId5 = await insertExpansion(
+    const localExpansionId = await insertExpansion(
       graphqlClient,
       'BiteBanana',
       `
@@ -1504,7 +1538,7 @@ describe('sequence generation', () => {
       expansionId1,
       expansionId2,
       expansionId3,
-      expansionId5,
+      localExpansionId,
     ]);
 
     // Create Activity Directives
@@ -2126,7 +2160,7 @@ describe('sequence generation', () => {
       removeActivityDirective(graphqlClient, activityId7, planId),
       removeActivityDirective(graphqlClient, activityId8, planId),
     ]);
-    await removeExpansion(graphqlClient, expansionId5);
+    await removeExpansion(graphqlClient, localExpansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     /** End Cleanup */
   }, 30000);
@@ -3677,6 +3711,124 @@ describe('sequence generation', () => {
       /** End Cleanup */
     }, 30000);
   });
+
+  it('Channel and Parameter Dictionary', async () => {
+    /** Begin Setup */
+    // Create Expansion Set
+    const expansionSetId = await insertExpansionSet(graphqlClient, parcelId, missionModelId, [
+      expansionId1,
+      expansionId2,
+      expansionId5,
+    ]);
+
+    // Create Activity Directives
+    const [activityId1, activityId2] = await Promise.all([
+      insertActivityDirective(graphqlClient, planId, 'BiteBanana', '90 minutes'), // non-existent expansion
+
+      insertActivityDirective(graphqlClient, planId, 'BananaNap', '230 minutes'),
+    ]);
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Expand Plan to Sequence Fragments
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+    // Create Sequence
+    const [sequencePk1, sequencePk2] = await Promise.all([
+      insertSequence(graphqlClient, {
+        seqId: 'test00000',
+        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+      }),
+      insertSequence(graphqlClient, {
+        seqId: 'test00001',
+        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+      }),
+    ]);
+    // Link Activity Instances to Sequence
+    await Promise.all([
+      linkActivityInstance(graphqlClient, sequencePk1, activityId1),
+      linkActivityInstance(graphqlClient, sequencePk2, activityId2),
+    ]);
+
+    // Get the simulated activity ids
+    const [
+      _simulatedActivityId1, // No expansion, so no check required on this one
+      simulatedActivityId2,
+    ] = await Promise.all([
+      convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId1,
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId2,
+      ),
+    ]);
+
+    /** End Setup */
+
+    // Retrieve seqJson
+    const getSequenceSeqJsonResponse = await getSequenceSeqJsonBulk(graphqlClient, [
+      { seqId: 'test00000', simulationDatasetId: simulationArtifactPk.simulationDatasetId },
+      { seqId: 'test00001', simulationDatasetId: simulationArtifactPk.simulationDatasetId },
+    ]);
+
+    const secondSequence = getSequenceSeqJsonResponse[1]!;
+
+    if (secondSequence.status !== FallibleStatus.SUCCESS) {
+      throw secondSequence.errors;
+    }
+
+    expect(secondSequence.seqJson.id).toBe('test00001');
+    expect(secondSequence.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+      timeSorted: false,
+    });
+    expect(secondSequence.seqJson.steps).toEqual([
+      {
+        args: [
+          {
+            name: 'echo_string',
+            type: 'string',
+            value: 'Telemetry Name: BAKE_STATE',
+          },
+        ],
+        metadata: { simulatedActivityId: simulatedActivityId2 },
+        stem: 'ECHO',
+        time: { type: 'COMMAND_COMPLETE' },
+        type: 'command',
+      },
+      {
+        args: [
+          {
+            name: 'echo_string',
+            type: 'string',
+            value: 'Parameter Name: BANANA_COLOR_RATE',
+          },
+        ],
+        metadata: { simulatedActivityId: simulatedActivityId2 },
+        stem: 'ECHO',
+        time: {
+          type: 'COMMAND_COMPLETE',
+        },
+        type: 'command',
+      },
+    ]);
+
+    /** Begin Cleanup */
+    await Promise.all([removeSequence(graphqlClient, sequencePk1), removeSequence(graphqlClient, sequencePk2)]);
+    await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await Promise.all([
+      removeActivityDirective(graphqlClient, activityId1, planId),
+      removeActivityDirective(graphqlClient, activityId2, planId),
+    ]);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    await removeExpansion(graphqlClient, expansionId5);
+    /** End Cleanup */
+  }, 30000);
 });
 
 it('should provide start, end, and computed attributes on activities', async () => {

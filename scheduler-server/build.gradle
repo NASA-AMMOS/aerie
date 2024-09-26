@@ -24,6 +24,8 @@ dependencies {
   implementation project(':permissions')
   implementation project(':constraints')
   implementation project(':scheduler-driver')
+  implementation project(':procedural:scheduling')
+  implementation project(':type-utils')
 
   implementation 'io.javalin:javalin:5.6.3'
   implementation 'org.eclipse:yasson:3.0.3'

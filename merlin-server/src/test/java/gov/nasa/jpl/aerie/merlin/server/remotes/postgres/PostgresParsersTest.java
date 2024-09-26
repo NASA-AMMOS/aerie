@@ -4,7 +4,7 @@ import javax.json.Json;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.junit.jupiter.api.Test;
 
 public final class PostgresParsersTest {

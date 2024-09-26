@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +29,7 @@ public record GenerateConstraintsLibAction(TypescriptCodeGenerationServiceAdapte
    *
    * @return a response object wrapping the results of generating the code (either successful or not)
    */
-  public Response run(final String missionModelId, final Optional<PlanId> planId) {
+  public Response run(final MissionModelId missionModelId, final Optional<PlanId> planId) {
 
     try {
       final var constraintsDslCompilerRoot = System.getenv("CONSTRAINTS_DSL_COMPILER_ROOT");

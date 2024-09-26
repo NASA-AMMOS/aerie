@@ -10,6 +10,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +107,7 @@ public class CheckpointSimulationDriver {
   }
 
   public static Function<SimulationState, Boolean> checkpointAtEnd(Function<SimulationState, Boolean> stoppingCondition) {
-    return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.isEqualTo(MAX_VALUE);
+    return simulationState -> stoppingCondition.apply(simulationState) || simulationState.nextTime.equals(MAX_VALUE);
   }
 
   private static Map<ActivityDirectiveId, Duration> getMinimumStartTimes(
@@ -308,9 +310,14 @@ public class CheckpointSimulationDriver {
       elapsedTime = engine.getElapsedTime();
       // Swallowing the spanException as the internal `spanId` is not user meaningful info.
       final var topics = missionModel.getTopics();
-      final var directiveId = engine.getDirectiveIdFromSpan(activityTopic, topics, ex.spanId);
-      if (directiveId.isPresent()) {
-        throw new SimulationException(elapsedTime, simulationStartTime, directiveId.get(), ex.cause);
+      final var directiveDetail = engine.getDirectiveDetailsFromSpan(activityTopic, topics, ex.spanId);
+      if (directiveDetail.directiveId().isPresent()) {
+        throw new SimulationException(
+            elapsedTime,
+            simulationStartTime,
+            directiveDetail.directiveId().get(),
+            directiveDetail.activityStackTrace(),
+            ex.cause);
       }
       throw new SimulationException(elapsedTime, simulationStartTime, ex.cause);
     } catch (Throwable ex) {
@@ -373,7 +380,7 @@ public class CheckpointSimulationDriver {
         }
         Duration computedStartTime = offset;
         if (predecessor != null) {
-          computedStartTime = (curTime.isEqualTo(Duration.MIN_VALUE) ? Duration.ZERO : curTime).plus(offset);
+          computedStartTime = (curTime.equals(Duration.MIN_VALUE) ? Duration.ZERO : curTime).plus(offset);
         }
         final var taskId = engine.scheduleTask(
             computedStartTime,

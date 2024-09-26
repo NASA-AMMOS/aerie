@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.streamline.core.ThinResource;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.*;
 import org.apache.commons.lang3.function.TriFunction;
 
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -22,6 +23,18 @@ public final class ThinResourceMonad {
 
   public static <A> ThinResource<A> join(ThinResource<ThinResource<A>> a) {
     return () -> a.getDynamics().getDynamics();
+  }
+
+  /**
+   * Efficiently reduce {@link ThinResource}s.
+   * <p>
+   *     Note: This is a lower-level function that doesn't record dependencies,
+   *     meant to be used in a select few cases.
+   *     Most users would prefer {@link ResourceMonad#reduce}.
+   * </p>
+   */
+  public static <A> ThinResource<A> reduce(Collection<? extends ThinResource<A>> operands, A identity, BiFunction<A, A, A> f) {
+    return () -> operands.stream().map(ThinResource::getDynamics).reduce(identity, f, f::apply);
   }
 
   // GENERATED CODE START

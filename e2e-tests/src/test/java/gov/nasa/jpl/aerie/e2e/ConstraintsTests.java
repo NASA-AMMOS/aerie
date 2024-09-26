@@ -68,7 +68,7 @@ public class ConstraintsTests {
         "1212h",
         "2021-01-01T00:00:00Z");
     //Insert the Activity
-    activityId = hasura.insertActivity(
+    activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",
@@ -143,7 +143,7 @@ public class ConstraintsTests {
         planId,
         "export default (): Constraint => Real.Resource(\"/fruit\").equal(3)",
         "");
-    hasura.insertActivity(
+    hasura.insertActivityDirective(
         planId,
         "PeelBanana",
         "1h",
@@ -264,7 +264,7 @@ public class ConstraintsTests {
         "export default (): Constraint => Windows.During(ActivityType.ControllableDurationActivity).not()");
     hasura.deleteActivity(planId, activityId);
     final long thirtyFiveDays = 35 * 24 * 60 * 60 * 1000L * 1000; // 35 days in microseconds
-    hasura.insertActivity(
+    hasura.insertActivityDirective(
         planId,
         "ControllableDurationActivity",
         "0h",

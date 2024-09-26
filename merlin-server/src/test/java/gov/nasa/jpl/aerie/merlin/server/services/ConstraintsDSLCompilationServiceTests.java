@@ -53,6 +53,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConstraintsDSLCompilationServiceTests {
-  private static final String MISSION_MODEL_ID = "abc";
+  private static final MissionModelId MISSION_MODEL_ID = new MissionModelId(1L);
   private static final PlanId PLAN_ID = new PlanId(1L);
   ConstraintsDSLCompilationService constraintsDSLCompilationService;
 

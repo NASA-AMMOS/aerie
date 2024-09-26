@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
+import gov.nasa.jpl.aerie.types.MissionModelId;
+
 import java.util.Optional;
 
 public record HasuraAction<I extends HasuraAction.Input>(String name, I input, Session session)
@@ -10,4 +12,5 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
 
   public record SpecificationInput(SpecificationId specificationId) implements Input { }
   public record MissionModelIdInput(MissionModelId missionModelId, Optional<PlanId> planId) implements  Input { }
+  public record HasuraSchedulingGoalEvent(long goalId, long revision) { }
 }

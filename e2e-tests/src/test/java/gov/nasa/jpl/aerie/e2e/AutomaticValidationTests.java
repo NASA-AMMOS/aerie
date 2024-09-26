@@ -69,7 +69,7 @@ public class AutomaticValidationTests {
 
   @Test
   void validationSuccess() throws IOException, InterruptedException {
-    final var activityId = hasura.insertActivity(
+    final var activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",
@@ -82,7 +82,7 @@ public class AutomaticValidationTests {
 
   @Test
   void noSuchActivityType() throws IOException, InterruptedException {
-    final var activityId = hasura.insertActivity(
+    final var activityId = hasura.insertActivityDirective(
         planId,
         "NopeBanana",
         "1h",
@@ -95,7 +95,7 @@ public class AutomaticValidationTests {
 
   @Test
   void validationNotice() throws IOException, InterruptedException {
-    final var activityId = hasura.insertActivity(
+    final var activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",
@@ -110,7 +110,7 @@ public class AutomaticValidationTests {
 
   @Test
   void instantiationError() throws IOException, InterruptedException {
-    final var activityId = hasura.insertActivity(
+    final var activityId = hasura.insertActivityDirective(
         planId,
         "BakeBananaBread",
         "1h",
@@ -133,7 +133,7 @@ public class AutomaticValidationTests {
 
   @Test
   void noSuchMissionModelError() throws IOException, InterruptedException {
-    final var activityId = hasura.insertActivity(
+    final var activityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",
@@ -150,14 +150,14 @@ public class AutomaticValidationTests {
     final var activityValidations = hasura.getActivityValidations(planId);
     final ActivityValidation activityValidation = activityValidations.get((long) activityId);
     assertEquals(
-        new ActivityValidation.NoSuchMissionModelFailure("no such mission model", "0"),
+        new ActivityValidation.NoSuchMissionModelFailure("no such mission model", 0),
         activityValidation
     );
   }
 
   @Test
   void exceptionDuringValidationHandled() throws IOException, InterruptedException {
-    final var exceptionActivityId = hasura.insertActivity(
+    final var exceptionActivityId = hasura.insertActivityDirective(
         planId,
         "ExceptionActivity",
         "1h",
@@ -166,7 +166,7 @@ public class AutomaticValidationTests {
     // sleep to make sure exception activity is picked up
     Thread.sleep(1000); // TODO consider a while loop here
 
-    final var biteActivityId = hasura.insertActivity(
+    final var biteActivityId = hasura.insertActivityDirective(
         planId,
         "BiteBanana",
         "1h",

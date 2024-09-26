@@ -2,28 +2,25 @@ package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.*;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.Plan;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 
 public final class SimulationUtility {
-  private static MissionModel<?> makeMissionModel(
-      final MissionModelBuilder builder,
-      final Instant planStart,
-      final Configuration config)
-  {
-    final var factory = new GeneratedModelType();
-    final var registry = DirectiveTypeRegistry.extract(factory);
-    // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
-    final var model = factory.instantiate(planStart, config, builder);
-    return builder.build(model, registry);
-  }
+
 
   public static <Model> SimulationDriver<Model>
   getDriver(final Duration simulationDuration)
@@ -42,7 +39,10 @@ public final class SimulationUtility {
         Configuration.DEFAULT_INITIAL_CONDITIONS,
         runDaemons);
     final var simStartTime = Instant.EPOCH;
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), simStartTime, config);
+    final var missionModel = gov.nasa.jpl.aerie.orchestration.simulation.SimulationUtility.instantiateMissionModel(
+        new GeneratedModelType(),
+        simStartTime,
+        config);
 
     var driver = new SimulationDriver(
         missionModel, simStartTime, simulationDuration);
@@ -59,16 +59,23 @@ public final class SimulationUtility {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath, Configuration.DEFAULT_INITIAL_CONDITIONS, runDaemons);
     final var startTime = Instant.now();
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
+    final var missionModel = gov.nasa.jpl.aerie.orchestration.simulation.SimulationUtility.instantiateMissionModel(
+        new GeneratedModelType(),
+        Instant.EPOCH,
+        config);
 
-    return SimulationDriver.simulate(
-        missionModel,
+    final var plan = new Plan(
+        "plan",
+        new Timestamp(startTime),
+        new Timestamp(startTime.plus(simulationDuration.in(Duration.MICROSECOND), ChronoUnit.MICROS)),
         schedule,
-        startTime,
-        simulationDuration,
-        startTime,
-        simulationDuration,
-        () -> false);
+        Map.of("initialDataPath", SerializedValue.of(dataPath.toString())));
+
+    try(final var simUtil = new gov.nasa.jpl.aerie.orchestration.simulation.SimulationUtility()) {
+      return simUtil.simulate(missionModel, plan).get();
+    } catch (ExecutionException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static long _counter = 0;

@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import java.sql.Connection;
@@ -26,7 +26,7 @@ public class GetUnvalidatedDirectivesAction implements AutoCloseable {
         join merlin.plan p
           on ad.plan_id = p.id
         where adv.status = 'pending';
-        """;
+      """;
 
   private final PreparedStatement statement;
 

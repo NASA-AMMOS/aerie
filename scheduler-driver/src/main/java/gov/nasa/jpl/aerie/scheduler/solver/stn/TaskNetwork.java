@@ -31,7 +31,6 @@ public class TaskNetwork {
     startActTimepoints = new HashMap<>();
     endActTimepoints = new HashMap<>();
     setHorizon(horizonStart, horizonEnd);
-
   }
 
   public record TNActData(Pair<Double,Double> start, Pair<Double,Double> end, Pair<Double,Double> duration) {}
@@ -41,6 +40,11 @@ public class TaskNetwork {
     var et = getEndInterval(nameAct);
     var d =  getDurationInterval(nameAct);
     return new TNActData(st, et, d);
+  }
+
+  public void removeTask(final String name){
+    stn.removeTimepoint(this.startActTimepoints.get(name));
+    stn.removeTimepoint(this.endActTimepoints.get(name));
   }
 
   /**
@@ -87,7 +91,7 @@ public class TaskNetwork {
 
   private void failIfActDoesNotExist(String nameAct){
     if(!startActTimepoints.containsKey(nameAct)){
-      throw new IllegalArgumentException("Trying to insert enveloppe to non existing act");
+      throw new IllegalArgumentException("Activity " + nameAct + " does not exist in the task network.");
     }
   }
 
@@ -139,6 +143,19 @@ public class TaskNetwork {
     stn.addBeforeCst(endActTimepoints.get(actBefore),startActTimepoints.get(actAfter));
   }
 
+  public void startsAfterStart(
+      final String actBefore,
+      final String actAfter,
+      final double lb,
+      final double ub){
+    failIfActDoesNotExist(actBefore);
+    failIfActDoesNotExist(actAfter);
+    stn.addDurCst(startActTimepoints.get(actBefore), startActTimepoints.get(actAfter), lb, ub);
+  }
+
+  public String toDOT() {
+    return this.stn.toDOT();
+  }
 
   public void addAct(String name){
     var namevertexst = "st"+name;
@@ -156,16 +173,7 @@ public class TaskNetwork {
     stn.addBeforeCst(namevertexet,endHorizon);
   }
 
-  public void print(){
-    stn.print();
-  }
-
-
   public boolean propagate(){
     return stn.update();
   }
-
-
-
-
 }

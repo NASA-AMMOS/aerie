@@ -13,8 +13,14 @@ include 'parsing-utilities'
 include 'permissions'
 
 // Procedural post-simulation libraries
+include 'procedural:processor'
 include 'procedural:timeline'
 include 'procedural:constraints'
+include 'procedural:scheduling'
+include 'procedural:remote'
+
+// Procedural examples
+include 'procedural:examples:foo-procedures'
 
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'
@@ -27,6 +33,9 @@ include 'sequencing-server'
 include 'constraints'
 include 'scheduler-driver'
 
+// Stateless Mode
+include 'stateless-aerie'
+
 // Testing
 include 'db-tests'
 include 'e2e-tests'
@@ -38,3 +47,6 @@ include 'examples:config-with-defaults'
 include 'examples:config-without-defaults'
 include 'examples:minimal-mission-model'
 include 'examples:streamline-demo'
+include 'stateless-aerie'
+include 'orchestration-utils'
+include 'type-utils'

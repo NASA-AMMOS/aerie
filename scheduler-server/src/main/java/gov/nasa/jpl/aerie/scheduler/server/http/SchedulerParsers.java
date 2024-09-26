@@ -2,12 +2,16 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 
+import javax.json.Json;
+import javax.json.stream.JsonParsingException;
+import java.io.StringReader;
+import java.util.List;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.anyP;
@@ -106,4 +110,31 @@ public final class SchedulerParsers {
       .map(
           untuple((missionModelId, planId) -> new HasuraAction.MissionModelIdInput(missionModelId, planId.flatMap($->$))),
           input -> tuple(input.missionModelId(), Optional.of(input.planId()))));
+
+  public static final JsonParser<HasuraAction.HasuraSchedulingGoalEvent> hasuraSchedulingGoalEventTriggerP
+      = productP
+      .field("event", productP
+          .field("data", productP
+              .field("new", productP
+                  .field("goal_id", longP)
+                  .field("revision", longP)
+                  .rest())
+              .rest())
+          .rest())
+      .rest()
+      .map(
+          untuple(HasuraAction.HasuraSchedulingGoalEvent::new),
+          $ -> tuple($.goalId(), $.revision()));
+
+  public static <T> T parseJson(final String jsonStr, final JsonParser<T> parser)
+  throws InvalidJsonException, InvalidEntityException
+  {
+    try (final var reader = Json.createReader(new StringReader(jsonStr))) {
+      final var requestJson = reader.readValue();
+      final var result = parser.parse(requestJson);
+      return result.getSuccessOrThrow(reason -> new InvalidEntityException(List.of(reason)));
+    } catch (JsonParsingException e) {
+      throw new InvalidJsonException(e);
+    }
+  }
 }

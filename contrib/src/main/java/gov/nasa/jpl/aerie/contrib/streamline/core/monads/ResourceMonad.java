@@ -8,10 +8,13 @@ import gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling;
 import gov.nasa.jpl.aerie.contrib.streamline.utils.*;
 import org.apache.commons.lang3.function.TriFunction;
 
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Dependencies.addDependency;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.argsFormat;
+import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Naming.name;
 import static gov.nasa.jpl.aerie.contrib.streamline.debugging.Profiling.profile;
 import static gov.nasa.jpl.aerie.contrib.streamline.utils.FunctionalUtils.curry;
 
@@ -70,6 +73,63 @@ public final class ResourceMonad {
     addDependency(result, a);
     if (profileAllResources) result = profile(result);
     return result;
+  }
+
+  /**
+   * Efficient reduce for resources, lifting an operator that can reduce the dynamics.
+   * <p>
+   *     This is logically equivalent to, but more efficient than,
+   *     <pre>operands.stream().reduce(pure(identity), map(operator), map(operator))</pre>
+   *     That is, it's logically equivalent to lifting the operator to an operator on resources,
+   *     then reducing the resources with the lifted operator.
+   *     However, that would produce a large number of unnecessary intermediate resources.
+   *     This function creates a "flat" reduction, with no intermediate nodes.
+   * </p>
+   *
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction, String)
+   */
+  public static <A> Resource<A> reduce(Collection<? extends Resource<A>> operands, A identity, BiFunction<A, A, A> f) {
+    return reduce(operands, DynamicsMonad.pure(identity), DynamicsMonad.map(f));
+  }
+
+  /**
+   * Like {@link ResourceMonad#reduce(Collection, Object, BiFunction)}, but also names the result
+   * like "operationName(operand1, operand2, ...)".
+   *
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction, String)
+   */
+  public static <A> Resource<A> reduce(Collection<? extends Resource<A>> operands, A identity, BiFunction<A, A, A> f, String operationName) {
+    return reduce(operands, DynamicsMonad.pure(identity), DynamicsMonad.map(f), operationName);
+  }
+
+  /**
+   * Like {@link ResourceMonad#reduce(Collection, Object, BiFunction)},
+   * but operator acts on fully wrapped dynamics instead of plain dynamics.
+   *
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction, String)
+   */
+  public static <A> Resource<A> reduce(Collection<? extends Resource<A>> operands, ErrorCatching<Expiring<A>> identity, BiFunction<ErrorCatching<Expiring<A>>, ErrorCatching<Expiring<A>>, ErrorCatching<Expiring<A>>> f) {
+    Resource<A> result = ThinResourceMonad.reduce(operands, identity, f)::getDynamics;
+    operands.forEach(op -> addDependency(result, op));
+    return result;
+  }
+
+  /**
+   * Like {@link ResourceMonad#reduce(Collection, Object, BiFunction, String)},
+   * but operator acts on fully wrapped dynamics instead of plain dynamics.
+   *
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction)
+   * @see ResourceMonad#reduce(Collection, Object, BiFunction, String)
+   * @see ResourceMonad#reduce(Collection, ErrorCatching, BiFunction)
+   */
+  public static <A> Resource<A> reduce(Collection<? extends Resource<A>> operands, ErrorCatching<Expiring<A>> identity, BiFunction<ErrorCatching<Expiring<A>>, ErrorCatching<Expiring<A>>, ErrorCatching<Expiring<A>>> f, String operationName) {
+    return name(reduce(operands, identity, f), operationName + argsFormat(operands), operands.toArray());
   }
 
   // Not strictly part of this monad, but commonly used to "fill the gap" when deriving resources with partial bindings

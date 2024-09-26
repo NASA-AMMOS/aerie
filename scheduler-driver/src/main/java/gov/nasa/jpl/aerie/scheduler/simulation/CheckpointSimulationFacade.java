@@ -1,11 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
@@ -15,7 +12,10 @@ import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver.onceAllActivitiesAreFinished;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.scheduleFromPlan;
+import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.schedulingActToActivityDir;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.updatePlanWithChildActivities;
 
 public class  CheckpointSimulationFacade implements SimulationFacade {
@@ -108,25 +109,11 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
-  private <K, V> void replaceValue(final Map<K, V> map, final V value, final V replacement) {
-    for (final Map.Entry<K, V> entry : map.entrySet()) {
-      if (entry.getValue().equals(value)) {
-        entry.setValue(replacement);
-        break;
-      }
-    }
-  }
-
   private void replaceIds(
       final PlanSimCorrespondence planSimCorrespondence,
-      final Map<ActivityDirectiveId, ActivityDirectiveId> updates)
-  {
-    for (final var replacements : updates.entrySet()) {
-      replaceValue(
-          planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId(),
-          replacements.getKey(),
-          replacements.getValue());
-      if (planSimCorrespondence.directiveIdActivityDirectiveMap().containsKey(replacements.getKey())) {
+      final Map<ActivityDirectiveId, ActivityDirectiveId> updates){
+    for(final var replacements : updates.entrySet()){
+      if(planSimCorrespondence.directiveIdActivityDirectiveMap().containsKey(replacements.getKey())){
         final var value = planSimCorrespondence.directiveIdActivityDirectiveMap().remove(replacements.getKey());
         planSimCorrespondence.directiveIdActivityDirectiveMap().put(replacements.getValue(), value);
       }
@@ -173,7 +160,7 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
   @Override
   public SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
       final Plan plan,
-      final SchedulingActivityDirective activity)
+      final SchedulingActivity activity)
   throws SimulationException, SchedulingInterruptedException {
     return simulateNoResults(plan, null, activity).simulationResultsComputerInputs();
   }
@@ -193,7 +180,7 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
   private AugmentedSimulationResultsComputerInputs simulateNoResults(
       final Plan plan,
       final Duration until,
-      final SchedulingActivityDirective activity)
+      final SchedulingActivity activity)
   throws SimulationException, SchedulingInterruptedException {
     final var planSimCorrespondence = scheduleFromPlan(plan, this.schedulerModel);
 
@@ -224,7 +211,7 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
     else if (activity != null && until == null) {
       simulationDuration = planningHorizon.getEndAerie();
       stoppingCondition = CheckpointSimulationDriver.stopOnceActivityHasFinished(
-          planSimCorrespondence.planActDirectiveIdToSimulationActivityDirectiveId().get(activity.id()));
+          activity.id());
       LOGGER.info("Simulation mode: until activity ends " + activity);
     }
     //(3)
@@ -277,8 +264,8 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
           activityResults,
           activityTypes,
           plan,
-          planSimCorrespondence,
-          planningHorizon);
+          planningHorizon
+      );
 
       SimulationFacadeUtils.pullActivityDurationsIfNecessary(
           plan,
@@ -321,23 +308,27 @@ public class  CheckpointSimulationFacade implements SimulationFacade {
       final Plan plan,
       final Duration until,
       final Set<String> resourceNames
-  ) throws SimulationException, SchedulingInterruptedException
-  {
+  ) throws SimulationException, SchedulingInterruptedException {
     if (this.initialSimulationResults != null) {
       final var inputPlan = scheduleFromPlan(plan, schedulerModel);
-      final var initialPlanA = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
-      if (initialPlanA.equals(inputPlan)) {
-        return initialSimulationResults;
-      }
+      final var initialPlan = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
+      if (inputPlan.equals(initialPlan)) return initialSimulationResults;
     }
     final var resultsInput = simulateNoResults(plan, until);
     final var driverResults = resultsInput.simulationResultsComputerInputs().computeResults(resourceNames);
     this.latestSimulationData = new SimulationData(
         plan,
         driverResults,
-        SimulationResultsConverter.convertToConstraintModelResults(driverResults),
-        Optional.ofNullable(resultsInput.planSimCorrespondence().planActDirectiveIdToSimulationActivityDirectiveId()));
+        SimulationResultsConverter.convertToConstraintModelResults(driverResults)
+    );
     return this.latestSimulationData;
   }
 
+  @Override
+  public Optional<SimulationData> getLatestSimulationData() {
+    if (this.latestSimulationData == null)
+      return Optional.ofNullable(this.initialSimulationResults);
+    else
+      return Optional.of(this.latestSimulationData);
+  }
 }

@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsInterface;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -11,7 +10,6 @@ import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
-import org.apache.commons.collections4.BidiMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -136,7 +134,7 @@ public class Problem {
    * @return the initial seed plan that schedulers may start from
    */
   public Plan getInitialPlan() {
-    return initialPlan;
+    return initialPlan.duplicate();
   }
 
   /**
@@ -146,14 +144,14 @@ public class Problem {
    */
   public void setInitialPlan(
       final Plan plan,
-      final Optional<SimulationResultsInterface> initialSimulationResults,
-      final BidiMap<SchedulingActivityDirectiveId, ActivityDirectiveId> mapSchedulingIdsToActivityIds) {
+      final Optional<SimulationResultsInterface> initialSimulationResults
+  ) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
-        plan,
+        getInitialPlan(),
         simulationResults,
-        SimulationResultsConverter.convertToConstraintModelResults(simulationResults),
-        Optional.ofNullable(mapSchedulingIdsToActivityIds)));
+        SimulationResultsConverter.convertToConstraintModelResults(simulationResults)
+    ));
   }
 
   /**
@@ -162,7 +160,7 @@ public class Problem {
    * @param plan the initial seed plan that schedulers may start from
    */
   public void setInitialPlan(final Plan plan) {
-    setInitialPlan(plan, Optional.empty(), null);
+    setInitialPlan(plan, Optional.empty());
   }
 
   public Optional<SimulationData> getInitialSimulationResults(){ return initialSimulationResults; }

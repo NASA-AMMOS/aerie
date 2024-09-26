@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-  id 'com.github.johnrengelman.shadow' version '8.1.1'
-  id "org.jetbrains.kotlin.jvm" version "1.9.22"
+  id "org.jetbrains.kotlin.jvm" version "2.0.20"
   id 'java-library'
-  id 'org.jetbrains.dokka' version '1.9.10'
+  id 'org.jetbrains.dokka' version '1.9.20'
+  id 'maven-publish'
 }
 
 repositories {
@@ -14,15 +14,13 @@ repositories {
 
 dependencies {
   implementation project(':merlin-driver')
-  implementation project(':parsing-utilities')
+  implementation project(':type-utils')
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
   testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-//  dokkaHtmlPlugin 'org.jetbrains.dokka:kotlin-as-java-plugin:1.9.10'
 }
 
 tasks.withType(KotlinJvmCompile.class).configureEach {
@@ -37,6 +35,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
 dokkaHtmlPartial.configure {
   dokkaSourceSets {
      configureEach {
@@ -44,7 +47,7 @@ dokkaHtmlPartial.configure {
       moduleName.set("Timeline")
 
       reportUndocumented.set(true)
-      failOnWarning.set(true)
+      failOnWarning.set(false)
 
       // contains descriptions for the module and the packages
       includes.from("MODULE_DOCS.md")
@@ -57,6 +60,28 @@ dokkaHtmlPartial.configure {
             "https://github.com/NASA-AMMOS/aerie/blob/feat/java-timeline-library/timeline/src/main/kotlin/"
         ))
         remoteLineSuffix.set("#L")
+      }
+    }
+  }
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty("publishing.version")
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
       }
     }
   }

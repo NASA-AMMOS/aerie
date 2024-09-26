@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.function.TriFunction;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -84,7 +83,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       if (segment.interval().isEmpty() ||
           (oldSegment != null &&
            (!endBeforeStart(oldSegment.interval(), segment.interval()) ||
-            (segment.interval().start.isEqualTo(oldSegment.interval().end) && Objects.equals(segment.value(), oldSegment.value()))))) {
+            (segment.interval().start.equals(oldSegment.interval().end) && Objects.equals(segment.value(), oldSegment.value()))))) {
         segmentsOkay = false;
         break;
       }
@@ -324,7 +323,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       if (!leftDone && (!leftGetNext || leftIter.hasNext())) {
         if (leftGetNext) leftNextDefinedSegment = leftIter.next();
         leftGetNext = false;
-        if (leftNextDefinedSegment.interval().start.shorterThan(startTime) || (leftNextDefinedSegment.interval().start.isEqualTo(startTime) && !leftNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+        if (leftNextDefinedSegment.interval().start.shorterThan(startTime) || (leftNextDefinedSegment.interval().start.equals(startTime) && !leftNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
           leftInterval = leftNextDefinedSegment.interval();
           leftValue = Optional.of(leftNextDefinedSegment.value());
           leftGetNext = true;
@@ -345,7 +344,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       if (!rightDone && (!rightGetNext || rightIter.hasNext())) {
         if (rightGetNext) rightNextDefinedSegment = rightIter.next();
         rightGetNext = false;
-        if (rightNextDefinedSegment.interval().start.shorterThan(startTime) || (rightNextDefinedSegment.interval().start.isEqualTo(startTime) && !rightNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+        if (rightNextDefinedSegment.interval().start.shorterThan(startTime) || (rightNextDefinedSegment.interval().start.equals(startTime) && !rightNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
           rightInterval = rightNextDefinedSegment.interval();
           rightValue = Optional.of(rightNextDefinedSegment.value());
           rightGetNext = true;
@@ -363,7 +362,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         rightValue = Optional.empty();
       }
 
-      if (leftInterval.end.isEqualTo(rightInterval.end)) {
+      if (leftInterval.end.equals(rightInterval.end)) {
         endTime = leftInterval.end;
         if (leftInterval.includesEnd() && rightInterval.includesEnd()) {
           endInclusivity = Inclusive;
@@ -445,6 +444,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   @Override
   public Iterator<Segment<V>> iterator() {
     return this.segments.iterator();
+  }
+
+  public Iterator<Segment<V>> reverseIterator() {
+    return this.segments.descendingIterator();
   }
 
   /** Creates an iterable over the Intervals where this map is equal to a value */

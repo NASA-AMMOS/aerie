@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -199,7 +199,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
    */
   @Override
   public SimulationResultsComputerInputs simulateNoResultsUntilEndAct(
-      final Plan plan, final SchedulingActivityDirective activity)
+      final Plan plan, final SchedulingActivity activity)
     throws SimulationException, SchedulingInterruptedException
   {
     checkNotNull(plan);
@@ -295,8 +295,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     final var driverResults = resultsInput.simulationResultsComputerInputs().computeResults(resourceNames);
     this.latestSimulationData = new SimulationData(
         plan, driverResults,
-        SimulationResultsConverter.convertToConstraintModelResults(driverResults),
-        Optional.ofNullable(resultsInput.planSimCorrespondence().planActDirectiveIdToSimulationActivityDirectiveId()));
+        SimulationResultsConverter.convertToConstraintModelResults(driverResults));
     return this.latestSimulationData;
   }
 
@@ -325,7 +324,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
   private AugmentedSimulationResultsComputerInputs simulateNoResults(
       final Plan plan,
       @Nullable final Duration until,
-      @Nullable final SchedulingActivityDirective activity)
+      @Nullable final SchedulingActivity activity)
     throws SimulationException, SchedulingInterruptedException
   {
     checkNotNull(plan);
@@ -379,7 +378,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
 
     //update the input plan object to contain child activities and durations
     SimulationFacadeUtils.updatePlanWithChildActivities(
-        activityResults, this.activityTypes, plan, planSimCorrespondence, this.planningHorizon);
+        activityResults, this.activityTypes, plan, this.planningHorizon);
     SimulationFacadeUtils.pullActivityDurationsIfNecessary(
         plan, planSimCorrespondence, activityResults);
 
@@ -447,6 +446,14 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
         this.planningHorizon.getAerieHorizonDuration());
     this.driverEngineCache = newDriver;
     return newDriver;
+  }
+
+  @Override
+  public Optional<SimulationData> getLatestSimulationData() {
+    if (this.latestSimulationData == null)
+      return Optional.ofNullable(this.initialSimulationResults);
+    else
+      return Optional.of(this.latestSimulationData);
   }
 
   /**

@@ -26,4 +26,13 @@ public record VariableClock(Duration extract, int multiplier) implements Dynamic
   public static VariableClock pausedStopwatch(Duration time) {
     return new VariableClock(time, 0);
   }
+
+  public static VariableClock runningTimer(Duration timeRemaining) {
+    return new VariableClock(timeRemaining, -1);
+  }
+
+  public static VariableClock pausedTimer(Duration timeRemaining) {
+    // Identical to pausedStopwatch (could be condensed to just "paused", perhaps?)
+    return new VariableClock(timeRemaining, 0);
+  }
 }

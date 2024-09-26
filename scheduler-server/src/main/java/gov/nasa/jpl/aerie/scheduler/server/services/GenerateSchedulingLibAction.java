@@ -10,14 +10,14 @@ import java.util.stream.Collectors;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 public record GenerateSchedulingLibAction(
-    MerlinService.ReaderRole merlinService
+    MerlinDatabaseService.ReaderRole merlinDatabaseService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(merlinService);
+    Objects.requireNonNull(merlinDatabaseService);
   }
 
   /**
@@ -45,10 +45,10 @@ public record GenerateSchedulingLibAction(
       final var temporalPolyfillTypes = getTypescriptResource("constraints/TemporalPolyfillTypes.ts");
 
 
-      var missionModelTypes = merlinService.getMissionModelTypes(missionModelId);
+      var missionModelTypes = merlinDatabaseService.getMissionModelTypes(missionModelId);
       if(planId.isPresent()) {
-        final var allResourceTypes = merlinService.getResourceTypes(planId.get());
-        missionModelTypes = new MerlinService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
+        final var allResourceTypes = merlinDatabaseService.getResourceTypes(planId.get());
+        missionModelTypes = new MerlinDatabaseService.MissionModelTypes(missionModelTypes.activityTypes(), allResourceTypes);
       }
 
       final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);

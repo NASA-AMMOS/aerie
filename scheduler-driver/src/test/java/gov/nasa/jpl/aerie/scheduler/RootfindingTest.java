@@ -73,7 +73,7 @@ public class RootfindingTest {
               final EquationSolvingAlgorithms.History<Duration, PrioritySolver.ActivityMetadata> historyType)
           throws EquationSolvingAlgorithms.DiscontinuityException
           {
-            if (x.isEqualTo(oneSecond)) {
+            if (x.equals(oneSecond)) {
               throw new EquationSolvingAlgorithms.DiscontinuityException();
             }
             final var ret = x.times(2);

@@ -16,6 +16,7 @@ import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.Discrete.d
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.discrete.DiscreteResources.not;
 import static gov.nasa.jpl.aerie.contrib.streamline.modeling.linear.Linear.linear;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 public final class VariableClockResources {
   private VariableClockResources() {}
@@ -51,7 +52,7 @@ public final class VariableClockResources {
   }
 
   public static Resource<Linear> asLinear(Resource<VariableClock> clock, Duration unit) {
-    return map(clock, c -> linear(c.extract().ratioOver(unit), c.multiplier()));
+    return map(clock, c -> linear(c.extract().ratioOver(unit), c.multiplier() * SECOND.ratioOver(unit)));
   }
 
   public static Resource<VariableClock> asVariableClock(Resource<Clock> clock) {

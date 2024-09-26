@@ -7,11 +7,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +23,17 @@ public class SimulationResults implements SimulationResultsInterface {
   public final Duration duration;
   public final Map<String, ResourceProfile<RealDynamics>> realProfiles;
   public final Map<String, ResourceProfile<SerializedValue>> discreteProfiles;
-  public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
-  public final Set<SimulatedActivityId> removedActivities;
-  public final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities;
+  public final Map<ActivityInstanceId, ActivityInstance> simulatedActivities;
+  public final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities;
+  public final Set<ActivityInstanceId> removedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
   public final Map<Duration, List<EventGraph<EventRecord>>> events;
 
   public SimulationResults(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
       final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+      final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
       final Instant startTime,
       final Duration duration,
       final List<Triple<Integer, String, ValueSchema>> topics,
@@ -46,9 +46,9 @@ public class SimulationResults implements SimulationResultsInterface {
   public SimulationResults(
       final Map<String, ResourceProfile<RealDynamics>> realProfiles,
       final Map<String, ResourceProfile<SerializedValue>> discreteProfiles,
-      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
-      final Set<SimulatedActivityId> removedActivities,
-      final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
+      final Map<ActivityInstanceId, ActivityInstance> simulatedActivities,
+      final Set<ActivityInstanceId> removedActivities,
+      final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
       final Instant startTime,
       final Duration duration,
       final List<Triple<Integer, String, ValueSchema>> topics,
@@ -91,17 +91,17 @@ public class SimulationResults implements SimulationResultsInterface {
   }
 
   @Override
-  public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+  public Map<ActivityInstanceId, ActivityInstance> getSimulatedActivities() {
     return simulatedActivities;
   }
 
   @Override
-  public Set<SimulatedActivityId> getRemovedActivities() {
+  public Set<ActivityInstanceId> getRemovedActivities() {
     return removedActivities;
   }
 
   @Override
-  public Map<SimulatedActivityId, UnfinishedActivity> getUnfinishedActivities() {
+  public Map<ActivityInstanceId, UnfinishedActivity> getUnfinishedActivities() {
     return unfinishedActivities;
   }
 
@@ -121,7 +121,7 @@ public class SimulationResults implements SimulationResultsInterface {
     if (!(o instanceof SimulationResults that)) return false;
 
     return startTime.equals(that.startTime)
-           && duration.isEqualTo(that.duration)
+           && duration.equals(that.duration)
            && realProfiles.equals(that.realProfiles)
            && discreteProfiles.equals(that.discreteProfiles)
            && simulatedActivities.equals(that.simulatedActivities)

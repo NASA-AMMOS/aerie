@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -15,7 +16,8 @@ class TypescriptCodeGenerationServiceTest {
   @Test
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
-    final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)), Optional.empty());
+    final var expected = codeGenService.generateTypescriptTypes(new MissionModelId(1L),
+                                                                Optional.of(new PlanId(1L)), Optional.empty());
     assertEquals(expected,
         """
             /** Start Codegen */

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<telemetry_dictionary>
+  <header mission_name="Banana Nation" version="1.0.0.0" schema_version="1.0">
+    <spacecraft_ids>
+      <spacecraft_id value="62"/>
+    </spacecraft_ids>
+  </header>
+  <enum_definitions>
+    <enum_table name="BAKE_STATE">
+    <values>
+      <enum symbol="OVEN_OFF" numeric="0"/>
+      <enum symbol="OVEN_ON" numeric="0"/>
+    </values>
+    </enum_table>
+  </enum_definitions>
+  <telemetry_groups>
+    <group group_name="oven_model" group_desc="different oven models">
+      <group_channel>OVEN-21</group_channel>
+      <group_channel>OVEN-26</group_channel>
+    </group>
+  </telemetry_groups>
+  <telemetry_definitions>
+  <telemetry abbreviation="BAKE-0000" channel_derivation="None" name="BAKE_STATE" type="enum" source="flight" byte_length="1">
+    <measurement_id>1</measurement_id>
+    <description>String of the oven</description>
+    <enum_format enum_name="BAKE_STATE"/>
+    <raw_units>None</raw_units>
+    <categories>
+      <module>oven_sc</module>
+      <ops_category>BAKE</ops_category>
+    </categories>
+    <fsw_specification oven_buffer_depth="4"/>
+  </telemetry>
+  </telemetry_definitions>
+</telemetry_dictionary>

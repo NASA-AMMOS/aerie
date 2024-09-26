@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;

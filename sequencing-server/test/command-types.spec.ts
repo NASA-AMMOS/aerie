@@ -1,18 +1,25 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { Status } from '../src/common.js';
-import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
+import { insertDictionary, removeDictionary } from './testUtils/Dictionary';
 import { getGraphQLClient } from './testUtils/testUtils.js';
+import { DictionaryType } from '../src/types/types';
 
 let graphqlClient: GraphQLClient;
 let commandDictionaryId: number;
+let channelDictionaryId: number;
+let parameterDictionaryId: number;
 
 beforeAll(async () => {
   graphqlClient = await getGraphQLClient();
-  commandDictionaryId = (await insertCommandDictionary(graphqlClient)).id;
+  commandDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.COMMAND)).id;
+  channelDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.CHANNEL)).id;
+  parameterDictionaryId = (await insertDictionary(graphqlClient, DictionaryType.PARAMETER)).id;
 });
 
 afterAll(async () => {
-  removeCommandDictionary(graphqlClient, commandDictionaryId);
+  await removeDictionary(graphqlClient, commandDictionaryId, DictionaryType.COMMAND);
+  await removeDictionary(graphqlClient, channelDictionaryId, DictionaryType.CHANNEL);
+  await removeDictionary(graphqlClient, parameterDictionaryId, DictionaryType.PARAMETER);
 });
 
 it('should return command types', async () => {
