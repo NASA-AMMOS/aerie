@@ -1993,7 +1993,7 @@ public final class SimulationEngine implements AutoCloseable {
   ) {
     return computeActivitySimulationResults(
         startTime,
-        this.spanInfo
+        true
     );
   }
 
@@ -2036,9 +2036,14 @@ public final class SimulationEngine implements AutoCloseable {
   /**
    * Computes only activity-related results when resources are not needed
    */
+  public SimulationActivityExtract computeCombinedActivitySimulationResults(
+      final Instant startTime
+  ) {
+    return computeActivitySimulationResults(startTime, true);
+  }
   public SimulationActivityExtract computeActivitySimulationResults(
       final Instant startTime,
-      final SpanInfo spanInfo
+      final boolean combined
   ) {
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<SpanId, SpanId>();
@@ -2103,7 +2108,18 @@ public final class SimulationEngine implements AutoCloseable {
         ));
       }
     });
-    return new SimulationActivityExtract(startTime, getElapsedTime(), simulatedActivities, unfinishedActivities);
+    var extract = new SimulationActivityExtract(startTime, getElapsedTime(), simulatedActivities, unfinishedActivities);
+    if (oldEngine != null && combined) {
+      var oldExtract = oldEngine.computeActivitySimulationResults(startTime, true);
+      final var newSimulatedActivities = new LinkedHashMap<>(simulatedActivities);
+      newSimulatedActivities.putAll(oldExtract.simulatedActivities);
+      final var newUnfinishedActivities = new LinkedHashMap<>(unfinishedActivities);
+      newUnfinishedActivities.putAll(oldExtract.unfinishedActivities);
+      var combinedExtract = new SimulationActivityExtract(startTime, Duration.max(getElapsedTime(), oldExtract.duration),
+                                                          newSimulatedActivities, newUnfinishedActivities);
+      return combinedExtract;
+    }
+    return extract;
   }
 
   private TreeMap<Duration, List<EventGraph<EventRecord>>> createSerializedTimeline(
@@ -2187,7 +2203,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var realProfiles = resourceProfiles.realProfiles();
     final var discreteProfiles = resourceProfiles.discreteProfiles();
 
-    final var activityResults = computeActivitySimulationResults(startTime, spanInfo);
+    final var activityResults = computeActivitySimulationResults(startTime, false);
     simulatedActivities = activityResults.simulatedActivities;
     unfinishedActivities = activityResults.unfinishedActivities;
 

@@ -1225,6 +1225,7 @@ public class TestApplyWhen {
     var plan = solver.getNextSolution();
     for(SchedulingActivity a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
+      System.out.println(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(0, Duration.SECONDS), activityTypeIndependent));

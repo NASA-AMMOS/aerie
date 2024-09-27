@@ -373,8 +373,7 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
     }
     if(canceledListener.get()) throw new SchedulingInterruptedException("simulation cleanup");
     //compute just the activity timing needed out of simulation (not full results)
-    final var activityResults = driver.getEngine().computeActivitySimulationResults(
-        simulationStartTime, driver.getEngine().spanInfo);
+    final var activityResults = driver.getEngine().computeCombinedActivitySimulationResults(simulationStartTime);
 
     //update the input plan object to contain child activities and durations
     SimulationFacadeUtils.updatePlanWithChildActivities(
