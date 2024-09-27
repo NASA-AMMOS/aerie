@@ -552,7 +552,7 @@ public class NexusMetaSolver implements Solver {
       plan.getEvaluation().forGoal(goal).setConflictSatisfaction(missing, conflictSolverReturn.satisfaction());
     }
 
-    // Resolve conflicts from non-decomposed compound SchedulingActivities added manually to the plan
+    // TODO jd Resolve conflicts from non-decomposed compound SchedulingActivities added manually to the plan
     while (itConflicts.hasNext()) {
       final var missing = itConflicts.next();
       assert missing != null;

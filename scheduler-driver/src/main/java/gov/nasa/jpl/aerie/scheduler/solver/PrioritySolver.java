@@ -324,7 +324,7 @@ public class PrioritySolver extends SubSolver {
     } else if(!analysisOnly && conflict instanceof MissingRecurrenceConflict missingRecurrenceConflict){
       conflictSolverReturn = solveMissingRecurrenceConflict(missingRecurrenceConflict, goal.get());
     }
-    conflictSolverReturn.plan = plan;
+    conflictSolverReturn.plan = this.plan;
     return conflictSolverReturn;
   }
 
@@ -396,7 +396,7 @@ public class PrioritySolver extends SubSolver {
     if (!solverResult.activitiesCreated().isEmpty()) {
       logger.info("Found activity to satisfy missing activity instance conflict");
       final var newActivity = solverResult.activitiesCreated().iterator().next();
-      solverResult.activitiesCreated().iterator().remove();
+      //solverResult.activitiesCreated().iterator().remove();
       // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
       // undo everything
       if(solverResult.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
@@ -464,7 +464,7 @@ public class PrioritySolver extends SubSolver {
       if (!solverResult.activitiesCreated().isEmpty()) {
         logger.info("Found activity to satisfy missing activity template conflict");
         final var newActivity = solverResult.activitiesCreated().iterator().next();
-        solverResult.activitiesCreated().iterator().remove();
+        //solverResult.activitiesCreated().iterator().remove();
         // If any conflict created by the iterative calls decomposer -> scheduler result in NOT_SAT, then we have to
         // undo everything
         if(solverResult.satisfaction().equals(ConflictSatisfaction.NOT_SAT)){
@@ -731,7 +731,7 @@ public class PrioritySolver extends SubSolver {
             missing.scheduleAt());
         if(solverResult.activitiesCreated().iterator().hasNext()){
           final var act = solverResult.activitiesCreated().iterator().next();
-          solverResult.activitiesCreated().iterator().remove();
+          //solverResult.activitiesCreated().iterator().remove();
           if (missingTemplate.getAnchorId().isPresent()) {
             final SchedulingActivity predecessor = plan.getActivitiesById().get(missingTemplate.getAnchorId().get());
             int includePredDuration = 0;
@@ -759,7 +759,8 @@ public class PrioritySolver extends SubSolver {
       }
 
     }//if(startWindows)
-    solverResult.activitiesCreated().add(newActivity);
+    if(newActivity != null)
+      solverResult.activitiesCreated().add(newActivity);
     return solverResult;
   }
 
@@ -1156,8 +1157,10 @@ public class PrioritySolver extends SubSolver {
     } else {
       throw new UnsupportedOperationException("Unsupported duration type found: " + activityExpression.type().getDurationType());
     }
-    solverResults.activitiesCreated().add(activity.get());
-    solverResults.setSatisfaction(ConflictSatisfaction.SAT);
+    if(activity.isPresent()) {
+      solverResults.activitiesCreated().add(activity.get());
+      solverResults.setSatisfaction(ConflictSatisfaction.SAT);
+    }
     return solverResults;
   }
 
