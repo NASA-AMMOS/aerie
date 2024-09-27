@@ -1,4 +1,5 @@
 plugins {
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
   id 'java-library'
   id 'maven-publish'
   id 'jacoco'
@@ -22,10 +23,33 @@ test {
   }
 }
 
+jar {
+  dependsOn ':merlin-sdk:jar'
+  dependsOn ':parsing-utilities:jar'
+  from {
+    configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
+  } {
+    exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+  }
+}
+
 jacocoTestReport {
   dependsOn test
   reports {
     xml.required = true
+  }
+}
+
+repositories {
+  flatDir { dirs "$rootDir/third-party" }
+  mavenCentral()
+  maven {
+    name = "GitHubPackages"
+    url = "https://maven.pkg.github.com/nasa-ammos/aerie"
+    credentials {
+      username = System.getenv('GITHUB_USER')
+      password = System.getenv('GITHUB_TOKEN')
+    }
   }
 }
 
@@ -35,20 +59,20 @@ javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/a
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
-  implementation project(":merlin-driver-protocol")
   implementation project(':parsing-utilities')
 
-  api project(':merlin-sdk')
+//  api 'gov.nasa.jpl.aerie:merlin-sdk:+'
+  implementation project(':merlin-sdk')
   api 'org.glassfish:javax.json:1.1.4'
-  implementation project(':type-utils')
   implementation 'it.unimi.dsi:fastutil:8.5.12'
-  implementation 'org.slf4j:slf4j-simple:2.0.7'
 
-  testImplementation project(':merlin-framework')
-  testImplementation project(':merlin-framework-junit')
-  testImplementation project(':contrib')
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-  testImplementation "net.jqwik:jqwik:1.6.5"
+  implementation project(':merlin-driver-protocol')
+
+//  testImplementation project(':merlin-framework')
+//  testImplementation project(':merlin-framework-junit')
+//  testImplementation project(':contrib')
+//  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+//  testImplementation "net.jqwik:jqwik:1.6.5"
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
