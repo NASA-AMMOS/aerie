@@ -50,3 +50,9 @@ include 'examples:streamline-demo'
 include 'stateless-aerie'
 include 'orchestration-utils'
 include 'type-utils'
+
+// Incremental sim testing
+include 'merlin-driver-protocol'
+include 'merlin-driver-develop'
+include 'merlin-driver-test'
+include 'test-mission-model'
