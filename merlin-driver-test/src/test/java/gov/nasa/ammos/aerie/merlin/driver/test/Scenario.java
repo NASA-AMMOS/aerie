@@ -87,7 +87,7 @@ public record Scenario(
         final var add = (DualSchedule.Edit.Add) entry.getRight();
         builder.add(".thenAdd(duration($L, SECONDS), $S)", add.startOffset().in(SECONDS), add.directiveType());
       }
-      builder.add(";");
+      builder.add(";\n");
     }
 
 //    for (final var entry : schedule.schedule1().entries()) {
