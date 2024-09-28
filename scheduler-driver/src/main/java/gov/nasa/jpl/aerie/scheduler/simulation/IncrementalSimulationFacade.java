@@ -363,7 +363,8 @@ public class IncrementalSimulationFacade<Model> implements SimulationFacade {
           simulationStartTime, simulationDuration,
           //same plan vs sim start/dur ok for now, but should distinguish if scheduling in just a window
           simulationStartTime, simulationDuration,
-          false, //don't compute all results; will calculate act timing data only below
+          true, // TODO -- don't compute all results; will calculate act timing data only below;
+                                //         presently having to pass in true because resource info is somehow lost, maybe for old engines
           this.canceledListener,
           noopSimExtentConsumer,
           resourceManager);
