@@ -172,6 +172,11 @@ public final class SimulationEngine implements AutoCloseable {
   /** whether this engine failed its simulation, in which case it is not suitable for incremental simulation */
   public boolean failed;
 
+  private SubInstantDuration lastStaleReadTime = SubInstantDuration.MAX_VALUE;
+  private SubInstantDuration lastStaleTopicTime = SubInstantDuration.MAX_VALUE;
+  private SubInstantDuration lastStaleTopicOldEventTime = SubInstantDuration.MAX_VALUE;
+  private SubInstantDuration lastConditionTime = SubInstantDuration.MAX_VALUE;
+
   public SimulationEngine(
       Instant startTime,
       MissionModel<?> missionModel,
@@ -299,7 +304,11 @@ public final class SimulationEngine implements AutoCloseable {
 
   private void startDaemons(Duration time) {
     try {
-      scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
+      // TODO -- is it necessary to handle task factories here?  Didn't this work before the 9/28/24 changes below?
+      var spanId = scheduleTask(Duration.ZERO, missionModel.getDaemon(), null);
+      var taskId = getTaskIds(spanId).getFirst();
+      this.taskFactories.put(taskId, missionModel.getDaemon());
+      this.taskIdsForFactories.put(missionModel.getDaemon(), taskId);
       step(Duration.MAX_VALUE, $ -> {});
     } catch (Throwable e) {
       throw new RuntimeException(e);
@@ -384,25 +393,33 @@ public final class SimulationEngine implements AutoCloseable {
       earliestStaleTopics = earliestStaleTopics(curTime().minus(1), nextTime);  // TODO: might want to not limit by nextTime and cache for future iterations
       if (debug) System.out.println("earliestStaleTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestStaleTopics);
       staleTopicTime = earliestStaleTopics.getRight().plus(1);
-      nextTime = SubInstantDuration.min(nextTime, staleTopicTime);
+      if (!staleTopicTime.isEqualTo(lastStaleTopicTime)) {
+        nextTime = SubInstantDuration.min(nextTime, staleTopicTime);
+      }
 
       earliestStaleTopicOldEvents = nextStaleTopicOldEvents(curTime().minus(1), SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)));
       if (debug) System.out.println("nextStaleTopicOldEvents(" + curTime().minus(1) + ", " + SubInstantDuration.min(nextTime, new SubInstantDuration(maximumTime, 0)) + ") = " + earliestStaleTopicOldEvents);
       staleTopicOldEventTime = earliestStaleTopicOldEvents.getRight().plus(1);
-      nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
+      if (!staleTopicOldEventTime.isEqualTo(lastStaleTopicOldEventTime)) {
+        nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
+      }
 
       earliestStaleReads = earliestStaleReads(
           curTime(),
           nextTime);  // might want to not limit by nextTime and cache for future iterations
       staleReadTime = earliestStaleReads.getLeft();
-      nextTime = SubInstantDuration.min(nextTime, staleReadTime);
+      if (!staleReadTime.isEqualTo(lastStaleReadTime)) {
+        nextTime = SubInstantDuration.min(nextTime, staleReadTime);
+      }
 
       // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
       // by index=1, and the window searched must be 1 index before the current time.
       earliestConditionTopics = earliestConditionTopics(curTime().minus(1), nextTime);
       if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestConditionTopics);
       conditionTime = earliestConditionTopics.getRight().plus(1);
-      nextTime = SubInstantDuration.min(nextTime, conditionTime);
+      if (!conditionTime.isEqualTo(lastConditionTime)) {
+        nextTime = SubInstantDuration.min(nextTime, conditionTime);
+      }
     }
 
     //SRS HERE was on dev:
@@ -444,16 +461,18 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (oldEngine != null) {
 
-      if (staleTopicTime.isEqualTo(nextTime)) {
+      if (staleTopicTime.isEqualTo(nextTime) && !staleTopicTime.isEqualTo(lastStaleTopicTime)) {
         if (debug) System.out.println("earliestStaleTopics at " + nextTime + " = " + earliestStaleTopics);
+        lastStaleTopicTime = staleTopicTime;
         for (Topic<?> topic : earliestStaleTopics.getLeft()) {
           invalidateTopic(topic, nextTime.duration());
           invalidatedTopics.add(topic);
         }
       }
 
-      if (staleTopicOldEventTime.isEqualTo(nextTime)) {
+      if (staleTopicOldEventTime.isEqualTo(nextTime) && !staleTopicOldEventTime.isEqualTo(lastStaleTopicOldEventTime)) {
         if (debug) System.out.println("nextStaleTopicOldEvents at " + nextTime + " = " + earliestStaleTopicOldEvents);
+        lastStaleTopicOldEventTime = staleTopicOldEventTime;
         for (Topic<?> topic : earliestStaleTopicOldEvents
             .getLeft()
             .stream()
@@ -464,8 +483,9 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
 
-      if (conditionTime.isEqualTo(nextTime)) {
+      if (conditionTime.isEqualTo(nextTime) && !conditionTime.isEqualTo(lastConditionTime)) {
         //if (debug) System.out.println("earliestConditionTopics at " + nextTime + " = " + earliestConditionTopics);
+        lastConditionTime = conditionTime;
         for (Topic<?> topic : earliestConditionTopics
             .getLeft()
             .stream()
@@ -476,8 +496,9 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
     }
-    if (staleReadTime != null && staleReadTime.isEqualTo(nextTime)) {
+    if (staleReadTime != null && staleReadTime.isEqualTo(nextTime) && !staleReadTime.isEqualTo(lastStaleReadTime)) {
       if (debug) System.out.println("earliestStaleReads at " + nextTime + " = " + earliestStaleReads);
+      lastStaleReadTime = staleReadTime;
       rescheduleStaleTasks(earliestStaleReads);
     } else
     if (timeOfNextJobs.isEqualTo(nextTime) && invalidatedTopics.isEmpty()) {
@@ -721,7 +742,7 @@ public final class SimulationEngine implements AutoCloseable {
         continue;
       }
       NavigableMap<SubInstantDuration, HashMap<TaskId, Event>> topicReadsAfter =
-          topicReads.subMap(after, false, earliest, true);
+          topicReads.subMap(after, true, earliest, true);
       if (topicReadsAfter == null || topicReadsAfter.isEmpty()) {
         continue;
       }
@@ -817,7 +838,7 @@ public final class SimulationEngine implements AutoCloseable {
     var earliest = before;
     for (var entry : timeline.staleTopics.entrySet()) {
       Topic<?> topic = entry.getKey();
-      var subMap = entry.getValue().subMap(after, false, earliest, true);
+      var subMap = entry.getValue().subMap(after, true, earliest, true);
       SubInstantDuration d = null;
       for (var e : subMap.entrySet()) {
         if (e.getValue()) {
@@ -849,7 +870,7 @@ public final class SimulationEngine implements AutoCloseable {
       TreeMap<Duration, List<EventGraph<Event>>> eventsByTime =
           timeline.getCombinedEventsByTopic().get(topic);
       if (eventsByTime == null) continue;
-      var subMap = eventsByTime.subMap(after.duration(), false, earliest.duration(), true);
+      var subMap = eventsByTime.subMap(after.duration(), true, earliest.duration(), true);
       SubInstantDuration time = null;
       for (var e : subMap.entrySet()) {
         final List<EventGraph<Event>> events = e.getValue();
@@ -931,12 +952,21 @@ public final class SimulationEngine implements AutoCloseable {
       parentId = nextParentId;
     }
 
-    final ExecutionState<?> execState = oldEngine.getTaskExecutionState(parentId);
-    final Duration taskStart;
-    if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
-    else {
-      //taskStart = Duration.ZERO;
-      throw new RuntimeException("Can't find task start!");
+    Duration taskStart = null;
+    var spanId = oldEngine.taskToSpanMap.get(parentId);
+    if (spanId != null) {
+      var span = oldEngine.spans.get(spanId);
+      if (span != null) {
+        taskStart = span.startOffset;
+      }
+    }
+    if (taskStart == null) {
+      final ExecutionState<?> execState = oldEngine.getTaskExecutionState(parentId);
+      if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
+      else {
+        //taskStart = Duration.ZERO;
+        throw new RuntimeException("Can't find task start!");
+      }
     }
     rescheduleTask(parentId, taskStart);
     removeTaskHistory(parentId, time, afterEvent);
@@ -1581,7 +1611,7 @@ public final class SimulationEngine implements AutoCloseable {
         SimulationEngine.this.taskParent.put(childTask, task);
         SimulationEngine.this.taskChildren.computeIfAbsent(task, x -> new HashSet<>()).add(childTask);
 
-        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);this.tasks.put(task, progress.continueWith(s.continuation()));
+        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);
         this.tasks.put(task, progress.continueWith(s.continuation()));
       }
 
@@ -2113,6 +2143,7 @@ public final class SimulationEngine implements AutoCloseable {
       var oldExtract = oldEngine.computeActivitySimulationResults(startTime, true);
       final var newSimulatedActivities = new LinkedHashMap<>(simulatedActivities);
       newSimulatedActivities.putAll(oldExtract.simulatedActivities);
+      removedActivities.forEach(act -> newSimulatedActivities.remove(act));
       final var newUnfinishedActivities = new LinkedHashMap<>(unfinishedActivities);
       newUnfinishedActivities.putAll(oldExtract.unfinishedActivities);
       var combinedExtract = new SimulationActivityExtract(startTime, Duration.max(getElapsedTime(), oldExtract.duration),
@@ -2492,6 +2523,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private <T> void startActivity(T activity, Topic<T> inputTopic, final SpanId activeSpan) {
+    if (trace) System.out.println("startActivity(" + activity + ", " + inputTopic + ", " +  activeSpan + ")");
     final SerializableTopic<T> sTopic = (SerializableTopic<T>) getMissionModel().getTopics().get(inputTopic);
     if (sTopic == null) return; // ignoring unregistered activity types!
     final var activityType = sTopic.name().substring("ActivityType.Input.".length());
