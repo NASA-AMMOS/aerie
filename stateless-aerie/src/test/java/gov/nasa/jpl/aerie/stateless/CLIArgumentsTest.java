@@ -227,7 +227,8 @@ public class CLIArgumentsTest {
             final var outputReader = Json.createReader(new StringReader(output.substring(truncateIndex)))) {
           final var fileJson = fileReader.readObject();
           final var outputJson = outputReader.readObject();
-          assertEquals(fileJson, outputJson);
+          var diff = Json.createDiff(fileJson, outputJson);
+          assertEquals(fileJson, outputJson, "Output differs: " + diff.toJsonArray());
         }
       }
     }
@@ -244,7 +245,8 @@ public class CLIArgumentsTest {
           final var outputReader = Json.createReader(new StringReader(out.toString()))) {
         final var fileJson = fileReader.readObject();
         final var outputJson = outputReader.readObject();
-        assertEquals(fileJson, outputJson);
+        var diff = Json.createDiff(fileJson, outputJson);
+        assertEquals(fileJson, outputJson, "Output differs: " + diff.toJsonArray());
       }
     }
 
