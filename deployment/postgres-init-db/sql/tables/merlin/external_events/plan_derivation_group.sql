@@ -16,3 +16,10 @@ create table merlin.plan_derivation_group (
 
 comment on table merlin.plan_derivation_group is e''
   'A table for linking externally imported event sources & plans.';
+
+comment on column merlin.plan_derivation_group.plan_id is e''
+  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.'
+comment on column merlin.plan_derivation_group.derivation_group_name is e''
+  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.'
+comment on column merlin.created_at is e''
+  'The time (in _planner_ time, NOT _plan_ time) that this link was created at.'

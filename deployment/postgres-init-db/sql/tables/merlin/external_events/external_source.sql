@@ -26,3 +26,25 @@ create table merlin.external_source (
 
 comment on table merlin.external_source is e''
   'A table for externally imported event sources.';
+
+comment on column merlin.external_source.key is e''
+  'The key, or name, of the external_source.\n'
+  'Part of the primary key, along with the derivation_group_name';
+comment on column merlin.external_source.source_type_name is e''
+  'The type of this external_source.';
+comment on column merlin.external_source.derivation_group is e''
+  'The derivation_group that this external_source is included in.';
+comment on column merlin.external_source.valid_at is e''
+  'The time (in _planner_ time, NOT plan time) at which a source becomes valid.\n'
+  'This time helps determine when a source\'s events are valid for the span of time it covers.';
+comment on column merlin.external_source.start_time is e''
+  'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_source.end_time is e''
+  'The end time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_source.created_at is e''
+  'The time (in _planner_ time, NOT plan time) that this particular source was created.\n'
+  'This column is used primarily for documentation purposes, and has no associated functionality.';
+comment on column merlin.external_source.metadata is e''
+  'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
+  'Like the \'created_at\' column, this column is used primarily for documentation purposes, and has no associated functionality.';
+
