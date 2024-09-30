@@ -21,6 +21,26 @@ create table merlin.external_event (
 comment on table merlin.external_event is e''
   'A table for externally imported events.';
 
+
+comment on column merlin.external_event.key is e''
+  'The key, or name, of the external_event.\n'
+  'Part of the primary key, along with the source_key, derivation_group_name, and event_type_name.';
+comment on column merlin.external_event.event_type_name is e''
+  'The type of this external_event.';
+comment on column merlin.external_event.source_key is e''
+  'The key of the external_source that this external_event is included in.\n'
+  'Used as a foreign key along with the derivation_group_name to directly identify said source.\n'
+  'Part of the primary key along with the key, derivation_group_name, and event_type_name.';
+comment on column merlin.external_event.derivation_group_name is e''
+  'The derivation_group that the external_source bearing this external_event is a part of.';
+comment on column merlin.external_event.start_time is e''
+  'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_event.duration is e''
+  'The span of time of this external event.';
+comment on column merlin.external_event.properties is e''
+  'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
+  'This column is used primarily for documentation purposes, and has no associated functionality.';
+
 -- Add a trigger verifying that events fit into their sources
 create or replace function merlin.check_event_times()
  	returns trigger
@@ -45,9 +65,13 @@ begin
 	return null;
 end;
 $func$;
+
 comment on function merlin.check_event_times() is e''
- 'Check that any inserted event is fully in bounds of its source.';
+  'A function that checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
 create trigger check_event_times
 after insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
+
+comment on trigger check_event_times on merlin.external_event is e''
+  'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';

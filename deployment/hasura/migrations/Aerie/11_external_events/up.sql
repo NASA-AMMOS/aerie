@@ -9,6 +9,9 @@ create table merlin.external_source_type (
 comment on table merlin.external_source_type is e''
   'A table for externally imported event source types.';
 
+comment on column merlin.external_source_type.name is e''
+  'The identifier for this external_source_type, as well as its name.';
+
 -- Create table for external event types
 create table merlin.external_event_type (
     name text not null,
@@ -19,6 +22,9 @@ create table merlin.external_event_type (
 
 comment on table merlin.external_event_type is e''
   'A table for externally imported event types.';
+
+comment on column merlin.external_event_type.name is e''
+  'The identifier for this external_event_type, as well as its name.';
 
 -- Create a table to represent derivation groups for external sources
 create table merlin.derivation_group (
@@ -31,8 +37,18 @@ create table merlin.derivation_group (
       foreign key (source_type_name)
       references merlin.external_source_type(name)
 );
+
 comment on table merlin.derivation_group is e''
   'A table to represent the names of groups of sources to run derivation operations over.';
+
+-- TODO: make name the pk on its own??
+comment on column merlin.derivation_group.name is e''
+  'The name of the derivation group.\n'
+  'Part of the primary key, along with source_type_name.\n'
+  'Globally unique.';
+comment on column merlin.derivation_group.source_type_name is e''
+  'The name of the external_source_type of sources in this derivation group.\n'
+  'Part of the primary key, along with name.';
 
 -- Create a table to represent external event sources.
 create table merlin.external_source (
@@ -63,6 +79,27 @@ create table merlin.external_source (
 comment on table merlin.external_source is e''
   'A table for externally imported event sources.';
 
+comment on column merlin.external_source.key is e''
+  'The key, or name, of the external_source.\n'
+  'Part of the primary key, along with the derivation_group_name';
+comment on column merlin.external_source.source_type_name is e''
+  'The type of this external_source.';
+comment on column merlin.external_source.derivation_group is e''
+  'The derivation_group that this external_source is included in.';
+comment on column merlin.external_source.valid_at is e''
+  'The time (in _planner_ time, NOT plan time) at which a source becomes valid.\n'
+  'This time helps determine when a source\'s events are valid for the span of time it covers.';
+comment on column merlin.external_source.start_time is e''
+  'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_source.end_time is e''
+  'The end time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_source.created_at is e''
+  'The time (in _planner_ time, NOT plan time) that this particular source was created.\n'
+  'This column is used primarily for documentation purposes, and has no associated functionality.';
+comment on column merlin.external_source.metadata is e''
+  'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
+  'Like the \'created_at\' column, this column is used primarily for documentation purposes, and has no associated functionality.';
+
 -- Create table for external events
 create table merlin.external_event (
     key text not null,
@@ -86,6 +123,25 @@ create table merlin.external_event (
 comment on table merlin.external_event is e''
   'A table for externally imported events.';
 
+comment on column merlin.external_event.key is e''
+  'The key, or name, of the external_event.\n'
+  'Part of the primary key, along with the source_key, derivation_group_name, and event_type_name.';
+comment on column merlin.external_event.event_type_name is e''
+  'The type of this external_event.';
+comment on column merlin.external_event.source_key is e''
+  'The key of the external_source that this external_event is included in.\n'
+  'Used as a foreign key along with the derivation_group_name to directly identify said source.\n'
+  'Part of the primary key along with the key, derivation_group_name, and event_type_name.';
+comment on column merlin.external_event.derivation_group_name is e''
+  'The derivation_group that the external_source bearing this external_event is a part of.';
+comment on column merlin.external_event.start is e''
+  'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
+comment on column merlin.external_event.duration is e''
+  'The span of time of this external event.';
+comment on column merlin.external_event.properties is e''
+  'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
+  'This column is used primarily for documentation purposes, and has no associated functionality.';
+
 -- Create table for plan/external event links
 create table merlin.plan_derivation_group (
     plan_id integer not null,
@@ -104,6 +160,13 @@ create table merlin.plan_derivation_group (
 
 comment on table merlin.plan_derivation_group is e''
   'A table for linking externally imported event sources & plans.';
+
+comment on column merlin.plan_derivation_group.plan_id is e''
+  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.'
+comment on column merlin.plan_derivation_group.derivation_group_name is e''
+  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.'
+comment on column merlin.created_at is e''
+  'The time (in _planner_ time, NOT _plan_ time) that this link was created at.'
 
 -- Add a trigger verifying that events fit into their sources
 create or replace function merlin.check_event_times()
@@ -130,9 +193,15 @@ begin
 end;
 $func$;
 
+comment on function merlin.check_event_times() is e''
+  'A function that checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
+
 create trigger check_event_times
 after insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
+
+comment on trigger check_event_times is e''
+  'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
 
 -- Create a table to track which sources the user has and has not seen added/removed
 create table ui.seen_sources
@@ -153,6 +222,16 @@ create table ui.seen_sources
 comment on table ui.seen_sources is e''
   'A table for tracking the external sources acknowledge/unacknowledged by each user.';
 
+comment on column ui.seen_sources.username is e''
+  'The username of the user that has seen the given source referenced by this entry.\n'
+  'A foreign key referencing the permissions.users table.';
+comment on column ui.seen_sources.external_source_name is e''
+  'The name of the external_source that the user is being marked as having seen in this entry.';
+comment on column ui.seen_sources.external_source_type is e''
+  'The external_source_type of the external_source that the user is being marked as having seen in this entry.';
+comment on column ui.seen_sources.external_source_type is e''
+  'The derivation_group name of the external_source that the user is being marked as having seen in this entry.';
+
 -- create a function to aid the derived_events view, around diffing time ranges
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
@@ -168,10 +247,18 @@ begin
 end
 $$;
 
+comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[]) is e''
+  'A function used by the derived_events view that produces from the singular interval of time that a source covers a set of disjoint intervals.\n'
+  'The disjointness arises from where future sources\' spans are subtracted from this one.\n'
+  'For example, if a source is valid at t=0, and covers span s=1 to s=5, and there is a source valid at t=1 with a span s=2 to s=3\n'
+  'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
+
 -- create a view that derives events from different sources in a given derivation group
 create or replace view merlin.derived_events
 as
-select source_key,
+select
+  -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)
+  source_key,
   derivation_group_name,
   event_key,
   duration,
@@ -180,7 +267,8 @@ select source_key,
   properties,
   source_range,
   valid_at
-from ( select rule1_3.source_key,
+from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
+        select rule1_3.source_key,
         rule1_3.event_key,
         rule1_3.event_type_name,
         rule1_3.duration,
@@ -190,7 +278,9 @@ from ( select rule1_3.source_key,
         rule1_3.source_range,
         rule1_3.valid_at,
         row_number() over (partition by rule1_3.event_key, rule1_3.derivation_group_name order by rule1_3.valid_at desc) as rn
-        from ( select sub.key as source_key,
+        from (
+                -- select the events from the sources and include them as they fit into the ranges determined by sub
+                select sub.key as source_key,
                 external_event.key as event_key,
                 external_event.event_type_name,
                 external_event.duration,
@@ -201,6 +291,7 @@ from ( select rule1_3.source_key,
                 sub.valid_at
                 from merlin.external_event
                 join ( with derivation_tb_range as (
+                        -- this inner selection (derivation_tb_range) orders sources by their valid time and extracts the multirange that they are stated to be valid over
                         select external_source.key,
                                 external_source.derivation_group_name,
                                 tstzmultirange(tstzrange(external_source.start_time, external_source.end_time)) AS dr,
@@ -208,6 +299,7 @@ from ( select rule1_3.source_key,
                                 from merlin.external_source
                                 order by external_source.valid_at
                         ), ranges_with_subs as (
+                        -- this inner selection (ranges_with_subs) takes each of the sources above and compiles a list of all the sources that follow it and their multiranges that they are stated to be valid over
                         select tr1.key,
                               tr1.derivation_group_name,
                               tr1.dr as original_range,
@@ -217,6 +309,7 @@ from ( select rule1_3.source_key,
                                   left join derivation_tb_range tr2 on tr1.valid_at < tr2.valid_at
                               group by tr1.key, tr1.derivation_group_name, tr1.valid_at, tr1.dr
                         )
+                        -- this final selection (sub) utilizes the first, as well as merlin.subtract_later_ranges, to produce a sparse multirange that a given source is valid over. See merlin.subtract_later_ranges for further details on subtracted ranges.
                         select ranges_with_subs.key,
                               ranges_with_subs.derivation_group_name,
                               ranges_with_subs.original_range,
@@ -231,7 +324,7 @@ where rn = 1
 order by start_time;
 
 comment on view  merlin.derived_events is e''
-  'A view detailing all derived events from the ';
+  'A view detailing all derived events from all derivation groups.';
 
 -- create a view that aggregates additional derivation group information
 create or replace view merlin.derivation_group_comp

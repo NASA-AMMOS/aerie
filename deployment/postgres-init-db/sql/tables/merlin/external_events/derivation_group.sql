@@ -9,5 +9,15 @@ create table merlin.derivation_group (
       foreign key (source_type_name)
       references merlin.external_source_type(name)
 );
+
 comment on table merlin.derivation_group is e''
   'A table to represent the names of groups of sources to run derivation operations over.';
+
+-- TODO: make name the pk on its own??
+comment on column merlin.derivation_group.name is e''
+  'The name of the derivation group.\n'
+  'Part of the primary key, along with source_type_name.\n'
+  'Globally unique.';
+comment on column merlin.derivation_group.source_type_name is e''
+  'The name of the external_source_type of sources in this derivation group.\n'
+  'Part of the primary key, along with name.';

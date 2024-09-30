@@ -8,3 +8,6 @@ create table merlin.external_event_type (
 
 comment on table merlin.external_event_type is e''
   'A table for externally imported event types.';
+
+comment on column merlin.external_event_type.name is e''
+  'The identifier for this external_event_type, as well as its name.';
