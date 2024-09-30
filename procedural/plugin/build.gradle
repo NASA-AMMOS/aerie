@@ -1,6 +1,5 @@
 plugins {
   id 'groovy-gradle-plugin'
-  // id 'com.gradle.plugin-publish' version '1.3.0'
   id "maven-publish"
 }
 
@@ -17,9 +16,7 @@ version = '0.0.1'
 
 publishing {
   publications {
-    maven(MavenPublication) {
-      artifactId = "plugin"
-    }
+    maven(MavenPublication)
   }
   repositories {
     maven {
@@ -32,18 +29,3 @@ publishing {
     }
   }
 }
-
-//gradlePlugin {
-//   website = 'https://ammos.nasa.gov/aerie-docs/'
-//   vcsUrl = 'https://github.com/NASA-AMMOS/aerie'
-//
-//   plugins {
-//     matching { it.name == 'gov.nasa.ammos.aerie.procedural.plugin' }.configureEach {
-//       id = "gov.nasa.ammos.aerie.procedural.plugin"
-//       displayName = "NASA AMMOS Aerie Procedural Plugin"
-//       description = "Provides gradle tasks for building scheduling & constraint procedures for the Aerie system"
-//       tags.set(['ammos', 'aerie'])
-//       implementationClass = "GovNasaAmmosAerieProceduralPluginPlugin"
-//     }
-//   }
-//}
