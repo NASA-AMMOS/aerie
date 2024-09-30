@@ -1,11 +1,4 @@
 pluginManagement {
-  resolutionStrategy {
-    eachPlugin {
-      if (requested.id.namespace == 'gov.nasa.ammos.aerie.procedural') {
-        useModule('gov.nasa.ammos.aerie.procedural:plugin')
-      }
-    }
-  }
   repositories {
     maven {
       name = "GitHubPackages"
