@@ -1,3 +1,23 @@
+pluginManagement {
+  resolutionStrategy {
+    eachPlugin {
+      if (requested.id.namespace == 'gov.nasa.ammos.aerie.procedural') {
+        useModule('gov.nasa.ammos.aerie.procedural:plugin')
+      }
+    }
+  }
+  repositories {
+    maven {
+      name = "GitHubPackages"
+      url = "https://maven.pkg.github.com/skovati/copie"
+      credentials {
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")
+      }
+    }
+    gradlePluginPortal()
+  }
+}
 rootProject.name = 'aerie'
 
 // Mission Model support
