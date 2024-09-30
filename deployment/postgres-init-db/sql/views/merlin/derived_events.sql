@@ -1,6 +1,9 @@
+-- create a view that derives events from different sources in a given derivation group
 create or replace view merlin.derived_events
 as
-select source_key,
+select
+  -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)
+  source_key,
   derivation_group_name,
   event_key,
   duration,
@@ -9,7 +12,8 @@ select source_key,
   properties,
   source_range,
   valid_at
-from ( select rule1_3.source_key,
+from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
+        select rule1_3.source_key,
         rule1_3.event_key,
         rule1_3.event_type_name,
         rule1_3.duration,
@@ -19,7 +23,9 @@ from ( select rule1_3.source_key,
         rule1_3.source_range,
         rule1_3.valid_at,
         row_number() over (partition by rule1_3.event_key, rule1_3.derivation_group_name order by rule1_3.valid_at desc) as rn
-        from ( select sub.key as source_key,
+        from (
+                -- select the events from the sources and include them as they fit into the ranges determined by sub
+                select sub.key as source_key,
                 external_event.key as event_key,
                 external_event.event_type_name,
                 external_event.duration,
@@ -30,6 +36,7 @@ from ( select rule1_3.source_key,
                 sub.valid_at
                 from merlin.external_event
                 join ( with derivation_tb_range as (
+                        -- this inner selection (derivation_tb_range) orders sources by their valid time and extracts the multirange that they are stated to be valid over
                         select external_source.key,
                                 external_source.derivation_group_name,
                                 tstzmultirange(tstzrange(external_source.start_time, external_source.end_time)) AS dr,
@@ -37,6 +44,7 @@ from ( select rule1_3.source_key,
                                 from merlin.external_source
                                 order by external_source.valid_at
                         ), ranges_with_subs as (
+                        -- this inner selection (ranges_with_subs) takes each of the sources above and compiles a list of all the sources that follow it and their multiranges that they are stated to be valid over
                         select tr1.key,
                               tr1.derivation_group_name,
                               tr1.dr as original_range,
@@ -46,6 +54,7 @@ from ( select rule1_3.source_key,
                                   left join derivation_tb_range tr2 on tr1.valid_at < tr2.valid_at
                               group by tr1.key, tr1.derivation_group_name, tr1.valid_at, tr1.dr
                         )
+                        -- this final selection (sub) utilizes the first, as well as merlin.subtract_later_ranges, to produce a sparse multirange that a given source is valid over. See merlin.subtract_later_ranges for further details on subtracted ranges.
                         select ranges_with_subs.key,
                               ranges_with_subs.derivation_group_name,
                               ranges_with_subs.original_range,
@@ -60,4 +69,4 @@ where rn = 1
 order by start_time;
 
 comment on view  merlin.derived_events is e''
-  'A view detailing all derived events from the ';
+  'A view detailing all derived events from all derivation groups.';
