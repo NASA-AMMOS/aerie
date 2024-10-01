@@ -77,21 +77,6 @@ public class ExternalEventTests {
     ---------- COMMONLY REPEATED FUNCTIONS ----------
    */
   /**
-    * Quick external event creator, leveraging constants from a provided source object (source).
-    */
-  ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
-    return new ExternalEvent(
-        key,
-        et,
-        source.key(),
-        source.derivation_group_name(),
-        start_time,
-        duration,
-        mt
-    );
-  }
-
-  /**
    * A simple function to compare a SQL result (res) for a given key (key) against a list of expected entries (expected)
    */
   void compareLists(String[] expected, ResultSet res, String key) throws SQLException {
@@ -121,88 +106,6 @@ public class ExternalEventTests {
     return ret;
   }
 
-  /**
-   * Repeated function that uploads a source and various events, as well as related types.
-   * Used in:
-   *  - BASIC TESTS (uploadWithoutError, basicDerivedEvents, derivationGroupComp, verifyDeletion)
-   *  - final duplication tests (duplicateSource, duplicatedDG)
-   *  - superDerivedEvents
-   *
-   * Data here is based on the SSMO-MPS/mission-data-sandbox/derivation_test examples.
-   */
-  void upload_source(String dg) throws SQLException {
-    // First, define the sources.
-    ExternalSource sourceOne = new ExternalSource(
-        "Derivation_Test_00.json",
-        st,
-        dg,
-        "2024-01-18 00:00:00+00",
-        "2024-01-05 00:00:00+00",
-        "2024-01-11 00:00:00+00",
-        "2024-08-21 22:36:12.858009+00",
-        "{}"
-    );
-    ExternalSource sourceTwo = new ExternalSource(
-        "Derivation_Test_01.json",
-        st,
-        dg,
-        "2024-01-19 00:00:00+00",
-        "2024-01-01 00:00:00+00",
-        "2024-01-07 00:00:00+00",
-        "2024-08-21 22:36:19.381275+00",
-        "{}"
-    );
-    ExternalSource sourceThree = new ExternalSource(
-        "Derivation_Test_02.json",
-        st,
-        dg,
-        "2024-01-20 00:00:00+00",
-        "2024-01-03 00:00:00+00",
-        "2024-01-10 00:00:00+00",
-        "2024-08-21 22:36:23.340941+00",
-        "{}"
-    );
-    ExternalSource sourceFour = new ExternalSource(
-        "Derivation_Test_03.json",
-        st,
-        dg,
-        "2024-01-21 00:00:00+00",
-        "2024-01-01 12:00:00+00",
-        "2024-01-02 12:00:00+00",
-        "2024-08-21 22:36:28.365244+00",
-        "{}"
-    );
-
-    // Second, define the events, spaced by sources 1-4
-    ExternalEvent twoA = new ExternalEvent("2", "DerivationD", "Derivation_Test_00.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
-    ExternalEvent seven = new ExternalEvent("7", "DerivationC", "Derivation_Test_00.json", dg, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
-    ExternalEvent eight = new ExternalEvent("8", "DerivationB", "Derivation_Test_00.json", dg, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
-
-    ExternalEvent one = new ExternalEvent("1", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent twoB = new ExternalEvent("2", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
-    ExternalEvent three = new ExternalEvent("3", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
-    ExternalEvent four = new ExternalEvent("4", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
-
-    ExternalEvent five = new ExternalEvent("5", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent six = new ExternalEvent("6", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent twoC = new ExternalEvent("2", "DerivationB", "Derivation_Test_02.json", dg, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
-
-    ExternalEvent nine = new ExternalEvent("9", "DerivationC", "Derivation_Test_03.json", dg, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-
-    // insert them and any related types (skipping overlaps)
-    merlinHelper.insertTypesForEvent(twoA, sourceOne);
-    merlinHelper.insertTypesForEvent(seven, sourceOne);
-    merlinHelper.insertTypesForEvent(eight, sourceOne);
-    merlinHelper.insertTypesForEvent(one, sourceTwo);
-    merlinHelper.insertTypesForEvent(twoB, sourceTwo);
-    merlinHelper.insertTypesForEvent(three, sourceTwo);
-    merlinHelper.insertTypesForEvent(four, sourceTwo);
-    merlinHelper.insertTypesForEvent(five, sourceThree);
-    merlinHelper.insertTypesForEvent(six, sourceThree);
-    merlinHelper.insertTypesForEvent(twoC, sourceThree);
-    merlinHelper.insertTypesForEvent(nine, sourceFour);
-  }
-
 
   /*
     ---------- BASIC TESTS ----------
@@ -224,7 +127,7 @@ public class ExternalEventTests {
      */
     @Test
     void uploadWithoutError() {
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
     }
 
 
@@ -236,7 +139,7 @@ public class ExternalEventTests {
     @Test
     void basicDerivedEvents() {
       // upload all source data
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
       final var statement = getStatement();
 
       // check that derived events in our prewritten case has the correct keys
@@ -261,7 +164,7 @@ public class ExternalEventTests {
     @Test
     void derivationGroupComp() {
       // upload all source data
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
       final var statement = getStatement();
 
       // check that derivation_group_comp has 1 entry, with 4 sources and 7 events
@@ -308,7 +211,7 @@ public class ExternalEventTests {
       final var statement = getStatement();
 
       // correct deletion order (a small amount of variance is allowed here, see documentation of this function).
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
       assertDoesNotThrow(() -> {
         statement.get().executeUpdate(
             // language-sql
@@ -323,7 +226,7 @@ public class ExternalEventTests {
       });
 
       // any other order throws an error; arbitrarily we delete external source types before derivation groups, breaking them:
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
       assertThrows(SQLException.class, () -> {
         statement.get().executeUpdate(
             // language-sql
@@ -616,7 +519,7 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
+          ExternalEvent e = merlinHelper.createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
 
           merlinHelper.insertTypesForEvent(e, eS);
         });
@@ -679,9 +582,9 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
-          ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
-          ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
+          ExternalEvent e = merlinHelper.createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
+          ExternalEvent before = merlinHelper.createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
+          ExternalEvent after = merlinHelper.createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
 
           merlinHelper.insertTypesForEvent(e, A);
           merlinHelper.insertTypesForEvent(before, B);
@@ -736,9 +639,9 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
-          ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
-          ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
+          ExternalEvent e = merlinHelper.createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
+          ExternalEvent b1 = merlinHelper.createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
+          ExternalEvent b2 = merlinHelper.createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
 
           merlinHelper.insertTypesForEvent(e, A);
           merlinHelper.insertTypesForEvent(b1, B);
@@ -793,14 +696,14 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e1 = createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by B, very clearly
-          ExternalEvent e2 = createEvent(
+          ExternalEvent e1 = merlinHelper.createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by B, very clearly
+          ExternalEvent e2 = merlinHelper.createEvent(
               "a2",
               "2024-01-01T00:55:00Z",
               "00:35:00",
               A); // even empty space in B neg should negate
-          ExternalEvent b1 = createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
-          ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
+          ExternalEvent b1 = merlinHelper.createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
+          ExternalEvent b2 = merlinHelper.createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
 
           merlinHelper.insertTypesForEvent(e1, A);
           merlinHelper.insertTypesForEvent(e2, A);
@@ -855,8 +758,8 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e1 = createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by empty space
-          ExternalEvent e2 = createEvent("a2", "2024-01-01T00:55:00Z", "00:35:00", A); // negated by empty space
+          ExternalEvent e1 = merlinHelper.createEvent("a1", "2024-01-01T00:40:00Z", "00:10:00", A); // negated by empty space
+          ExternalEvent e2 = merlinHelper.createEvent("a2", "2024-01-01T00:55:00Z", "00:35:00", A); // negated by empty space
 
           merlinHelper.insertTypesForEvent(e1, A);
           merlinHelper.insertTypesForEvent(e2, A);
@@ -940,9 +843,9 @@ public class ExternalEventTests {
               ca,
               mt);
 
-          ExternalEvent e1 = createEvent("a", "2024-01-01T01:50:00Z", "00:10:00", A); // negated by empty space
-          ExternalEvent e2 = createEvent("a", "2024-01-01T03:40:00Z", "00:15:00", B); // negated by empty space
-          ExternalEvent e3 = createEvent("a", "2024-01-01T00:30:00Z", "00:20:00", C); // negated by empty space
+          ExternalEvent e1 = merlinHelper.createEvent("a", "2024-01-01T01:50:00Z", "00:10:00", A); // negated by empty space
+          ExternalEvent e2 = merlinHelper.createEvent("a", "2024-01-01T03:40:00Z", "00:15:00", B); // negated by empty space
+          ExternalEvent e3 = merlinHelper.createEvent("a", "2024-01-01T00:30:00Z", "00:20:00", C); // negated by empty space
 
           merlinHelper.insertTypesForEvent(e1, A);
           merlinHelper.insertTypesForEvent(e2, B);
@@ -1086,9 +989,9 @@ public class ExternalEventTests {
           ca,
           mt);
 
-      ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
-      ExternalEvent e2 = createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
-      ExternalEvent e3 = createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
+      ExternalEvent e1 = merlinHelper.createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+      ExternalEvent e2 = merlinHelper.createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
+      ExternalEvent e3 = merlinHelper.createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
 
       assertDoesNotThrow(() -> {
         merlinHelper.insertTypesForEvent(e1, A);
@@ -1121,8 +1024,8 @@ public class ExternalEventTests {
           ca,
           mt);
 
-      ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
-      ExternalEvent e2 = createEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
+      ExternalEvent e1 = merlinHelper.createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+      ExternalEvent e2 = merlinHelper.createEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
 
       // uploading is fine for the first event, naturally
       assertDoesNotThrow(() -> merlinHelper.insertTypesForEvent(e1, A));
@@ -1283,11 +1186,11 @@ public class ExternalEventTests {
           ca,
           mt);
 
-      ExternalEvent legal = createEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
-      ExternalEvent completelyBefore = createEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
-      ExternalEvent beforeIntersect = createEvent("beforeIntersect", "2024-01-01T00:55:00Z", "00:25:00", A); // illegal!
-      ExternalEvent afterIntersect = createEvent("afterIntersect", "2024-01-01T01:45:00Z", "00:30:00", A); // illegal!
-      ExternalEvent completelyAfter = createEvent("completelyAfter", "2024-01-01T02:10:00Z", "00:15:00", A); // illegal!
+      ExternalEvent legal = merlinHelper.createEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
+      ExternalEvent completelyBefore = merlinHelper.createEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
+      ExternalEvent beforeIntersect = merlinHelper.createEvent("beforeIntersect", "2024-01-01T00:55:00Z", "00:25:00", A); // illegal!
+      ExternalEvent afterIntersect = merlinHelper.createEvent("afterIntersect", "2024-01-01T01:45:00Z", "00:30:00", A); // illegal!
+      ExternalEvent completelyAfter = merlinHelper.createEvent("completelyAfter", "2024-01-01T02:10:00Z", "00:15:00", A); // illegal!
 
       // assert the legal event is okay (in the center of the source)
       assertDoesNotThrow(() -> {
@@ -1342,7 +1245,7 @@ public class ExternalEventTests {
       ); // same name, diff dg
 
       // upload general data
-      assertDoesNotThrow(() -> upload_source(dg));
+      assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
 
       // upload a conflicting source (same name in a given dg)
       assertThrowsExactly(PSQLException.class, () -> {
@@ -1402,7 +1305,7 @@ public class ExternalEventTests {
 
       assertDoesNotThrow(() -> {
         // create a derivation group of the Test type
-        upload_source(dg);
+        merlinHelper.upload_source(dg);
         statement.set(connection.createStatement());
         statement.get().executeUpdate("INSERT INTO merlin.external_source_type VALUES ('New Name');");
       });
@@ -1583,7 +1486,7 @@ public class ExternalEventTests {
           "2024-01-01T00:30:00Z",
           ca,
           mt);
-      ExternalEvent evt = createEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
+      ExternalEvent evt = merlinHelper.createEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
 
       // insert the event and her types
       assertDoesNotThrow(() -> {
@@ -1618,7 +1521,7 @@ public class ExternalEventTests {
     String dg2 = dg + "_2";
 
     // upload the data once for the first derivation group
-    assertDoesNotThrow(() -> upload_source(dg));
+    assertDoesNotThrow(() -> merlinHelper.upload_source(dg));
 
     // repeat (explicitly, for ease of implementation) with the second derivation group
     assertDoesNotThrow(() -> {
@@ -1682,5 +1585,27 @@ public class ExternalEventTests {
       String[] expected_keys_2 = {"1", "9", "3", "5", "6", "2", "8"};
       compareLists(expected_keys_2, res, "event_key");
     });
+  }
+
+  /**
+   * This test ensures that a derivation group can be associated with a plan. This behavior is very simple and doesn't
+   *    have many derivative cases besides merging of plans, and that behavior is handled in a test in
+   *    PlanCollaborationTests.java.
+   */
+  @Test
+  void associateDerivationGroupWithBasePlan() throws SQLException {
+    // upload a mission model
+    final int fileId = merlinHelper.insertFileUpload();
+    final int missionModelId = merlinHelper.insertMissionModel(fileId);
+
+    // upload derivation group A
+    String derivationGroupName = "A";
+    merlinHelper.upload_source(derivationGroupName);
+
+    // create plan "base"
+    final int parentPlanId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name(), "base");
+
+    // associate the derivation group with it
+    assertDoesNotThrow(() -> merlinHelper.associateDerivationGroupWithPlan(parentPlanId, derivationGroupName));
   }
 }

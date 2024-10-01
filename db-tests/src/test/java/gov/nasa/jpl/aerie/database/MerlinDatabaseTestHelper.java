@@ -1,9 +1,12 @@
 package gov.nasa.jpl.aerie.database;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
@@ -364,6 +367,143 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
       );
 
     }
+  }
+
+  /**
+   * Repeated function that uploads a source and various events, as well as related types.
+   * Used in:
+   *  - ExternalEventTests.java:
+   *    + BASIC TESTS (uploadWithoutError, basicDerivedEvents, derivationGroupComp, verifyDeletion)
+   *    + final duplication tests (duplicateSource, duplicatedDG)
+   *    + superDerivedEvents
+   *  - PlanCollaborationTests.java:
+   *    +
+   *
+   * Data here is based on the SSMO-MPS/mission-data-sandbox/derivation_test examples.
+   */
+  public void upload_source(String dg) throws SQLException {
+    // First, define the sources.
+    ExternalSource sourceOne = new ExternalSource(
+        "Derivation_Test_00.json",
+        "Test",
+        dg,
+        "2024-01-18 00:00:00+00",
+        "2024-01-05 00:00:00+00",
+        "2024-01-11 00:00:00+00",
+        "2024-08-21 22:36:12.858009+00",
+        "{}"
+    );
+    ExternalSource sourceTwo = new ExternalSource(
+        "Derivation_Test_01.json",
+        "Test",
+        dg,
+        "2024-01-19 00:00:00+00",
+        "2024-01-01 00:00:00+00",
+        "2024-01-07 00:00:00+00",
+        "2024-08-21 22:36:19.381275+00",
+        "{}"
+    );
+    ExternalSource sourceThree = new ExternalSource(
+        "Derivation_Test_02.json",
+        "Test",
+        dg,
+        "2024-01-20 00:00:00+00",
+        "2024-01-03 00:00:00+00",
+        "2024-01-10 00:00:00+00",
+        "2024-08-21 22:36:23.340941+00",
+        "{}"
+    );
+    ExternalSource sourceFour = new ExternalSource(
+        "Derivation_Test_03.json",
+        "Test",
+        dg,
+        "2024-01-21 00:00:00+00",
+        "2024-01-01 12:00:00+00",
+        "2024-01-02 12:00:00+00",
+        "2024-08-21 22:36:28.365244+00",
+        "{}"
+    );
+
+    // Second, define the events, spaced by sources 1-4
+    ExternalEvent twoA = new ExternalEvent("2", "DerivationD", "Derivation_Test_00.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
+    ExternalEvent seven = new ExternalEvent("7", "DerivationC", "Derivation_Test_00.json", dg, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
+    ExternalEvent eight = new ExternalEvent("8", "DerivationB", "Derivation_Test_00.json", dg, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
+
+    ExternalEvent one = new ExternalEvent("1", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent twoB = new ExternalEvent("2", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
+    ExternalEvent three = new ExternalEvent("3", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
+    ExternalEvent four = new ExternalEvent("4", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
+
+    ExternalEvent five = new ExternalEvent("5", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent six = new ExternalEvent("6", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent twoC = new ExternalEvent("2", "DerivationB", "Derivation_Test_02.json", dg, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
+
+    ExternalEvent nine = new ExternalEvent("9", "DerivationC", "Derivation_Test_03.json", dg, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+
+    // insert them and any related types (skipping overlaps)
+    insertTypesForEvent(twoA, sourceOne);
+    insertTypesForEvent(seven, sourceOne);
+    insertTypesForEvent(eight, sourceOne);
+    insertTypesForEvent(one, sourceTwo);
+    insertTypesForEvent(twoB, sourceTwo);
+    insertTypesForEvent(three, sourceTwo);
+    insertTypesForEvent(four, sourceTwo);
+    insertTypesForEvent(five, sourceThree);
+    insertTypesForEvent(six, sourceThree);
+    insertTypesForEvent(twoC, sourceThree);
+    insertTypesForEvent(nine, sourceFour);
+  }
+
+
+  /**
+   * Quick external event creator, leveraging constants from a provided source object (source).
+   */
+  public ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
+    return new ExternalEvent(
+        key,
+        "Test",
+        source.key(),
+        source.derivation_group_name(),
+        start_time,
+        duration,
+        "{}"
+    );
+  }
+
+  public void associateDerivationGroupWithPlan(int planId, String derivationGroupName) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      // create the event type
+      statement.executeUpdate(
+          // language-sql
+          """
+          INSERT INTO
+            merlin.plan_derivation_group
+          VALUES ('%s', '%s')
+          ON CONFLICT(plan_id, derivation_group_name) DO NOTHING;
+          """.formatted(planId, derivationGroupName)
+      );
+    }
+  }
+
+  public List<String> getPlanDerivationGroupNames(int planId) throws SQLException {
+    var names = new ArrayList<String>();
+
+    try(final var statement = connection.createStatement()) {
+      // create the event type
+      final var result = statement.executeQuery(
+          // language-sql
+          """
+          SELECT derivation_group_name FROM merlin.plan_derivation_group
+            WHERE plan_id = %d;
+          """.formatted(planId)
+      );
+
+      while(result.next()) {
+        names.add(result.getString("derivation_group_name"));
+      }
+    }
+
+    return names;
   }
 
   // borrowed directly from: https://stackoverflow.com/questions/24229442/print-the-data-in-resultset-along-with-column-names
