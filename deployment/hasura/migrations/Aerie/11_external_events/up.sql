@@ -84,7 +84,7 @@ comment on column merlin.external_source.key is e''
   'Part of the primary key, along with the derivation_group_name';
 comment on column merlin.external_source.source_type_name is e''
   'The type of this external_source.';
-comment on column merlin.external_source.derivation_group is e''
+comment on column merlin.external_source.derivation_group_name is e''
   'The derivation_group that this external_source is included in.';
 comment on column merlin.external_source.valid_at is e''
   'The time (in _planner_ time, NOT plan time) at which a source becomes valid.\n'
