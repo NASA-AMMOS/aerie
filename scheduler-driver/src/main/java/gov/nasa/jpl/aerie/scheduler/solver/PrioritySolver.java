@@ -1230,7 +1230,8 @@ public class PrioritySolver implements Solver {
               null,
               null,
               true,
-              true
+              true,
+              null
           );
           Duration computedDuration = null;
           try {

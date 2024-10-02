@@ -12,14 +12,16 @@ public record Plan(
     int revision,
     List<ActivityDirective> activityDirectives
 ) {
-  public record ActivityDirective(int id, int planId, String type, String startOffset, JsonObject arguments) {
+  public record ActivityDirective(int id, int planId, String type, String startOffset, JsonObject arguments, String name) {
     public static ActivityDirective fromJSON(JsonObject json){
       return new ActivityDirective(
           json.getInt("id"),
           json.getInt("plan_id"),
           json.getString("type"),
           json.getString("startOffset"),
-          json.getJsonObject("arguments"));
+          json.getJsonObject("arguments"),
+          json.getString("name")
+      );
     }
   }
 

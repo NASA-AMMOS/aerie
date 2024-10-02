@@ -327,6 +327,7 @@ public enum GQL {
           plan_id
           startOffset: start_offset
           type
+          name
         }
         constraint_specification {
           constraint_id
