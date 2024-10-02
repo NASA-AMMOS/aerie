@@ -1,6 +1,5 @@
 package gov.nasa.ammos.aerie.merlin.driver.test;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -8,26 +7,31 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, TaskThread<T> thread) implements Task<T> {
+public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, TaskThread<T> thread, MutableBoolean finished) implements Task<T> {
   public static <T> ThreadedTask<T> of(Executor executor, TestContext.CellMap cellMap, Supplier<T> task) {
-    return new ThreadedTask<>(cellMap, task, TaskThread.start(executor, task));
+    return new ThreadedTask<>(cellMap, task, TaskThread.start(executor, task), new MutableBoolean(false));
   }
 
   @Override
   public TaskStatus<T> step(final Scheduler scheduler) {
+    if (finished.getValue()) {
+      throw new IllegalStateException("Stepping finished task");
+    }
     TestContext.set(new TestContext.Context(cellMap, scheduler, this));
     try {
-      thread.inbox().put(Unit.UNIT);
+      thread.inbox().put(new Message.Resume());
       final var response = thread.outbox().take();
       if (response instanceof ThreadedTaskStatus.Aborted<T> r) {
         throw new RuntimeException(r.throwable());
+      }
+      if (response instanceof ThreadedTaskStatus.Completed<T> r) {
+        finished.setTrue();
       }
       return response.withContinuation(this);
     } catch (InterruptedException e) {
@@ -37,7 +41,28 @@ public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, Tas
     }
   }
 
-  record TaskThread<T>(Supplier<T> task, ArrayBlockingQueue<Unit> inbox, ArrayBlockingQueue<ThreadedTaskStatus<T>> outbox) {
+  @Override
+  public void release() {
+    try {
+      thread.inbox.put(new Message.Abort());
+//      thread.outbox.take();
+    } catch (final InterruptedException ex) {
+      return;
+    }
+  }
+
+  sealed interface Message {
+    record Resume() implements Message {}
+
+    record Abort() implements Message {}
+  }
+
+  record TaskThread<T>(
+      Supplier<T> task,
+      ArrayBlockingQueue<Message> inbox,
+      ArrayBlockingQueue<ThreadedTaskStatus<T>> outbox
+  )
+  {
     public static <T> TaskThread<T> start(Executor executor, Supplier<T> task) {
       final var taskThread = new TaskThread<>(
           task,
@@ -49,15 +74,15 @@ public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, Tas
 
     private void start() {
       try {
-        inbox.take();
+        if (inbox.take() instanceof Message.Abort) outbox.put(null);
         outbox.put(new ThreadedTaskStatus.Completed<>(task.get()));
       } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+        return; //throw new RuntimeException(e);
       } catch (Throwable throwable) {
         try {
           outbox.put(new ThreadedTaskStatus.Aborted<>(throwable));
         } catch (InterruptedException e) {
-          throw new RuntimeException(e);
+          return; //throw new RuntimeException(e);
         }
       }
     }
@@ -92,9 +117,13 @@ public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, Tas
 
   public sealed interface ThreadedTaskStatus<Return> {
     record Completed<Return>(Return returnValue) implements ThreadedTaskStatus<Return> {}
+
     record Delayed<Return>(Duration delay) implements ThreadedTaskStatus<Return> {}
+
     record CallingTask<Return>(InSpan childSpan, TaskFactory<?> child) implements ThreadedTaskStatus<Return> {}
+
     record AwaitingCondition<Return>(Condition condition) implements ThreadedTaskStatus<Return> {}
+
     record Aborted<Return>(Throwable throwable) implements ThreadedTaskStatus<Return> {}
 
     default TaskStatus<Return> withContinuation(Task<Return> continuation) {

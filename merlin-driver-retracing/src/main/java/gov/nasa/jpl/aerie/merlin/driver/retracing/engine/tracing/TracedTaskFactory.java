@@ -40,7 +40,7 @@ public class TracedTaskFactory<T> implements TaskFactory<T> {
 
     @Override
     public TaskStatus<Output> step(Scheduler scheduler) {
-      return replaceContinuation(cursor.step(new Scheduler() {
+      return withContinuation(cursor.step(new Scheduler() {
         @Override
         public <State> State get(final CellId<State> cellId) {
           return scheduler.get(cellId);
@@ -75,6 +75,23 @@ public class TracedTaskFactory<T> implements TaskFactory<T> {
           return new TaskStatus.CallingTask<>(s.childSpan(), s.child(), this);
         }
         case TaskStatus.AwaitingCondition<Output> s -> {
+          return new TaskStatus.AwaitingCondition<>(s.condition(), this);
+        }
+      }
+    }
+
+    private TaskStatus<Output> withContinuation(Action.Status<Output> status) {
+      switch (status) {
+        case Action.Status.Completed<Output> s -> {
+          return new TaskStatus.Completed<>(s.returnValue());
+        }
+        case Action.Status.Delayed<Output> s -> {
+          return new TaskStatus.Delayed<>(s.delay(), this);
+        }
+        case Action.Status.CallingTask<Output> s -> {
+          return new TaskStatus.CallingTask<>(s.childSpan(), s.child(), this);
+        }
+        case Action.Status.AwaitingCondition<Output> s -> {
           return new TaskStatus.AwaitingCondition<>(s.condition(), this);
         }
       }

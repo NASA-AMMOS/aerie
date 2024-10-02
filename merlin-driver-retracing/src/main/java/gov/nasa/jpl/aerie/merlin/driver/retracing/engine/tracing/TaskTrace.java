@@ -41,16 +41,18 @@ public class TaskTrace<T> {
 
   public <ReturnedType> TaskTrace<T> read(CellId<?> query, ReturnedType value) {
     if (!(this.end instanceof End.Unfinished<T> ending)) throw new IllegalStateException();
+    final TaskResumptionInfo<T> resumptionInfoUpToThisPoint = ending.info().duplicate(); // Does not include new read
+    ending.info().reads().add(value); // Includes new read
+
     TaskTrace<T> newTip;
     {
-      final TaskTrace<T> res = new TaskTrace<>(executor, ending.info().duplicate());
+      final TaskTrace<T> res = new TaskTrace<>(executor, ending.info()); // newTip include new read
       res.end = ending;
       newTip = res;
     }
-    ending.info().reads().add(value);
     final var readRecords = new ArrayList<End.Read.Entry<T>>();
     readRecords.add(new End.Read.Entry<>(value, value.toString(), newTip));
-    this.end = new End.Read<>(query, readRecords, ending.info().duplicate());
+    this.end = new End.Read<>(query, readRecords, resumptionInfoUpToThisPoint); // End.Read does not include new read
     return newTip;
   }
 
@@ -108,7 +110,9 @@ public class TaskTrace<T> {
           final var status = tr.restart(writer.instrument(scheduler));
           writer.yield(status);
 
-          this.init(writer, extractTask(status).orElse(null));
+          if (!(status instanceof TaskStatus.Completed<T>)) {
+            this.init(writer, extractTask(status).orElse(null));
+          }
           cursor.trace = writer.trace;
           cursor.traceCounter = cursor.trace.actions.size();
           return status;
@@ -138,7 +142,7 @@ public class TaskTrace<T> {
       this.trace = trace;
     }
 
-    public TaskStatus<T> step(Scheduler scheduler) {
+    public Action.Status<T> step(Scheduler scheduler) {
       while (true) {
         List<Action<T>> actions = this.trace.actions;
         while (traceCounter < actions.size()) {
@@ -152,9 +156,9 @@ public class TaskTrace<T> {
         }
 
         switch (this.trace.end) {
-          case End.Exit<T> e -> { return TaskStatus.completed(e.returnValue()); }
+          case End.Exit<T> e -> { return new Action.Status.Completed<>(e.returnValue()); }
           case End.Unfinished<T> e -> {
-            return this.trace.step(scheduler, this);
+            return Action.Status.of(this.trace.step(scheduler, this));
           }
           case End.Read<T> read -> {
             // Read the current value and use it to decide whether to continue down a trace, or start a new one
@@ -165,9 +169,11 @@ public class TaskTrace<T> {
               this.traceCounter = 0;
               continue;
             } else {
-              final var rest = new TaskTrace<>(this.trace.executor, read.info().duplicate());
+              final TaskResumptionInfo<T> resumptionInfo = read.info().duplicate();
+              resumptionInfo.reads().add(readValue);
+              final var rest = new TaskTrace<>(this.trace.executor, resumptionInfo);
               read.entries().add(new End.Read.Entry<>(readValue, readValue.toString(), rest));
-              return rest.step(scheduler, this);
+              return Action.Status.of(rest.step(scheduler, this)); // This will mutate this.trace
             }
           }
         }

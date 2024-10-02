@@ -12,6 +12,8 @@ import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
@@ -33,10 +35,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.rightmostNumber;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,14 +90,60 @@ public class SideBySideTest {
     assertEquals(regResult2, incResult2);
   }
 
-  public record Cell(Topic<String> topic) {
+  public record Cell(Topic<String> topic, Topic<LinearDynamicsEffect> linearTopic, boolean isLinear) {
     public static Cell of()
     {
-      return new Cell(new Topic<>());
+      return new Cell(new Topic<>(), new Topic<>(), false);
+    }
+
+    public static Cell ofLinear()
+    {
+      return new Cell(new Topic<>(), new Topic<>(), true);
     }
 
     public void emit(String event) {
       TestContext.get().scheduler().emit(event, this.topic);
+    }
+
+    public void emit(int number) {
+      this.emit(String.valueOf(number));
+    }
+
+    public void setRate(final double newRate) {
+      TestContext.get().scheduler().emit(new LinearDynamicsEffect(newRate, null), this.linearTopic);
+    }
+
+    public void setInitialValue(final double newInitialValue) {
+      TestContext.get().scheduler().emit(new LinearDynamicsEffect(null, newInitialValue), this.linearTopic);
+    }
+
+    public double getLinear() {
+      final var context = TestContext.get();
+      final var scheduler = context.scheduler();
+      final var cellId = context.cells().get(this);
+      final MutableObject<LinearDynamics> state = (MutableObject<LinearDynamics>) scheduler.get(Objects.requireNonNull(cellId));
+      return state.getValue().initialValue;
+    }
+
+    public double getRate() {
+      final var context = TestContext.get();
+      final var scheduler = context.scheduler();
+      final var cellId = context.cells().get(this);
+      final MutableObject<LinearDynamics> state = (MutableObject<LinearDynamics>) scheduler.get(Objects.requireNonNull(cellId));
+      return state.getValue().rate;
+    }
+
+    public int getRightmostNumber() {
+      return rightmostNumber(this.get().toString());
+    }
+
+    public int getNum() {
+      for (final var entry : this.get().timeline.reversed()) {
+        if (!(entry instanceof TimePoint.Commit e)) continue;
+        final int num = rightmostNumber(e.toString());
+        if (num != -1) return num;
+      }
+      return 0;
     }
 
     @SuppressWarnings("unchecked")
@@ -229,7 +282,8 @@ public class SideBySideTest {
   }
 
   public static void spawn(Runnable task) {
-    TestContext.get().scheduler().spawn(InSpan.Fresh, x -> ThreadedTask.of(x, TestContext.get().cells(), () -> {
+    final TestContext.CellMap cells = TestContext.get().cells();
+    TestContext.get().scheduler().spawn(InSpan.Fresh, x -> ThreadedTask.of(x, cells, () -> {
       task.run();
       return UNIT;
     }));
@@ -243,13 +297,32 @@ public class SideBySideTest {
     }));
   }
 
-  public static void waitUntil(Condition condition) {
-    TestContext.get().threadedTask().thread().waitUntil(condition);
+  public static void waitUntil(Function<Duration, Optional<Duration>> condition) {
+    final var cells = TestContext.get().cells();
+    TestContext.get().threadedTask().thread().waitUntil((now, atLatest) -> {
+      TestContext.set(new TestContext.Context(cells, new Scheduler() {
+        @Override
+        public <State> State get(final CellId<State> cellId) {
+          return now.getState(cellId);
+        }
+
+        @Override
+        public <Event> void emit(final Event event, final Topic<Event> topic) {}
+
+        @Override
+        public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {}
+      }, null));
+      try {
+        return condition.apply(atLatest);
+      } finally {
+        TestContext.clear();
+      }
+    });
   }
 
-//  public static void call(TaskFactory<?> child) {
-//    TestContext.get().threadedTask().thread().call(InSpan.Fresh, child);
-//  }
+  public static void waitUntil(Supplier<Boolean> condition) {
+    waitUntil($ -> condition.get() ? Optional.of(ZERO) : Optional.empty());
+  }
 
   public static <Config, Model> void incrementalSimTestCase(
       ModelType<Config, Model> modelType,
@@ -273,6 +346,16 @@ public class SideBySideTest {
     record Commit(EventGraph<String> graph) implements TimePoint {}
 
     record Delay(Duration duration) implements TimePoint {}
+  }
+
+  public record LinearDynamics(double rate, double initialValue) {}
+  public record LinearDynamicsEffect(Double newRate, Double newValue) {
+    static LinearDynamicsEffect empty() {
+      return new LinearDynamicsEffect(null, null);
+    }
+    boolean isEmpty() {
+      return newRate == null && newValue == null;
+    }
   }
 
   public static class History {
@@ -372,6 +455,20 @@ public class SideBySideTest {
       return res;
     }
 
+    @Override
+    public boolean equals(final Object object) {
+      if (this == object) return true;
+      if (object == null || getClass() != object.getClass()) return false;
+
+      History history = (History) object;
+      return history.toString().equals(this.toString());
+    }
+
+    @Override
+    public int hashCode() {
+      return timeline.hashCode();
+    }
+
     public String toString() {
       final var res = new StringBuilder();
       var first = true;
@@ -393,6 +490,69 @@ public class SideBySideTest {
       }
       return res.toString();
     }
+  }
+
+  public static CellId<MutableObject<LinearDynamics>> allocateLinear(final Initializer builder, final Topic<LinearDynamicsEffect> topic) {
+    return builder.allocate(
+        new MutableObject<>(new LinearDynamics(0, 0)),
+        new CellType<>() {
+          @Override
+          public EffectTrait<LinearDynamicsEffect> getEffectType() {
+            return new EffectTrait<>() {
+              @Override
+              public LinearDynamicsEffect empty() {
+                return LinearDynamicsEffect.empty();
+              }
+
+              @Override
+              public LinearDynamicsEffect sequentially(
+                  final LinearDynamicsEffect prefix,
+                  final LinearDynamicsEffect suffix)
+              {
+                if (suffix.isEmpty()) {
+                  return prefix;
+                } else {
+                  return suffix;
+                }
+              }
+
+              @Override
+              public LinearDynamicsEffect concurrently(
+                  final LinearDynamicsEffect left,
+                  final LinearDynamicsEffect right)
+              {
+                if (left.isEmpty()) return right;
+                if (right.isEmpty()) return left;
+                throw new IllegalArgumentException("Concurrent composition of non-empty linear effects: "
+                                                   + left
+                                                   + " | "
+                                                   + right);
+              }
+            };
+          }
+
+          @Override
+          public MutableObject<LinearDynamics> duplicate(final MutableObject<LinearDynamics> mutableObject) {
+            return new MutableObject<>(mutableObject.getValue());
+          }
+
+          @Override
+          public void apply(final MutableObject<LinearDynamics> mutableObject, final LinearDynamicsEffect o) {
+            final LinearDynamics currentDynamics = mutableObject.getValue();
+            mutableObject.setValue(new LinearDynamics(o.newRate == null ? currentDynamics.rate : o.newRate, o.newValue == null ? currentDynamics.initialValue : o.newValue));
+          }
+
+          @Override
+          public void step(final MutableObject<LinearDynamics> mutableObject, final Duration duration) {
+            final LinearDynamics currentDynamics = mutableObject.getValue();
+            mutableObject.setValue(
+                new LinearDynamics(
+                    currentDynamics.rate,
+                    currentDynamics.initialValue + (duration.ratioOver(SECONDS) * currentDynamics.rate)));
+          }
+        },
+        $ -> $,
+        topic);
   }
 
   public static CellId<MutableObject<History>> allocate(final Initializer builder, final Topic<String> topic)

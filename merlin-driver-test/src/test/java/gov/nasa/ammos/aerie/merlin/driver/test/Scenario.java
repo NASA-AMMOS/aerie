@@ -78,8 +78,11 @@ public record Scenario(
             case DualSchedule.Edit.Delete e -> {
               builder.add(".thenDelete()");
             }
-            case DualSchedule.Edit.Update e -> {
+            case DualSchedule.Edit.UpdateStart e -> {
               builder.add(".thenUpdate(duration($L, SECONDS))", e.newStartOffset().in(SECONDS));
+            }
+            case DualSchedule.Edit.UpdateArg e -> {
+              builder.add(".thenUpdate($S)", e.newArg());
             }
           }
         }
@@ -338,11 +341,13 @@ public record Scenario(
 
   public static int rightmostNumber(String s) {
     StringBuilder result = new StringBuilder();
+    boolean startedNumber = false;
     for (int i = 0; i < s.length(); i++) {
       final var c = s.substring(s.length() - i - 1, s.length() - i);
       if (isDigit(c)) {
+        startedNumber = true;
         result.insert(0, c);
-      } else {
+      } else if (startedNumber) {
         break;
       }
     }

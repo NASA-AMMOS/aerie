@@ -26,13 +26,19 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class TestRegistrar {
-  List<Pair<String, Consumer<Object>>> activities = new ArrayList<>();
+  List<Pair<String, Consumer<String>>> activities = new ArrayList<>();
   List<SideBySideTest.Cell> cells = new ArrayList<>();
   List<Runnable> daemons = new ArrayList<>();
   List<Pair<String, Supplier<?>>> resources = new ArrayList<>();
 
   public <T> SideBySideTest.Cell cell() {
     final SideBySideTest.Cell cell = SideBySideTest.Cell.of();
+    cells.add(cell);
+    return cell;
+  }
+
+  public <T> SideBySideTest.Cell linearCell() {
+    final SideBySideTest.Cell cell = SideBySideTest.Cell.ofLinear();
     cells.add(cell);
     return cell;
   }
@@ -47,7 +53,7 @@ public final class TestRegistrar {
 //    return cell;
 //  }
 
-  public void activity(String name, Consumer<Object> effectModel) {
+  public void activity(String name, Consumer<String> effectModel) {
     this.activities.add(Pair.of(name, effectModel));
   }
 
@@ -61,11 +67,11 @@ public final class TestRegistrar {
 
   public ModelType<Unit, TestContext.CellMap> asModelType() {
     final var directives = new HashMap<String, DirectiveType<TestContext.CellMap, Map<String, SerializedValue>, Unit>>();
-    final var inputTopics = new HashMap<String, Topic<Unit>>();
+    final var inputTopics = new HashMap<String, Topic<String>>();
     final var outputTopics = new HashMap<String, Topic<Unit>>();
 
     for (final var activity : activities) {
-      final Topic<Unit> inputTopic = new Topic<>();
+      final Topic<String> inputTopic = new Topic<>();
       final Topic<Unit> outputTopic = new Topic<>();
       inputTopics.put(activity.getLeft(), inputTopic);
       outputTopics.put(activity.getLeft(), outputTopic);
@@ -84,8 +90,10 @@ public final class TestRegistrar {
         @Override
         public TaskFactory<Unit> getTaskFactory(final TestContext.CellMap cellMap, final Map<String, SerializedValue> args) {
           return executor -> ThreadedTask.of(executor, cellMap, () -> {
-            TestContext.get().scheduler().startActivity(Unit.UNIT, inputTopic);
-            activity.getValue().accept(Unit.UNIT);
+            final SerializedValue value = args.get("value");
+            final String input = value == null ? "" : value.asString().get();
+            TestContext.get().scheduler().startActivity(input, inputTopic);
+            activity.getValue().accept(input);
             TestContext.get().scheduler().endActivity(Unit.UNIT, outputTopic);
             return Unit.UNIT;
           });
@@ -115,7 +123,7 @@ public final class TestRegistrar {
           builder.topic(
               "ActivityType.Input." + directive.getKey(),
               inputTopics.get(directive.getKey()),
-              Stubs.UNIT_OUTPUT_TYPE);
+              Stubs.STRING_OUTPUT_TYPE);
           builder.topic(
               "ActivityType.Output." + directive.getKey(),
               outputTopics.get(directive.getKey()),
@@ -123,7 +131,11 @@ public final class TestRegistrar {
         }
         final var cellMap = new TestContext.CellMap();
         for (final var cell : cells) {
-          cellMap.put(cell, SideBySideTest.allocate(builder, cell.topic()));
+          if (cell.isLinear()) {
+            cellMap.put(cell, SideBySideTest.allocateLinear(builder, cell.linearTopic()));
+          } else {
+            cellMap.put(cell, SideBySideTest.allocate(builder, cell.topic()));
+          }
         }
         for (final var daemon : daemons) {
           builder.daemon(executor -> ThreadedTask.of(executor, cellMap, () -> {daemon.run(); return Unit.UNIT;}));

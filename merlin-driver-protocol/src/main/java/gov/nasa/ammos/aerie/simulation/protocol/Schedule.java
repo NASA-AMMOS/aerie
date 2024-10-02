@@ -1,12 +1,14 @@
 package gov.nasa.ammos.aerie.simulation.protocol;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 
 import java.util.HashSet;
 
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -94,6 +96,16 @@ public record Schedule(ArrayList<ScheduleEntry> entries) {
     return new Schedule(newEntries);
   }
 
+  public Schedule plus(Duration startTime, String directive) {
+    var newEntries = new ArrayList<ScheduleEntry>();
+    var id = 0L;
+    for (final var entry : this.entries) {
+      newEntries.add(new ScheduleEntry(id++, entry.startTime, entry.directive));
+    }
+    newEntries.add(new ScheduleEntry(id++, startTime, new Directive(directive, Map.of())));
+    return new Schedule(newEntries);
+  }
+
   public int size() {
     return entries.size();
   }
@@ -101,5 +113,10 @@ public record Schedule(ArrayList<ScheduleEntry> entries) {
   public Schedule setStartTime(long id, Duration newStartTime) {
     final var oldEntry = this.get(id);
     return this.put(oldEntry.id(), newStartTime, oldEntry.directive());
+  }
+
+  public Schedule setArg(long id, String newArg) {
+    final var oldEntry = this.get(id);
+    return this.put(oldEntry.id(), oldEntry.startTime, new Directive(oldEntry.directive.type(), Map.of("value", SerializedValue.of(newArg))));
   }
 }
