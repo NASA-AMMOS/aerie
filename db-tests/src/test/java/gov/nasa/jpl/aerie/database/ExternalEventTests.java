@@ -469,6 +469,39 @@ public class ExternalEventTests {
         });
       }
 
+      /**
+       * This test is an overlapping case wherein the source of higher precedence (the more recently valid one - B)
+       *    covers the entire range of the original (A), which produces an empty range in the subtract_later_ranges function.
+       *
+       *    A:  +++++++
+       *    B:  +++++++
+       *        BBBBBBB
+       */
+      @Test
+      void testTotalOverlap() {
+        final var statement = getStatement();
+
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource("A", st, dg, "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+        ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, "2024-01-01T00:00:00Z", duration, mt); // have to manually pick this
+        ExternalSource b = new ExternalSource("B", st, dg, "2024-01-02T00:00:00Z", "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z", ca, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+
+        // verify the ranges are as expected
+        assertDoesNotThrow(() -> {
+          merlinHelper.insertTypesForEvent(aE, a);
+          merlinHelper.insertTypesForEvent(bE, b);
+
+          var res = statement.get().executeQuery("SELECT * FROM merlin.derived_events ORDER BY source_key");
+
+          // verify the range for A is shorter than what is specified in the definition of "a" - it should end sooner.
+          String[] expectedResults = {
+              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}"
+          };
+          compareLists(expectedResults, res, "source_range");
+        });
+      }
+
       /*
         A source in present before all sources, in a gap, should be ever present, even if chopped into several
           subintervals:

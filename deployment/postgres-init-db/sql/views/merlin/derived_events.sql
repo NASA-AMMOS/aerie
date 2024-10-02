@@ -12,7 +12,7 @@ select
   properties,
   source_range,
   valid_at
-from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
+from ( -- select all relevant properties of those shortlisted in the from clause (rules 1-3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
         select rule1_3.source_key,
         rule1_3.event_key,
         rule1_3.event_type_name,

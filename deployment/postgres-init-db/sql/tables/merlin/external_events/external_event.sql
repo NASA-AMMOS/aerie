@@ -33,7 +33,7 @@ comment on column merlin.external_event.source_key is e''
   'Part of the primary key along with the key, derivation_group_name, and event_type_name.';
 comment on column merlin.external_event.derivation_group_name is e''
   'The derivation_group that the external_source bearing this external_event is a part of.';
-comment on column merlin.external_event.start is e''
+comment on column merlin.external_event.start_time is e''
   'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
 comment on column merlin.external_event.duration is e''
   'The span of time of this external event.';
@@ -73,5 +73,5 @@ create trigger check_event_times
 after insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
 
-comment on trigger check_event_times is e''
+comment on trigger check_event_times on merlin.external_event is e''
   'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
