@@ -12,7 +12,6 @@ create table merlin.derivation_group (
 comment on table merlin.derivation_group is e''
   'A representation of the names of groups of sources to run derivation operations over.';
 
--- TODO: make name the pk on its own??
 comment on column merlin.derivation_group.name is e''
   'The name and primary key of the derivation group.';
 comment on column merlin.derivation_group.source_type_name is e''
