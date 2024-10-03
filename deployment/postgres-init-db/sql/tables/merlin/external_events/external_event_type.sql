@@ -1,4 +1,3 @@
--- Create table for external event types
 create table merlin.external_event_type (
     name text not null,
 

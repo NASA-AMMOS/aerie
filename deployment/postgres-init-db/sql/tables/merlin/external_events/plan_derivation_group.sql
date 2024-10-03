@@ -1,4 +1,3 @@
--- Create table for plan/external event links
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,

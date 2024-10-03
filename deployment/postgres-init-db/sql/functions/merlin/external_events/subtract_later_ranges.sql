@@ -1,4 +1,3 @@
--- Create a function to subtract lists of time ranges
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
 immutable

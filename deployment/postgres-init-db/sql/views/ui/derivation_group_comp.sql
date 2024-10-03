@@ -1,4 +1,3 @@
--- create a view that aggregates additional derivation group information
 create view merlin.derivation_group_comp
   as
 select

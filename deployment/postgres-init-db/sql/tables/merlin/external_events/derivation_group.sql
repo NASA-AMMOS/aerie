@@ -1,4 +1,3 @@
--- Create a table to represent derivation groups for external sources
 create table merlin.derivation_group (
     name text not null unique,
     source_type_name text not null,

@@ -1,4 +1,3 @@
--- Create table for external source types
 create table merlin.external_source_type (
     name text not null,
 
@@ -12,7 +11,6 @@ comment on table merlin.external_source_type is e''
 comment on column merlin.external_source_type.name is e''
   'The identifier for this external_source_type, as well as its name.';
 
--- Create table for external event types
 create table merlin.external_event_type (
     name text not null,
 
@@ -26,7 +24,6 @@ comment on table merlin.external_event_type is e''
 comment on column merlin.external_event_type.name is e''
   'The identifier for this external_event_type, as well as its name.';
 
--- Create a table to represent derivation groups for external sources
 create table merlin.derivation_group (
     name text not null unique,
     source_type_name text not null,
@@ -50,7 +47,6 @@ comment on column merlin.derivation_group.source_type_name is e''
   'The name of the external_source_type of sources in this derivation group.\n'
   'Part of the primary key, along with name.';
 
--- Create a table to represent external event sources.
 create table merlin.external_source (
     key text not null,
     source_type_name text not null,
@@ -65,9 +61,9 @@ create table merlin.external_source (
     constraint external_source_pkey
       primary key (key, derivation_group_name),
     -- a given dg cannot have two sources with the same valid_at!
+    CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
     -- TODO: going forward, we might want to consider making an exception if sources have no overlap. This may be
     --        overkill or an unnecessary complication to the general rule.
-    CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name),
@@ -100,7 +96,6 @@ comment on column merlin.external_source.metadata is e''
   'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
   'Like the \'created_at\' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 
--- Create table for external events
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
@@ -142,7 +137,6 @@ comment on column merlin.external_event.properties is e''
   'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
--- Create table for plan/external event links
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,
@@ -168,7 +162,6 @@ comment on column merlin.plan_derivation_group.derivation_group_name is e''
 comment on column merlin.created_at is e''
   'The time (in _planner_ time, NOT _plan_ time) that this link was created at.'
 
--- Add a trigger verifying that events fit into their sources
 create function merlin.check_event_times()
  	returns trigger
  	language plpgsql as
@@ -203,13 +196,12 @@ after insert on merlin.external_event
 comment on trigger check_event_times is e''
   'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
 
--- Create a table to track which sources the user has and has not seen added/removed
 create table ui.seen_sources
 (
     username text not null,
     external_source_name text not null,
-    external_source_type text not null, -- included for ease of filtering, though not part of pkey
     derivation_group text not null,
+    external_source_type text not null, -- included for ease of filtering
 
     constraint seen_sources_pkey
       primary key (username, external_source_name, derivation_group),
@@ -232,7 +224,6 @@ comment on column ui.seen_sources.external_source_type is e''
 comment on column ui.seen_sources.external_source_type is e''
   'The derivation_group name of the external_source that the user is being marked as having seen in this entry.';
 
--- create a function to aid the derived_events view, around diffing time ranges
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
 language plpgsql as $$
@@ -253,7 +244,6 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
   'For example, if a source is valid at t=0, and covers span s=1 to s=5, and there is a source valid at t=1 with a span s=2 to s=3\n'
   'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
 
--- create a view that derives events from different sources in a given derivation group
 create view merlin.derived_events
 as
 select
@@ -326,7 +316,6 @@ order by start_time;
 comment on view  merlin.derived_events is e''
   'A view detailing all derived events from all derivation groups.';
 
--- create a view that aggregates additional derivation group information
 create view merlin.derivation_group_comp
   as
 select

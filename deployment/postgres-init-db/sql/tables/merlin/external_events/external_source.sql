@@ -1,4 +1,3 @@
--- Create a table to represent external event sources.
 create table merlin.external_source (
     key text not null,
     source_type_name text not null,
@@ -13,9 +12,9 @@ create table merlin.external_source (
     constraint external_source_pkey
       primary key (key, derivation_group_name),
     -- a given dg cannot have two sources with the same valid_at!
-    -- TODO: going forward, we might want to consider making an exception if sources have no overlap. This may be
-    --       overkill or an unnecessary complication to the general rule.
     CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
+    -- TODO: going forward, we might want to consider making an exception to the above if sources have no overlap. That
+    --        being said, this may be overkill or an unnecessary complication to the general rule.
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name),
