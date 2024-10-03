@@ -19,8 +19,8 @@ create table merlin.external_source (
       foreign key (source_type_name)
       references merlin.external_source_type(name),
     constraint external_source_type_matches_derivation_group
-      foreign key (derivation_group_name, source_type_name)
-      references merlin.derivation_group (name, source_type_name)
+      foreign key (derivation_group_name)
+      references merlin.derivation_group (name)
 );
 
 comment on table merlin.external_source is e''
