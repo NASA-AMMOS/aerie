@@ -1,4 +1,3 @@
--- Create table for external source types
 create table merlin.external_source_type (
     name text not null,
 

@@ -1,4 +1,3 @@
--- Create table for external events
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
@@ -41,7 +40,6 @@ comment on column merlin.external_event.properties is e''
   'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
--- Add a trigger verifying that events fit into their sources
 create function merlin.check_event_times()
  	returns trigger
  	language plpgsql as

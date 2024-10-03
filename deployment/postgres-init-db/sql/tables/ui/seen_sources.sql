@@ -1,4 +1,3 @@
--- Create a table to track which sources the user has and has not seen added/removed
 create table ui.seen_sources
 (
     username text not null,
