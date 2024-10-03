@@ -1,5 +1,5 @@
 -- create a view that derives events from different sources in a given derivation group
-create or replace view merlin.derived_events
+create view merlin.derived_events
 as
 select
   -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)

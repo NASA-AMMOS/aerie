@@ -169,7 +169,7 @@ comment on column merlin.created_at is e''
   'The time (in _planner_ time, NOT _plan_ time) that this link was created at.'
 
 -- Add a trigger verifying that events fit into their sources
-create or replace function merlin.check_event_times()
+create function merlin.check_event_times()
  	returns trigger
  	language plpgsql as
 $func$
@@ -254,7 +254,7 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
   'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
 
 -- create a view that derives events from different sources in a given derivation group
-create or replace view merlin.derived_events
+create view merlin.derived_events
 as
 select
   -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)
@@ -327,7 +327,7 @@ comment on view  merlin.derived_events is e''
   'A view detailing all derived events from all derivation groups.';
 
 -- create a view that aggregates additional derivation group information
-create or replace view merlin.derivation_group_comp
+create view merlin.derivation_group_comp
   as
 select
   name,
