@@ -18,7 +18,7 @@ create table merlin.external_event (
 );
 
 comment on table merlin.external_event is e''
-  'A table for externally imported events.';
+  'Externally imported events.';
 
 
 comment on column merlin.external_event.key is e''
@@ -65,11 +65,11 @@ end;
 $func$;
 
 comment on function merlin.check_event_times() is e''
-  'A function that checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
+  'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
 create trigger check_event_times
 after insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
 
 comment on trigger check_event_times on merlin.external_event is e''
-  'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
+  'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';

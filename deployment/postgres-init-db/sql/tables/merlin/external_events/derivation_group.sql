@@ -10,7 +10,7 @@ create table merlin.derivation_group (
 );
 
 comment on table merlin.derivation_group is e''
-  'A table to represent the names of groups of sources to run derivation operations over.';
+  'A representation of the names of groups of sources to run derivation operations over.';
 
 -- TODO: make name the pk on its own??
 comment on column merlin.derivation_group.name is e''

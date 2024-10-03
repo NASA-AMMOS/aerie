@@ -30,4 +30,4 @@ full outer join ( select derived_events.event_key,
 group by with_event_types.name, with_event_types.source_type_name;
 
 comment on view  merlin.derivation_group_comp is e''
-  'A view detailing all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
+  'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
