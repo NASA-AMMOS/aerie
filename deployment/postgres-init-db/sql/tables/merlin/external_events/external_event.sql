@@ -42,7 +42,7 @@ comment on column merlin.external_event.properties is e''
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
 -- Add a trigger verifying that events fit into their sources
-create or replace function merlin.check_event_times()
+create function merlin.check_event_times()
  	returns trigger
  	language plpgsql as
 $func$
