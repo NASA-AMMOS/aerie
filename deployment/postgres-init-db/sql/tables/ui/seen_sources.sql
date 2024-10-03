@@ -15,7 +15,7 @@ create table ui.seen_sources
 );
 
 comment on table ui.seen_sources is e''
-  'A table for tracking the external sources acknowledge/unacknowledged by each user.';
+  'A table for tracking the external sources either acknowledged by each user.';
 
 comment on column ui.seen_sources.username is e''
   'The username of the user that has seen the given source referenced by this entry.\n'
