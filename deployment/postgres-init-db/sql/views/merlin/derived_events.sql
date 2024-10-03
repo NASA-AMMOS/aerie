@@ -69,4 +69,4 @@ where rn = 1
 order by start_time;
 
 comment on view  merlin.derived_events is e''
-  'A view detailing all derived events from all derivation groups.';
+  'Details all derived events from all derivation groups.';

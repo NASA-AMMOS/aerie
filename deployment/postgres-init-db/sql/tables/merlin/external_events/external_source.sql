@@ -24,7 +24,7 @@ create table merlin.external_source (
 );
 
 comment on table merlin.external_source is e''
-  'A table for externally imported event sources.';
+  'Externally imported event sources.';
 
 comment on column merlin.external_source.key is e''
   'The key, or name, of the external_source.\n'
