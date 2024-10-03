@@ -3,8 +3,8 @@ create table ui.seen_sources
 (
     username text not null,
     external_source_name text not null,
-    external_source_type text not null, -- included for ease of filtering, though not part of pkey
     derivation_group text not null,
+    external_source_type text not null, -- included for ease of filtering
 
     constraint seen_sources_pkey
       primary key (username, external_source_name, derivation_group),
