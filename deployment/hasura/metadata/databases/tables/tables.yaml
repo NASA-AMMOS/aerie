@@ -104,7 +104,6 @@
 - "!include merlin/plan_derivation_group.yaml"
 - "!include merlin/external_source_type.yaml"
 - "!include merlin/external_event_type.yaml"
-- "!include ui/derivation_group_comp.yaml"
 - "!include merlin/derived_events.yaml"
 
 # Constraints
@@ -178,3 +177,4 @@
 - "!include ui/extensions.yaml"
 - "!include ui/view.yaml"
 - "!include ui/seen_sources.yaml"
+- "!include ui/derivation_group_comp.yaml"
