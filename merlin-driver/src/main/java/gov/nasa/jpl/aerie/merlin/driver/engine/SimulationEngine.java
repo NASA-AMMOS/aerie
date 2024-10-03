@@ -828,7 +828,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
+            Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
@@ -843,7 +843,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
+            Optional.ofNullable(directiveId)
         ));
       }
     });
