@@ -1,7 +1,6 @@
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,
-    created_at timestamp with time zone default now() not null,
 
     constraint plan_derivation_group_pkey
       primary key (plan_id, derivation_group_name),
@@ -20,5 +19,3 @@ comment on column merlin.plan_derivation_group.plan_id is e''
   'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.';
 comment on column merlin.plan_derivation_group.derivation_group_name is e''
   'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.';
-comment on column merlin.plan_derivation_group.created_at is e''
-  'The time (in _planner_ time, NOT _plan_ time) that this link was created at.';
