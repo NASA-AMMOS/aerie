@@ -1,4 +1,3 @@
--- create a view that derives events from different sources in a given derivation group
 create view merlin.derived_events
 as
 select

@@ -20,7 +20,6 @@ create table merlin.external_event (
 comment on table merlin.external_event is e''
   'Externally imported events.';
 
-
 comment on column merlin.external_event.key is e''
   'The key, or name, of the external_event.\n'
   'Part of the primary key, along with the source_key, derivation_group_name, and event_type_name.';
