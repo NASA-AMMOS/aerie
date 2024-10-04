@@ -6,7 +6,7 @@ create table merlin.external_source_type (
 );
 
 comment on table merlin.external_source_type is e''
-  'A table for externally imported event source types.';
+  'Externally imported event source types.';
 
 comment on column merlin.external_source_type.name is e''
   'The identifier for this external_source_type, as well as its name.';
@@ -19,7 +19,7 @@ create table merlin.external_event_type (
 );
 
 comment on table merlin.external_event_type is e''
-  'A table for externally imported event types.';
+  'Externally imported event types.';
 
 comment on column merlin.external_event_type.name is e''
   'The identifier for this external_event_type, as well as its name.';
@@ -29,23 +29,19 @@ create table merlin.derivation_group (
     source_type_name text not null,
 
     constraint derivation_group_pkey
-      primary key (name, source_type_name),
+      primary key (name),
     constraint derivation_group_references_external_source_type
       foreign key (source_type_name)
       references merlin.external_source_type(name)
 );
 
 comment on table merlin.derivation_group is e''
-  'A table to represent the names of groups of sources to run derivation operations over.';
+  'A representation of the names of groups of sources to run derivation operations over.';
 
--- TODO: make name the pk on its own??
 comment on column merlin.derivation_group.name is e''
-  'The name of the derivation group.\n'
-  'Part of the primary key, along with source_type_name.\n'
-  'Globally unique.';
+  'The name and primary key of the derivation group.';
 comment on column merlin.derivation_group.source_type_name is e''
-  'The name of the external_source_type of sources in this derivation group.\n'
-  'Part of the primary key, along with name.';
+  'The name of the external_source_type of sources in this derivation group.';
 
 create table merlin.external_source (
     key text not null,
@@ -62,18 +58,18 @@ create table merlin.external_source (
       primary key (key, derivation_group_name),
     -- a given dg cannot have two sources with the same valid_at!
     CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
-    -- TODO: going forward, we might want to consider making an exception if sources have no overlap. This may be
-    --        overkill or an unnecessary complication to the general rule.
+    -- TODO: going forward, we might want to consider making an exception to the above if sources have no overlap. That
+    --        being said, this may be overkill or an unnecessary complication to the general rule.
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name),
     constraint external_source_type_matches_derivation_group
-      foreign key (derivation_group_name, source_type_name)
-      references merlin.derivation_group (name, source_type_name)
+      foreign key (derivation_group_name)
+      references merlin.derivation_group (name)
 );
 
 comment on table merlin.external_source is e''
-  'A table for externally imported event sources.';
+  'Externally imported event sources.';
 
 comment on column merlin.external_source.key is e''
   'The key, or name, of the external_source.\n'
@@ -81,10 +77,10 @@ comment on column merlin.external_source.key is e''
 comment on column merlin.external_source.source_type_name is e''
   'The type of this external_source.';
 comment on column merlin.external_source.derivation_group_name is e''
-  'The derivation_group that this external_source is included in.';
+  'The name of the derivation_group that this external_source is included in.';
 comment on column merlin.external_source.valid_at is e''
   'The time (in _planner_ time, NOT plan time) at which a source becomes valid.\n'
-  'This time helps determine when a source\'s events are valid for the span of time it covers.';
+  'This time helps determine when a source''s events are valid for the span of time it covers.';
 comment on column merlin.external_source.start_time is e''
   'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
 comment on column merlin.external_source.end_time is e''
@@ -94,29 +90,8 @@ comment on column merlin.external_source.created_at is e''
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 comment on column merlin.external_source.metadata is e''
   'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
-  'Like the \'created_at\' column, this column is used primarily for documentation purposes, and has no associated functionality.';
+  'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 
-create table merlin.external_event (
-    key text not null,
-    event_type_name text not null,
-	  source_key text not null,
-    derivation_group_name text not null,
-    start_time timestamp with time zone not null,
-    duration interval not null,
-    properties jsonb,
-
-    constraint external_event_pkey
-      primary key (key, source_key, derivation_group_name, event_type_name),
-    constraint external_event_references_source_key_derivation_group
-      foreign key (source_key, derivation_group_name)
-      references merlin.external_source (key, derivation_group_name),
-    constraint external_event_references_event_type_name
-      foreign key (event_type_name)
-      references merlin.external_event_type(name)
-);
-
-comment on table merlin.external_event is e''
-  'A table for externally imported events.';
 
 comment on column merlin.external_event.key is e''
   'The key, or name, of the external_event.\n'
@@ -129,7 +104,7 @@ comment on column merlin.external_event.source_key is e''
   'Part of the primary key along with the key, derivation_group_name, and event_type_name.';
 comment on column merlin.external_event.derivation_group_name is e''
   'The derivation_group that the external_source bearing this external_event is a part of.';
-comment on column merlin.external_event.start is e''
+comment on column merlin.external_event.start_time is e''
   'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
 comment on column merlin.external_event.duration is e''
   'The span of time of this external event.';
@@ -140,7 +115,6 @@ comment on column merlin.external_event.properties is e''
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,
-    created_at timestamp with time zone default now() not null,
 
     constraint plan_derivation_group_pkey
       primary key (plan_id, derivation_group_name),
@@ -153,14 +127,12 @@ create table merlin.plan_derivation_group (
 );
 
 comment on table merlin.plan_derivation_group is e''
-  'A table for linking externally imported event sources & plans.';
+  'Links externally imported event sources & plans.';
 
 comment on column merlin.plan_derivation_group.plan_id is e''
-  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.'
+  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.';
 comment on column merlin.plan_derivation_group.derivation_group_name is e''
-  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.'
-comment on column merlin.created_at is e''
-  'The time (in _planner_ time, NOT _plan_ time) that this link was created at.'
+  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.';
 
 create function merlin.check_event_times()
  	returns trigger
@@ -187,32 +159,36 @@ end;
 $func$;
 
 comment on function merlin.check_event_times() is e''
-  'A function that checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
+  'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
 create trigger check_event_times
 after insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
 
-comment on trigger check_event_times is e''
-  'A trigger that fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
+comment on trigger check_event_times on merlin.external_event is e''
+  'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
 
 create table ui.seen_sources
 (
     username text not null,
     external_source_name text not null,
     derivation_group text not null,
-    external_source_type text not null, -- included for ease of filtering
+    external_source_type text not null, -- included for ease of filtering in the UI
 
     constraint seen_sources_pkey
       primary key (username, external_source_name, derivation_group),
     constraint seen_sources_references_user
       foreign key (username)
       references permissions.users (username) match simple
+      on delete cascade,
+    constraint seen_sources_references_external_source
+      foreign key (external_source_name, derivation_group)
+      references merlin.external_source (key, derivation_group_name) match simple
       on delete cascade
 );
 
 comment on table ui.seen_sources is e''
-  'A table for tracking the external sources acknowledge/unacknowledged by each user.';
+  'Tracks the external sources either acknowledged by each user.';
 
 comment on column ui.seen_sources.username is e''
   'The username of the user that has seen the given source referenced by this entry.\n'
@@ -221,11 +197,10 @@ comment on column ui.seen_sources.external_source_name is e''
   'The name of the external_source that the user is being marked as having seen in this entry.';
 comment on column ui.seen_sources.external_source_type is e''
   'The external_source_type of the external_source that the user is being marked as having seen in this entry.';
-comment on column ui.seen_sources.external_source_type is e''
-  'The derivation_group name of the external_source that the user is being marked as having seen in this entry.';
 
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
+immutable
 language plpgsql as $$
   declare
 	  ret tstzmultirange := curr_date;
@@ -239,8 +214,8 @@ end
 $$;
 
 comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[]) is e''
-  'A function used by the derived_events view that produces from the singular interval of time that a source covers a set of disjoint intervals.\n'
-  'The disjointness arises from where future sources\' spans are subtracted from this one.\n'
+  'Used by the derived_events view that produces from the singular interval of time that a source covers a set of disjoint intervals.\n'
+  'The disjointedness arises from where future sources'' spans are subtracted from this one.\n'
   'For example, if a source is valid at t=0, and covers span s=1 to s=5, and there is a source valid at t=1 with a span s=2 to s=3\n'
   'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
 
@@ -314,7 +289,7 @@ where rn = 1
 order by start_time;
 
 comment on view  merlin.derived_events is e''
-  'A view detailing all derived events from all derivation groups.';
+  'Details all derived events from all derivation groups.';
 
 create view merlin.derivation_group_comp
   as
@@ -348,256 +323,6 @@ full outer join ( select derived_events.event_key,
 group by with_event_types.name, with_event_types.source_type_name;
 
 comment on view  merlin.derivation_group_comp is e''
-  'A view detailing all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. As such, a new view was created to lighten the load.';
-
--- update pre-existing functions now associated with branching:
--- duplicate_plan:
-create or replace function merlin.duplicate_plan(_plan_id integer, new_plan_name text, new_owner text)
-  returns integer -- plan_id of the new plan
-  security definer
-  language plpgsql as $$
-  declare
-    validate_plan_id integer;
-    new_plan_id integer;
-    created_snapshot_id integer;
-begin
-  select id from merlin.plan where plan.id = _plan_id into validate_plan_id;
-  if(validate_plan_id is null) then
-    raise exception 'Plan % does not exist.', _plan_id;
-  end if;
-
-  select merlin.create_snapshot(_plan_id) into created_snapshot_id;
-
-  insert into merlin.plan(revision, name, model_id, duration, start_time, parent_id, owner, updated_by)
-    select
-        0, new_plan_name, model_id, duration, start_time, _plan_id, new_owner, new_owner
-    from merlin.plan where id = _plan_id
-    returning id into new_plan_id;
-  insert into merlin.activity_directive(
-      id, plan_id, name, source_scheduling_goal_id, created_at, created_by, last_modified_at, last_modified_by, start_offset, type, arguments,
-      last_modified_arguments_at, metadata, anchor_id, anchored_to_start)
-    select
-      id, new_plan_id, name, source_scheduling_goal_id, created_at, created_by, last_modified_at, last_modified_by, start_offset, type, arguments,
-      last_modified_arguments_at, metadata, anchor_id, anchored_to_start
-    from merlin.activity_directive where activity_directive.plan_id = _plan_id;
-
-  with source_plan as (
-    select simulation_template_id, arguments, simulation_start_time, simulation_end_time
-    from merlin.simulation
-    where simulation.plan_id = _plan_id
-  )
-  update merlin.simulation s
-  set simulation_template_id = source_plan.simulation_template_id,
-      arguments = source_plan.arguments,
-      simulation_start_time = source_plan.simulation_start_time,
-      simulation_end_time = source_plan.simulation_end_time
-  from source_plan
-  where s.plan_id = new_plan_id;
-
-  insert into merlin.preset_to_directive(preset_id, activity_id, plan_id)
-    select preset_id, activity_id, new_plan_id
-    from merlin.preset_to_directive ptd where ptd.plan_id = _plan_id;
-
-  insert into tags.plan_tags(plan_id, tag_id)
-    select new_plan_id, tag_id
-    from tags.plan_tags pt where pt.plan_id = _plan_id;
-  insert into tags.activity_directive_tags(plan_id, directive_id, tag_id)
-    select new_plan_id, directive_id, tag_id
-    from tags.activity_directive_tags adt where adt.plan_id = _plan_id;
-
-  insert into merlin.plan_derivation_group(derivation_group_name, plan_id)
-    select derivation_group_name, new_plan_id
-  	from merlin.plan_derivation_group pdg where pdg.plan_id = _plan_id;
-
-  insert into merlin.plan_latest_snapshot(plan_id, snapshot_id) values(new_plan_id, created_snapshot_id);
-  return new_plan_id;
-end
-$$;
-
-comment on function merlin.duplicate_plan(plan_id integer, new_plan_name text, new_owner text) is e''
-  'Copies all of a given plan''s properties and activities into a new plan with the specified name.
-  When duplicating a plan, a snapshot is created of the original plan.
-  Additionally, that snapshot becomes the latest snapshot of the new plan.';
-
--- commit_merge:
-create or replace procedure merlin.commit_merge(_request_id integer)
-  language plpgsql as $$
-  declare
-    validate_noConflicts integer;
-    plan_id_R integer;
-    plan_id_S integer;
-    snapshot_id_S integer;
-begin
-  if(select id from merlin.merge_request where id = _request_id) is null then
-    raise exception 'Invalid merge request id %.', _request_id;
-  end if;
-
-  -- Stop if this merge is not 'in-progress'
-  if (select status from merlin.merge_request where id = _request_id) != 'in-progress' then
-    raise exception 'Cannot commit a merge request that is not in-progress.';
-  end if;
-
-  -- Stop if any conflicts have not been resolved
-  select * from merlin.conflicting_activities
-  where merge_request_id = _request_id and resolution = 'none'
-  limit 1
-  into validate_noConflicts;
-
-  if(validate_noConflicts is not null) then
-    raise exception 'There are unresolved conflicts in merge request %. Cannot commit merge.', _request_id;
-  end if;
-
-  select plan_id_receiving_changes from merlin.merge_request mr where mr.id = _request_id into plan_id_R;
-  select snapshot_id_supplying_changes from merlin.merge_request mr where mr.id = _request_id into snapshot_id_S;
-
-  insert into merlin.merge_staging_area(
-    merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at, created_by, last_modified_by,
-    start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type)
-    -- gather delete data from the opposite tables
-    select  _request_id, activity_id, name, tags.tag_ids_activity_directive(ca.activity_id, ad.plan_id),
-            source_scheduling_goal_id, created_at, created_by, last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start,
-            'delete'::merlin.activity_change_type
-      from  merlin.conflicting_activities ca
-      join  merlin.activity_directive ad
-        on  ca.activity_id = ad.id
-      where ca.resolution = 'supplying'
-        and ca.merge_request_id = _request_id
-        and plan_id = plan_id_R
-        and ca.change_type_supplying = 'delete'
-    union
-    select  _request_id, activity_id, name, tags.tag_ids_activity_snapshot(ca.activity_id, psa.snapshot_id),
-            source_scheduling_goal_id, created_at, created_by, last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start,
-            'delete'::merlin.activity_change_type
-      from  merlin.conflicting_activities ca
-      join  merlin.plan_snapshot_activities psa
-        on  ca.activity_id = psa.id
-      where ca.resolution = 'receiving'
-        and ca.merge_request_id = _request_id
-        and snapshot_id = snapshot_id_S
-        and ca.change_type_receiving = 'delete'
-    union
-    select  _request_id, activity_id, name, tags.tag_ids_activity_directive(ca.activity_id, ad.plan_id),
-            source_scheduling_goal_id, created_at, created_by, last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start,
-            'none'::merlin.activity_change_type
-      from  merlin.conflicting_activities ca
-      join  merlin.activity_directive ad
-        on  ca.activity_id = ad.id
-      where ca.resolution = 'receiving'
-        and ca.merge_request_id = _request_id
-        and plan_id = plan_id_R
-        and ca.change_type_receiving = 'modify'
-    union
-    select  _request_id, activity_id, name, tags.tag_ids_activity_snapshot(ca.activity_id, psa.snapshot_id),
-            source_scheduling_goal_id, created_at, created_by, last_modified_by, start_offset, type, arguments, metadata, anchor_id, anchored_to_start,
-            'modify'::merlin.activity_change_type
-      from  merlin.conflicting_activities ca
-      join  merlin.plan_snapshot_activities psa
-        on  ca.activity_id = psa.id
-      where ca.resolution = 'supplying'
-        and ca.merge_request_id = _request_id
-        and snapshot_id = snapshot_id_S
-        and ca.change_type_supplying = 'modify';
-
-  -- Unlock so that updates can be written
-  update merlin.plan
-  set is_locked = false
-  where id = plan_id_R;
-
-  -- Update the plan's activities to match merge-staging-area's activities
-  -- Add
-  insert into merlin.activity_directive(
-                id, plan_id, name, source_scheduling_goal_id, created_at, created_by, last_modified_by,
-                start_offset, type, arguments, metadata, anchor_id, anchored_to_start )
-  select  activity_id, plan_id_R, name, source_scheduling_goal_id, created_at, created_by, last_modified_by,
-            start_offset, type, arguments, metadata, anchor_id, anchored_to_start
-   from merlin.merge_staging_area
-  where merge_staging_area.merge_request_id = _request_id
-    and change_type = 'add';
-
-  -- Modify
-  insert into merlin.activity_directive(
-    id, plan_id, "name", source_scheduling_goal_id, created_at, created_by, last_modified_by,
-    start_offset, "type", arguments, metadata, anchor_id, anchored_to_start )
-  select  activity_id, plan_id_R, "name", source_scheduling_goal_id, created_at, created_by, last_modified_by,
-          start_offset, "type", arguments, metadata, anchor_id, anchored_to_start
-  from merlin.merge_staging_area
-  where merge_staging_area.merge_request_id = _request_id
-    and change_type = 'modify'
-  on conflict (id, plan_id)
-  do update
-  set name = excluded.name,
-      source_scheduling_goal_id = excluded.source_scheduling_goal_id,
-      created_at = excluded.created_at,
-      created_by = excluded.created_by,
-      last_modified_by = excluded.last_modified_by,
-      start_offset = excluded.start_offset,
-      type = excluded.type,
-      arguments = excluded.arguments,
-      metadata = excluded.metadata,
-      anchor_id = excluded.anchor_id,
-      anchored_to_start = excluded.anchored_to_start;
-
-  -- Tags
-  delete from tags.activity_directive_tags adt
-    using merlin.merge_staging_area msa
-    where adt.directive_id = msa.activity_id
-      and adt.plan_id = plan_id_R
-      and msa.merge_request_id = _request_id
-      and msa.change_type = 'modify';
-
-  insert into tags.activity_directive_tags(plan_id, directive_id, tag_id)
-    select plan_id_R, activity_id, t.id
-    from merlin.merge_staging_area msa
-    inner join tags.tags t -- Inner join because it's specifically inserting into a tags-association table, so if there are no valid tags we do not want a null value for t.id
-    on t.id = any(msa.tags)
-    where msa.merge_request_id = _request_id
-      and (change_type = 'modify'
-       or change_type = 'add')
-    on conflict (directive_id, plan_id, tag_id) do nothing;
-  -- Presets
-  insert into merlin.preset_to_directive(preset_id, activity_id, plan_id)
-  select pts.preset_id, pts.activity_id, plan_id_R
-  from merlin.merge_staging_area msa
-  inner join merlin.preset_to_snapshot_directive pts using (activity_id)
-  where pts.snapshot_id = snapshot_id_S
-    and msa.merge_request_id = _request_id
-    and (msa.change_type = 'add'
-     or msa.change_type = 'modify')
-  on conflict (activity_id, plan_id)
-    do update
-    set preset_id = excluded.preset_id;
-
-  -- Delete
-  delete from merlin.activity_directive ad
-  using merlin.merge_staging_area msa
-  where ad.id = msa.activity_id
-    and ad.plan_id = plan_id_R
-    and msa.merge_request_id = _request_id
-    and msa.change_type = 'delete';
-
-  -- Clean up
-  delete from merlin.conflicting_activities where merge_request_id = _request_id;
-  delete from merlin.merge_staging_area where merge_staging_area.merge_request_id = _request_id;
-
-  update merlin.merge_request
-  set status = 'accepted'
-  where id = _request_id;
-
-  -- Perform an OR operation on the plans' derivation groups
-  select plan_id from merlin.plan_snapshot ps where ps.snapshot_id = snapshot_id_S into plan_id_S;
-
-  insert into merlin.plan_derivation_group(derivation_group_name, plan_id)
-	  select derivation_group_name, plan_id_R
-	  from merlin.plan_derivation_group pdg where pdg.plan_id = plan_id_S
-  on conflict(derivation_group_name, plan_id) do nothing;
-  -- as branch still exists, no need to delete anything or perform any cleanup in merlin.plan_derivation_group.
-
-  -- Attach snapshot history
-  insert into merlin.plan_latest_snapshot(plan_id, snapshot_id)
-  select plan_id_receiving_changes, snapshot_id_supplying_changes
-  from merlin.merge_request
-  where id = _request_id;
-end
-$$;
+  'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
 
 call migrations.mark_migration_applied('11');
