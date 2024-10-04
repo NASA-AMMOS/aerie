@@ -7,8 +7,8 @@ object_relationships:
   - name: external_source
     using:
       foreign_key_constraint_on:
-        - source_key
-        - derivation_group_name
+        - external_source_name
+        - derivation_group
 select_permissions:
   - role: aerie_admin
     permission:
