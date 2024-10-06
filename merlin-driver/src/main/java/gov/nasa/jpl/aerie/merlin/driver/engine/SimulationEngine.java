@@ -2155,7 +2155,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            Optional.of(directiveId)
+            Optional.ofNullable(directiveId)
         ));
       }
     });
