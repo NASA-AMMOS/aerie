@@ -87,4 +87,17 @@ public class Stubs {
       }
     };
   }
+
+  public static OutputType<String> STRING_OUTPUT_TYPE =
+      new OutputType<>() {
+        @Override
+        public ValueSchema getSchema() {
+          return ValueSchema.ofStruct(Map.of("value", ValueSchema.STRING));
+        }
+
+        @Override
+        public SerializedValue serialize(final String value) {
+          return SerializedValue.of(Map.of("value", SerializedValue.of(value)));
+        }
+      };
 }

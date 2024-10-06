@@ -26,7 +26,6 @@ repositories {
 dependencies {
     implementation project(':merlin-sdk') // 'gov.nasa.jpl.aerie:merlin-sdk:+'
     implementation 'org.apache.commons:commons-lang3:3.13.0'
-    implementation project(':test-mission-model')
     implementation project(':merlin-driver-protocol')
     implementation 'it.unimi.dsi:fastutil:8.5.12' // Not sure why this doesn't get included in the jars...
 
@@ -36,6 +35,7 @@ dependencies {
     testImplementation project(':examples:banananation')
     testImplementation project(':merlin-driver')
     testImplementation project(':merlin-driver-develop')
+    testImplementation project(':merlin-driver-retracing')
     testImplementation "net.jqwik:jqwik:1.6.5"
     testImplementation 'com.squareup:javapoet:1.13.0'
 }

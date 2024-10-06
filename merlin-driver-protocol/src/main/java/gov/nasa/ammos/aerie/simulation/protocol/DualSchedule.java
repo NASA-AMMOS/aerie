@@ -1,6 +1,7 @@
 package gov.nasa.ammos.aerie.simulation.protocol;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -9,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+
 public class DualSchedule {
   Schedule schedule;
   List<Edit> edits;
@@ -16,10 +20,16 @@ public class DualSchedule {
   public sealed interface Edit {
     Schedule apply(Schedule original);
 
-    record Update(long id, Duration newStartOffset) implements Edit {
+    record UpdateStart(long id, Duration newStartOffset) implements Edit {
       @Override
       public Schedule apply(final Schedule original) {
         return original.setStartTime(id, newStartOffset);
+      }
+    }
+    record UpdateArg(long id, String newArg) implements Edit {
+      @Override
+      public Schedule apply(final Schedule original) {
+        return original.setArg(id, newArg);
       }
     }
     record Delete(long id) implements Edit {
@@ -28,10 +38,10 @@ public class DualSchedule {
         return original.delete(id);
       }
     }
-    record Add(Duration startOffset, String directiveType) implements Edit {
+    record Add(Duration startOffset, String directiveType, String arg) implements Edit {
       @Override
       public Schedule apply(final Schedule original) {
-        return original.plus(Schedule.build(Pair.of(startOffset, new Directive(directiveType, Map.of()))));
+        return original.plus(Schedule.build(Pair.of(startOffset, new Directive(directiveType, Map.of("value", SerializedValue.of(arg))))));
       }
     }
   }
@@ -41,13 +51,35 @@ public class DualSchedule {
     edits = new ArrayList<>();
   }
 
+  public Modifier add(int seconds, String directiveType) {
+    return add(SECONDS.times(seconds), directiveType);
+  }
+
+  public Modifier add(int seconds, String directiveType, String arg) {
+    return add(SECONDS.times(seconds), directiveType, arg);
+  }
+
   public Modifier add(Duration startOffset, String directiveType) {
-    schedule = schedule.plus(Schedule.build(Pair.of(startOffset, new Directive(directiveType, Map.of()))));
+    return add(startOffset, directiveType, "");
+  }
+
+  public Modifier add(Duration startOffset, String directiveType, String arg) {
+    schedule = schedule.plus(Schedule.build(Pair.of(startOffset, new Directive(directiveType, Map.of("value", SerializedValue.of(arg))))));
     final var id = schedule.entries().getLast().id();
     return new Modifier() {
       @Override
+      public void thenUpdate(final int newStartOffsetSeconds) {
+        thenUpdate(SECONDS.times(newStartOffsetSeconds));
+      }
+
+      @Override
       public void thenUpdate(final Duration newStartOffset) {
-        edits.add(new Edit.Update(id, newStartOffset));
+        edits.add(new Edit.UpdateStart(id, newStartOffset));
+      }
+
+      @Override
+      public void thenUpdate(final String newArgument) {
+        edits.add(new Edit.UpdateArg(id, newArgument));
       }
 
       @Override
@@ -57,8 +89,19 @@ public class DualSchedule {
     };
   }
 
+  public void thenAdd(int startOffset, String directiveType) {
+    thenAdd(SECOND.times(startOffset), directiveType);
+  }
+
+  public void thenAdd(int startOffset, String directiveType, String arg) {
+    thenAdd(SECOND.times(startOffset), directiveType, arg);
+  }
+
   public void thenAdd(Duration startOffset, String directiveType) {
-    edits.add(new Edit.Add(startOffset, directiveType));
+    thenAdd(startOffset, directiveType, "");
+  }
+  public void thenAdd(Duration startOffset, String directiveType, String arg) {
+    edits.add(new Edit.Add(startOffset, directiveType, arg));
   }
 
   public void thenDelete(long id) {
@@ -66,11 +109,17 @@ public class DualSchedule {
   }
 
   public void thenUpdate(long id, Duration newStartOffset) {
-    edits.add(new Edit.Update(id, newStartOffset));
+    edits.add(new Edit.UpdateStart(id, newStartOffset));
+  }
+
+  public void thenUpdate(long id, String newArgument) {
+    edits.add(new Edit.UpdateArg(id, newArgument));
   }
 
   public interface Modifier {
+    void thenUpdate(int newStartOffsetSeconds);
     void thenUpdate(Duration newStartOffset);
+    void thenUpdate(String newArgument);
     void thenDelete();
   }
 
@@ -84,13 +133,16 @@ public class DualSchedule {
     for (final var edit : edits) {
       switch (edit) {
         case Edit.Add e -> {
-          res = res.plus(Schedule.build(Pair.of(e.startOffset, new Directive(e.directiveType, Map.of()))));
+          res = res.plus(Schedule.build(Pair.of(e.startOffset, new Directive(e.directiveType, Map.of("value", SerializedValue.of(e.arg))))));
         }
         case Edit.Delete e -> {
           res = res.delete(e.id);
         }
-        case Edit.Update e -> {
+        case Edit.UpdateStart e -> {
           res = res.setStartTime(e.id, e.newStartOffset);
+        }
+        case Edit.UpdateArg e -> {
+          res = res.setArg(e.id, e.newArg);
         }
       }
     }
@@ -114,7 +166,10 @@ public class DualSchedule {
         case Edit.Delete e -> {
           editsById.put(e.id(), e);
         }
-        case Edit.Update e -> {
+        case Edit.UpdateStart e -> {
+          editsById.put(e.id(), e);
+        }
+        case Edit.UpdateArg e -> {
           editsById.put(e.id(), e);
         }
       }
