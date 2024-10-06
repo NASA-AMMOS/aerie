@@ -123,6 +123,8 @@ public final class SimulationEngine implements AutoCloseable {
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
   private HashMap<String, ActivityInstanceId> taskToSimulatedActivityId = null;
+  private HashMap<SpanId, SpanId> activityParents = new HashMap<SpanId, SpanId>();;
+  private HashMap<SpanId, LinkedHashSet<SpanId>> activityChildren = new HashMap<SpanId, LinkedHashSet<SpanId>>();;
   private HashMap<SpanId, ActivityDirectiveId> activityDirectiveIds = null;
 
   /** When tasks become stale */
@@ -921,6 +923,7 @@ public final class SimulationEngine implements AutoCloseable {
    * @param afterEvent
    */
   public void setTaskStale(TaskId taskId, SubInstantDuration time, final Event afterEvent) {
+    if (debug) System.out.println("setTaskStale(" + taskId + ", " + time + ", afterEvent=" + afterEvent + ")");
     var staleTime = staleTasks.get(taskId);
     if (staleTime != null) {
       if (staleTime.shorterThan(time) || (staleTime.isEqualTo(time) &&
@@ -939,15 +942,19 @@ public final class SimulationEngine implements AutoCloseable {
       staleEvents.put(parentId, afterEvent);
       // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
       if (oldEngine.getFactoryForTaskId(parentId) != null) {
+        if (trace) System.out.println("setTaskStale(" + taskId + "): found factory for " + parentId);
         break;
       }
       if (oldEngine.isActivity(parentId)) {
+        if (trace) System.out.println("setTaskStale(" + taskId + "): isActivity(" + parentId + ") = true");
         break;
       }
       if (oldEngine.isDaemonTask(parentId)) {
+        if (trace) System.out.println("setTaskStale(" + taskId + "): isDaemonTask(" + parentId + ") = true");
         break;
       }
       var nextParentId = oldEngine.getTaskParent(parentId);
+      if (trace) System.out.println("setTaskStale(" + taskId + "): parent of " + parentId + " is " + nextParentId);
       if (nextParentId == null) break;
       parentId = nextParentId;
     }
@@ -1565,9 +1572,9 @@ public final class SimulationEngine implements AutoCloseable {
           if (this.blockedTasks.get($).decrementAndGet() == 0) {
             this.blockedTasks.remove($);
             if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(blocked caller TaskId = " + $ + ", " + currentTime.duration() + ")");
-              SimulationEngine.this.taskParent.put(task, $);
-              SimulationEngine.this.taskChildren.computeIfAbsent($, x -> new HashSet<>()).add(task);
-              this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime.duration()));
+            wireTasksAndSpans(task, $, null, null);
+
+            this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime.duration()));
           }
         });
       }
@@ -1608,9 +1615,7 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Arrange for the parent task to resume.... later.
         SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
-        SimulationEngine.this.taskParent.put(childTask, task);
-        SimulationEngine.this.taskChildren.computeIfAbsent(task, x -> new HashSet<>()).add(childTask);
-
+        wireTasksAndSpans(childTask, task, childSpan, scheduler.span);
         if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);
         this.tasks.put(task, progress.continueWith(s.continuation()));
       }
@@ -1626,6 +1631,23 @@ public final class SimulationEngine implements AutoCloseable {
         this.tasks.put(task, progress.continueWith(s.continuation()));
         this.waitingTasks.put(condition, task);
       }
+    }
+  }
+
+  private void wireTasksAndSpans(TaskId childTaskId, TaskId parentTaskId, SpanId childSpanId, SpanId parentSpanId) {
+    if (childTaskId != null && parentTaskId != null) {
+      taskParent.put(childTaskId, parentTaskId);
+      taskChildren.computeIfAbsent(parentTaskId, x -> new HashSet<>()).add(childTaskId);
+    }
+    if (childTaskId != null && childSpanId != null) {
+      putSpanId(childTaskId, childSpanId);
+    }
+    if (parentTaskId != null && parentSpanId != null) { // This one is probably already linked
+      putSpanId(parentTaskId, parentSpanId);
+    }
+    if (childSpanId != null && parentSpanId != null && childSpanId != parentSpanId) {
+      activityParents.put(childSpanId, parentSpanId);
+      activityChildren.computeIfAbsent(parentSpanId, $ -> new LinkedHashSet<>()).add(childSpanId);
     }
   }
 
@@ -2076,8 +2098,7 @@ public final class SimulationEngine implements AutoCloseable {
       final boolean combined
   ) {
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
-    final var activityParents = new HashMap<SpanId, SpanId>();
-    final var activityDirectiveIds = spanToActivityDirectiveId(spanInfo);
+    activityDirectiveIds = spanToActivityDirectiveId(spanInfo); // TODO -- REVIEW -- this is called again later in this function by spanToSimulatedActivities(); can we remove this?
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
@@ -2088,9 +2109,8 @@ public final class SimulationEngine implements AutoCloseable {
       parent.ifPresent(spanId -> activityParents.put(span, spanId));
     });
 
-    final var activityChildren = new HashMap<SpanId, List<SpanId>>();
     activityParents.forEach((activity, parent) -> {
-      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(activity);
+      activityChildren.computeIfAbsent(parent, $ -> new LinkedHashSet<>()).add(activity);
     });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
@@ -2098,6 +2118,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var simulatedActivities = new LinkedHashMap<ActivityInstanceId, ActivityInstance>();
     final var unfinishedActivities = new LinkedHashMap<ActivityInstanceId, UnfinishedActivity>();
+    final var emptySet = new LinkedHashSet<SpanId>(0);
     this.spans.forEach((span, state) -> {
       if (!spanInfo.isActivity(span)) return;
 
@@ -2115,11 +2136,11 @@ public final class SimulationEngine implements AutoCloseable {
             state.endOffset().get().minus(state.startOffset()),
             spanToActivityInstanceId.get(activityParents.get(span)),
             activityChildren
-                .getOrDefault(span, Collections.emptyList())
+                .getOrDefault(span, emptySet)
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span) || directiveId == null) ? Optional.empty() : Optional.ofNullable(directiveId),
+            Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
@@ -2130,11 +2151,11 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(state.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             spanToActivityInstanceId.get(activityParents.get(span)),
             activityChildren
-                .getOrDefault(span, Collections.emptyList())
+                .getOrDefault(span, emptySet)
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span) || directiveId == null) ? Optional.empty() : Optional.of(directiveId)
+            Optional.of(directiveId)
         ));
       }
     });
@@ -2507,8 +2528,7 @@ public final class SimulationEngine implements AutoCloseable {
             state.create(SimulationEngine.this.executor),
             currentTime.duration()));
         this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
-        SimulationEngine.this.taskParent.put(task, this.activeTask);
-        SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
+        wireTasksAndSpans(task, this.activeTask, childSpan, this.span);
         SimulationEngine.this.taskFactories.put(task, state);
         SimulationEngine.this.taskIdsForFactories.put(state, task);
         this.frame.signal(JobId.forTask(task));
@@ -2518,6 +2538,7 @@ public final class SimulationEngine implements AutoCloseable {
 
 
   private void startDirective(ActivityDirectiveId directiveId, Topic<ActivityDirectiveId> activityTopic, SpanId activeSpan) {
+    if (trace) System.out.println("startDirective(" + directiveId + ", " + activityTopic + ", " +  activeSpan + ")");
     spanInfo.spanToPlannedDirective.put(activeSpan, directiveId);
     spanInfo.directiveIdToSpanId.put(directiveId, activeSpan);
   }
@@ -2565,7 +2586,70 @@ public final class SimulationEngine implements AutoCloseable {
     return parent;
   }
 
+  TaskId getActivityParentTaskId(TaskId taskId, boolean tryOldEngine) {
+    SpanId spanId = getSpanId(taskId);
+    if (spanId != null && this.spanInfo.isActivity(spanId)) {
+      return taskId;
+    }
+    if (taskId.equals(getDaemonTaskId()) || this.daemonTasks.contains(taskId)) {
+      return null;
+    }
+    var parent = this.taskParent.get(taskId);
+    if (parent != null) {
+      var t = getActivityParentTaskId(parent, false);
+      if (t != null) {
+        return t;
+      }
+    }
+    if (oldEngine == null || !tryOldEngine) return null;
+    var t = this.oldEngine.getActivityParentTaskId(taskId, true);
+    return t;
+  }
+
+  private TaskId getTaskParentFromSpan(TaskId taskId) {
+    var spanId = getSpanId(taskId);
+    TaskId parent = null;
+    if (spanId != null && activityParents != null && !activityParents.isEmpty()) {
+      var parentSpanId = activityParents.get(spanId);
+      if (parentSpanId != null) {
+        var tasks = getTaskIds(spanId);
+        if (tasks != null && !tasks.isEmpty()) {
+          parent = tasks.getFirst();
+        }
+      }
+    }
+    if (parent == null && oldEngine != null) {
+      parent = oldEngine.getTaskParent(taskId);
+    }
+    return parent;
+  }
+
+  TaskId getDaemonTaskId() {
+    TaskId daemonTaskId = getTaskIdForFactory(getMissionModel().getDaemon());
+    if (daemonTaskId != null) {
+      return daemonTaskId;
+    }
+    if (oldEngine != null) {
+      return oldEngine.getDaemonTaskId();
+    }
+    return null;
+  }
+
   boolean isDaemonTask(TaskId taskId) {
+    if (daemonTasks.contains(taskId)) return true;
+    SpanId spanId = getSpanId(taskId);
+    if (spanId != null && spanInfo.isActivity(spanId)) return false;
+    TaskId daemonTaskId = getTaskIdForFactory(getMissionModel().getDaemon());
+    if (daemonTaskId != null && daemonTaskId.equals(taskId)) {
+      return true;
+    }
+    if (oldEngine != null) {
+      return oldEngine.isDaemonTask(taskId);
+    }
+    return false;
+  }
+
+  boolean isDaemonTaskOld(TaskId taskId) {
     if (daemonTasks.contains(taskId)) return true;
     SpanId spanId = getSpanId(taskId);
     if (spanId != null && spanInfo.isActivity(spanId)) return false;
@@ -2639,22 +2723,26 @@ public final class SimulationEngine implements AutoCloseable {
     return children;
   }
 
-  public void rescheduleTask(TaskId taskId, Duration startOffset) {
+  public void rescheduleTask(TaskId taskId, Duration startOffset) {  // TODO -- don't we need the startOffset to be a SubInstantDuration?
+    if (debug) System.out.println("rescheduleTask(" + taskId + ", " + startOffset + ")");
     if (oldEngine.isDaemonTask(taskId)) {
+      if (trace) System.out.println("rescheduleTask(" + taskId + "): is daemon task");
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
-        scheduleTask(startOffset, factory, taskId);  // TODO: Emit something like with emitAndThen() in the isAct case below?
+        scheduleTask(startOffset, factory, taskId);
       } else {
         String daemonId = missionModel.getDaemonId(factory);
         throw new RuntimeException("Can't reschedule daemon task " + daemonId + " (" + taskId + ") at time offset " + startOffset +
                                    (factory == null ? " because there is no TaskFactory." : "."));
       }
     } else if (oldEngine.isActivity(taskId)) {
+      if (trace) System.out.println("rescheduleTask(" + taskId + "): is activity");
       // Get the SerializedActivity for the taskId.
       // If an activity is found, see if it is associated with a directive and, if so, use the directive instead.
-      SerializedActivity serializedActivity = this.spanInfo.input.get(taskId.id());
-      var activityDirectiveId = spanInfo.spanToPlannedDirective.get(taskId.id());
-      ActivityInstance simulatedActivity = simulatedActivities.get(activityDirectiveId);
+      var spanId = getSpanId(taskId);
+      SerializedActivity serializedActivity = this.oldEngine.spanInfo.input.get(spanId);
+      var activityDirectiveId = oldEngine.spanInfo.spanToPlannedDirective.get(spanId);
+      ActivityInstance simulatedActivity = oldEngine.simulatedActivities.get(activityDirectiveId);
       if (startOffset == null || startOffset == Duration.MAX_VALUE) {
         if (simulatedActivity != null) {
           // TODO -- not possible to get here?  See println below.
@@ -2678,6 +2766,7 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: No need to emit(), right?  So, what about below instead?
       // scheduleTask(startOffset, task, taskId);
     } else {
+      if (trace) System.out.println("rescheduleTask(" + taskId + "): WARNING!  unknown whether task is daemon or activity spawned!");
       // We have a TaskFactory even though it's not an activity or daemon -- maybe a cached TaskFactory to avoid rerunning parents
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
