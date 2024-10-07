@@ -16,6 +16,6 @@ comment on table merlin.plan_derivation_group is e''
   'Links externally imported event sources & plans.';
 
 comment on column merlin.plan_derivation_group.plan_id is e''
-  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.';
+  'The plan with which the derivation group is associated.';
 comment on column merlin.plan_derivation_group.derivation_group_name is e''
-  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.';
+  'The derivation group being associated with the plan.';
