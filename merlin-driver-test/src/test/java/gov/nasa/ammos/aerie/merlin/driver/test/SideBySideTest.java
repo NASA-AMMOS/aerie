@@ -40,6 +40,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.rightmostNumber;
+import static gov.nasa.ammos.aerie.merlin.driver.test.TestRegistrar.schedulerOfQuerier;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
@@ -300,18 +301,7 @@ public class SideBySideTest {
   public static void waitUntil(Function<Duration, Optional<Duration>> condition) {
     final var cells = TestContext.get().cells();
     TestContext.get().threadedTask().thread().waitUntil((now, atLatest) -> {
-      TestContext.set(new TestContext.Context(cells, new Scheduler() {
-        @Override
-        public <State> State get(final CellId<State> cellId) {
-          return now.getState(cellId);
-        }
-
-        @Override
-        public <Event> void emit(final Event event, final Topic<Event> topic) {}
-
-        @Override
-        public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {}
-      }, null));
+      TestContext.set(new TestContext.Context(cells, schedulerOfQuerier(now), null));
       try {
         return condition.apply(atLatest);
       } finally {

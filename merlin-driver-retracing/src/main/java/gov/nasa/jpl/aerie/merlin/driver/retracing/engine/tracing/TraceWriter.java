@@ -61,6 +61,16 @@ public class TraceWriter<T> {
         scheduler.spawn(taskSpan, task);
         TraceWriter.this.spawn(taskSpan, task);
       }
+
+      @Override
+      public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+        // TODO
+      }
+
+      @Override
+      public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+        // TODO
+      }
     };
   }
 }

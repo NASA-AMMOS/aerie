@@ -44,6 +44,16 @@ public record TaskRestarter<T>(TaskResumptionInfo<T> resumptionInfo, Executor ex
             scheduler.spawn(childSpan, task);
           }
         }
+
+        @Override
+        public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+          // TODO
+        }
+
+        @Override
+        public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+          // TODO
+        }
       });
     }
     return Objects.requireNonNull(taskStatus);

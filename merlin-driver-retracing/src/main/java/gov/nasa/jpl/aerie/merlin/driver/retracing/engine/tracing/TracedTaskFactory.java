@@ -40,22 +40,7 @@ public class TracedTaskFactory<T> implements TaskFactory<T> {
 
     @Override
     public TaskStatus<Output> step(Scheduler scheduler) {
-      return withContinuation(cursor.step(new Scheduler() {
-        @Override
-        public <State> State get(final CellId<State> cellId) {
-          return scheduler.get(cellId);
-        }
-
-        @Override
-        public <Event> void emit(final Event event, final Topic<Event> topic) {
-            scheduler.emit(event, topic);
-        }
-
-        @Override
-        public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {
-          scheduler.spawn(taskSpan, task);
-        }
-      }));
+      return withContinuation(cursor.step(scheduler));
     }
 
     @Override

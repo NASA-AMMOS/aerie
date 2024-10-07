@@ -178,7 +178,7 @@ public final class TestRegistrar {
     };
   }
 
-  private Scheduler schedulerOfQuerier(Querier querier) {
+  public static Scheduler schedulerOfQuerier(Querier querier) {
     return new Scheduler() {
       @Override
       public <State> State get(final CellId<State> cellId) {
