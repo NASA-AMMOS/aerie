@@ -1,5 +1,5 @@
 create table merlin.derivation_group (
-    name text not null unique,
+    name text not null,
     source_type_name text not null,
 
     constraint derivation_group_pkey
@@ -10,7 +10,7 @@ create table merlin.derivation_group (
 );
 
 comment on table merlin.derivation_group is e''
-  'A representation of the names of groups of sources to run derivation operations over.';
+  'A collection of external sources of the same type that the derivation operation is run against.';
 
 comment on column merlin.derivation_group.name is e''
   'The name and primary key of the derivation group.';
