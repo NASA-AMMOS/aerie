@@ -22,7 +22,7 @@ public class STNTest {
     assertTrue(success);
     var d = tn.getAllData("left");
     var expD1 = new TaskNetwork.TNActData(Pair.of(6.,8.), Pair.of(8.,8.), Pair.of(0.,2.));
-    assertEquals(d, expD1);
+    assertEquals(expD1, d);
   }
 
   @Test

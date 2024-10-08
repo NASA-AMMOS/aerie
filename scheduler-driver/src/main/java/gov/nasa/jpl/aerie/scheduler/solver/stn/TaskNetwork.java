@@ -17,7 +17,8 @@ import java.util.Map;
  */
 public class TaskNetwork {
 
-  private final BidiMap<String, String> startActTimepoints;
+  //private final BidiMap<String, String> startActTimepoints;
+  private final Map<String, String> startActTimepoints;
   private final Map<String, String> endActTimepoints;
   private final String startHorizon = "SI";
   private final String endHorizon = "EI";
@@ -32,7 +33,8 @@ public class TaskNetwork {
 
   public TaskNetwork(double horizonStart, double horizonEnd){
     stn = new STN();
-    startActTimepoints = new DualHashBidiMap<>();
+    //TODO jd restore startActTimepoints = new DualHashBidiMap<>();
+    startActTimepoints = new HashMap<>();
     endActTimepoints = new HashMap<>();
     setHorizon(horizonStart, horizonEnd);
   }
@@ -134,8 +136,10 @@ public class TaskNetwork {
     final var taskNames = new ArrayList<String>();
 
     List<String> tpNames = stn.orderNodesRootToLeaf();
-    for(String tpName : tpNames)
-      taskNames.add(startActTimepoints.getKey(tpName));
+    for(String tpName : tpNames){
+      //TODO jd restore taskNames.add(startActTimepoints.getKey(tpName));
+    }
+
     return taskNames;
   }
 
