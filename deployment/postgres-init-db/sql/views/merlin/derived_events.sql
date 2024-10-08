@@ -1,3 +1,8 @@
+-- Rule 1. An External Event superceded by nothing will be present in the final, derived result.
+-- Rule 2. An External Event partially superceded by a later External Source, but whose start time occurs before the start of said External Source(s), will be present in the final, derived result.
+-- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
+-- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
+
 create view merlin.derived_events
 as
 select
