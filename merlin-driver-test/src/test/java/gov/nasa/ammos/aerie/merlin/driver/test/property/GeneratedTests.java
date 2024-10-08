@@ -1,5 +1,7 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
 import gov.nasa.ammos.aerie.simulation.protocol.Directive;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Schedule;
@@ -15,12 +17,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.IncrementalSimPropertyTests.assertLastSegmentsEqual;
-import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.rightmostNumber;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.spawn;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.waitUntil;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.assertLastSegmentsEqual;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.rightmostNumber;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.waitUntil;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;

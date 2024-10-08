@@ -1,8 +1,9 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import com.squareup.javapoet.CodeBlock;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
-import gov.nasa.ammos.aerie.simulation.protocol.Schedule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -16,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.IncrementalSimPropertyTests.printEffectModel;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.spawn;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.printEffectModel;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.spawn;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 

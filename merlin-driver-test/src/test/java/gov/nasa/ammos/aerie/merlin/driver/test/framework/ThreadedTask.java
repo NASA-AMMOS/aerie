@@ -1,4 +1,4 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
@@ -13,8 +13,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, TaskThread<T> thread, MutableBoolean finished) implements Task<T> {
-  public static <T> ThreadedTask<T> of(Executor executor, TestContext.CellMap cellMap, Supplier<T> task) {
+public record ThreadedTask<T>(TestRegistrar.CellMap cellMap, Supplier<T> task, TaskThread<T> thread, MutableBoolean finished) implements Task<T> {
+  public static <T> ThreadedTask<T> of(Executor executor, TestRegistrar.CellMap cellMap, Supplier<T> task) {
     return new ThreadedTask<>(cellMap, task, TaskThread.start(executor, task), new MutableBoolean(false));
   }
 
@@ -45,7 +45,6 @@ public record ThreadedTask<T>(TestContext.CellMap cellMap, Supplier<T> task, Tas
   public void release() {
     try {
       thread.inbox.put(new Message.Abort());
-//      thread.outbox.take();
     } catch (final InterruptedException ex) {
       return;
     }

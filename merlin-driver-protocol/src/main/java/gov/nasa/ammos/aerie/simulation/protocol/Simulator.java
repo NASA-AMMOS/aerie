@@ -6,6 +6,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.time.Instant;
 import java.util.function.Supplier;
 
+/**
+ * A Simulator is capable of interpreting a schedule and producing results.
+ *
+ * The simulate method may be called multiple times with different schedules.
+ *
+ * Schedule entries that share ids across calls to `simulate` must share a directive type.
+ *
+ * The first action taken by each directive type must be to call `startActivity`, and the last action must be to call `endActivity`
+ */
 public interface Simulator {
   default Results simulate(Schedule schedule) {
     return simulate(schedule, () -> false);

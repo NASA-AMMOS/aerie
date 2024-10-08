@@ -1,4 +1,4 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.framework;
 
 import gov.nasa.ammos.aerie.simulation.protocol.Directive;
 import gov.nasa.ammos.aerie.simulation.protocol.Results;
@@ -12,14 +12,10 @@ import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -39,8 +35,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.rightmostNumber;
-import static gov.nasa.ammos.aerie.merlin.driver.test.TestRegistrar.schedulerOfQuerier;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.rightmostNumber;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar.schedulerOfQuerier;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
@@ -276,42 +273,6 @@ public class SideBySideTest {
 
   private static void assertGraphEquals(String expected, History actual) {
     assertEquals(expected, actual.toString());
-  }
-
-  public static void delay(Duration duration) {
-    TestContext.get().threadedTask().thread().delay(duration);
-  }
-
-  public static void spawn(Runnable task) {
-    final TestContext.CellMap cells = TestContext.get().cells();
-    TestContext.get().scheduler().spawn(InSpan.Fresh, x -> ThreadedTask.of(x, cells, () -> {
-      task.run();
-      return UNIT;
-    }));
-  }
-
-  public static void call(Runnable task) {
-    final TestContext.CellMap cells = TestContext.get().cells();
-    TestContext.get().threadedTask().thread().call(InSpan.Fresh, x -> ThreadedTask.of(x, cells, () -> {
-      task.run();
-      return UNIT;
-    }));
-  }
-
-  public static void waitUntil(Function<Duration, Optional<Duration>> condition) {
-    final var cells = TestContext.get().cells();
-    TestContext.get().threadedTask().thread().waitUntil((now, atLatest) -> {
-      TestContext.set(new TestContext.Context(cells, schedulerOfQuerier(now), null));
-      try {
-        return condition.apply(atLatest);
-      } finally {
-        TestContext.clear();
-      }
-    });
-  }
-
-  public static void waitUntil(Supplier<Boolean> condition) {
-    waitUntil($ -> condition.get() ? Optional.of(ZERO) : Optional.empty());
   }
 
   public static <Config, Model> void incrementalSimTestCase(

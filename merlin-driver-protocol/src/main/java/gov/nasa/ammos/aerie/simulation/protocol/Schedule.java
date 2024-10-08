@@ -13,6 +13,9 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
+/**
+ * A schedule is a set of entries, which each represent a directive with a start time and an id
+ */
 public record Schedule(ArrayList<ScheduleEntry> entries) {
   public record ScheduleEntry(long id, Duration startTime, Directive directive) {
     public Duration startOffset() {
