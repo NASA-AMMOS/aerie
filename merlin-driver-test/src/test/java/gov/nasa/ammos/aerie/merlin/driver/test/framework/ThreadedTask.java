@@ -23,22 +23,24 @@ public record ThreadedTask<T>(TestRegistrar.CellMap cellMap, Supplier<T> task, T
     if (finished.getValue()) {
       throw new IllegalStateException("Stepping finished task");
     }
-    TestContext.set(new TestContext.Context(cellMap, scheduler, this));
-    try {
-      thread.inbox().put(new Message.Resume());
-      final var response = thread.outbox().take();
-      if (response instanceof ThreadedTaskStatus.Aborted<T> r) {
-        throw new RuntimeException(r.throwable());
-      }
-      if (response instanceof ThreadedTaskStatus.Completed<T> r) {
-        finished.setTrue();
-      }
-      return response.withContinuation(this);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    } finally {
-      TestContext.clear();
-    }
+    return TestContext.set(
+        new TestContext.Context(cellMap, scheduler, this),
+        () -> {
+          final ThreadedTaskStatus<T> response;
+          try {
+            thread.inbox().put(new Message.Resume());
+            response = thread.outbox().take();
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+          if (response instanceof ThreadedTaskStatus.Aborted<T> r) {
+            throw new RuntimeException(r.throwable());
+          }
+          if (response instanceof ThreadedTaskStatus.Completed<T> r) {
+            finished.setTrue();
+          }
+          return response.withContinuation(this);
+        });
   }
 
   @Override

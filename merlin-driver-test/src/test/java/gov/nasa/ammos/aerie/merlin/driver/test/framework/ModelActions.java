@@ -1,5 +1,7 @@
 package gov.nasa.ammos.aerie.merlin.driver.test.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 
@@ -36,14 +38,15 @@ public final class ModelActions {
 
   public static void waitUntil(Function<Duration, Optional<Duration>> condition) {
     final var cells = TestContext.get().cells();
-    TestContext.get().threadedTask().thread().waitUntil((now, atLatest) -> {
-      TestContext.set(new TestContext.Context(cells, schedulerOfQuerier(now), null));
-      try {
-        return condition.apply(atLatest);
-      } finally {
-        TestContext.clear();
-      }
-    });
+    TestContext.get().threadedTask().thread().waitUntil(
+        new Condition() {
+          @Override
+          public Optional<Duration> nextSatisfied(final Querier now, final Duration atLatest) {
+            return TestContext.set(
+                new TestContext.Context(cells, schedulerOfQuerier(now), null),
+                () -> condition.apply(atLatest));
+          }
+        });
   }
 
   public static void waitUntil(Supplier<Boolean> condition) {

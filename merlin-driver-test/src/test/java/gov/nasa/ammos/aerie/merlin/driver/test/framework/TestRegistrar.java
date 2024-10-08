@@ -172,12 +172,9 @@ public final class TestRegistrar {
 
             @Override
             public Object getDynamics(final Querier querier) {
-              TestContext.set(new TestContext.Context(cellMap, schedulerOfQuerier(querier), null));
-              try {
-                return resource.getRight().get();
-              } finally {
-                TestContext.clear();
-              }
+              return TestContext.set(
+                  new TestContext.Context(cellMap, schedulerOfQuerier(querier), null),
+                  resource.getRight()::get);
             }
           });
         }

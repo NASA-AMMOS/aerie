@@ -21,11 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.spawn;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.waitUntil;
 import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.assertLastSegmentsEqual;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.spawn;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.waitUntil;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;

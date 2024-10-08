@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.spawn;
 import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.printEffectModel;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest.spawn;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
