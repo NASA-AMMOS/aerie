@@ -41,6 +41,12 @@ comment on column merlin.external_event.properties is e''
   'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
+create trigger check_external_event_duration_is_nonnegative_trigger
+before insert or update on merlin.external_event
+for each row
+when (new.duration < '0')
+execute function util_functions.raise_duration_is_negative();
+
 create function merlin.check_event_times()
 returns trigger
 language plpgsql as $$
