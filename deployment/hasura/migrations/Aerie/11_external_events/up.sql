@@ -151,9 +151,26 @@ comment on table merlin.plan_derivation_group is e''
   'Links externally imported event sources & plans.';
 
 comment on column merlin.plan_derivation_group.plan_id is e''
-  'The id of the plan that the derivation_group (referenced by derivation_group_name) in this link is being associated with.';
+  'The plan with which the derivation group is associated.';
 comment on column merlin.plan_derivation_group.derivation_group_name is e''
-  'The name of the derivation group that is being associated with the plan (referenced by plan_id) in this link.';
+  'The derivation group being associated with the plan.';
+
+-- if an external source is linked to a plan it cannot be deleted
+create function merlin.check_if_associated()
+  returns trigger
+  language plpgsql as $$
+begin
+  if exists(select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
+    raise foreign_key_violation
+    using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
+  end if;
+  return null;
+end;
+$$;
+
+create trigger check_if_associated
+before delete on merlin.external_source
+  for each row execute function merlin.check_if_associated();
 
 create function merlin.check_event_times()
  	returns trigger
@@ -170,10 +187,10 @@ begin
     event_start := new.start_time;
 	event_end := new.start_time + new.duration;
 	if event_start < source_start or event_end < source_start then
-		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+		raise exception 'Event % out of bounds of source %', new.key, new.source_key;
 	end if;
 	if event_start > source_end or event_end > source_end then
-		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+		raise exception 'Event % out of bounds of source %', new.key, new.source_key;
 	end if;
 	return null;
 end;
@@ -191,33 +208,44 @@ comment on trigger check_event_times on merlin.external_event is e''
 
 create table ui.seen_sources
 (
-    username text not null,
-    external_source_name text not null,
-    derivation_group text not null,
-    external_source_type text not null, -- included for ease of filtering in the UI
+    plan_id integer not null,
+    derivation_group_name text not null,
+    last_acknowledged_at timestamp with time zone default now() not null,
 
     constraint seen_sources_pkey
-      primary key (username, external_source_name, derivation_group),
-    constraint seen_sources_references_user
-      foreign key (username)
-      references permissions.users (username) match simple
-      on delete cascade,
-    constraint seen_sources_references_external_source
-      foreign key (external_source_name, derivation_group)
-      references merlin.external_source (key, derivation_group_name) match simple
+      primary key (plan_id, derivation_group_name),
+    constraint seen_sources_references_plan_derivation_group
+      foreign key (plan_id, derivation_group_name)
+      references merlin.plan_derivation_group (plan_id, derivation_group_name)
       on delete cascade
 );
 
 comment on table ui.seen_sources is e''
-  'Tracks the external sources either acknowledged by each user.';
+  'Tracks whether a plan (specifically any of its contributors/owners) has acknowledged that a source is now associated with a plan by virtue of being a member of an associated derivation group.\n'
+  'Membership indicates that the new source has been acknowledged and is now understood to be a member.\n'
+  'A source in external_source that is part of a derivation group associated with this plan but not in this table is unacknowledged.\n'
+  'Acknowledgements are performed in the UI, and upon doing so new entries are appended to this table.';
 
-comment on column ui.seen_sources.username is e''
-  'The username of the user that has seen the given source referenced by this entry.\n'
-  'A foreign key referencing the permissions.users table.';
-comment on column ui.seen_sources.external_source_name is e''
-  'The name of the external_source that the user is being marked as having seen in this entry.';
-comment on column ui.seen_sources.external_source_type is e''
-  'The external_source_type of the external_source that the user is being marked as having seen in this entry.';
+comment on column ui.seen_sources.plan_id is e''
+  'The plan that any new source is now associated with by virtue of being a member of the named derivation group.';
+comment on column ui.seen_sources.derivation_group_name is e''
+  'The derivation group of the plan is associated with.';
+comment on column ui.seen_sources.last_acknowledged_at is e''
+  'The time at which changes to the derivation group were last acknowledged.';
+
+-- add a trigger that adds to seen sources whenever an association is made
+create function ui.add_seen_source_on_assoc()
+  returns trigger
+  language plpgsql as $$
+begin
+  insert into ui.seen_sources values (new.plan_id, new.derivation_group_name);
+  return new;
+end;
+$$;
+
+create trigger add_seen_source_on_assoc
+after insert on merlin.plan_derivation_group
+  for each row execute function ui.add_seen_source_on_assoc();
 
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange

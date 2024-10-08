@@ -4,11 +4,11 @@ table:
 configuration:
   custom_name: "seen_sources"
 object_relationships:
-  - name: external_source
+  - name: plan_derivation_group
     using:
       foreign_key_constraint_on:
-        - external_source_name
-        - derivation_group
+        - plan_id
+        - derivation_group_name
 select_permissions:
   - role: aerie_admin
     permission:
@@ -30,23 +30,29 @@ insert_permissions:
     permission:
       columns: '*'
       check: {}
-  - role: user
-    permission:
-      columns: '*'
-      check: {}
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: '*'
+      columns: [last_acknowledged_at]
       filter: {}
   - role: user
     permission:
-      columns: '*'
-      filter: {}
+      columns: [last_acknowledged_at]
+      filter: {
+        "plan_derivation_group": {
+          "plan":{
+            "_or":[
+              {
+                "owner":{"_eq":"X-Hasura-User-Id" }
+              },
+              {
+                "collaborators":{"collaborator":{"_eq":"X-Hasura-User-Id"}}
+              }
+            ]
+          }
+        }
+      }
 delete_permissions:
   - role: aerie_admin
-    permission:
-      filter: {}
-  - role: user
     permission:
       filter: {}
