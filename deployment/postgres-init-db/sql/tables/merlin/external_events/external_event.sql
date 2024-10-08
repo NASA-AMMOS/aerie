@@ -11,10 +11,12 @@ create table merlin.external_event (
       primary key (key, source_key, derivation_group_name, event_type_name),
     constraint external_event_references_source_key_derivation_group
       foreign key (source_key, derivation_group_name)
-      references merlin.external_source (key, derivation_group_name),
+      references merlin.external_source (key, derivation_group_name)
+      on delete cascade,
     constraint external_event_references_event_type_name
       foreign key (event_type_name)
       references merlin.external_event_type(name)
+      on delete restrict
 );
 
 comment on table merlin.external_event is e''
@@ -40,28 +42,27 @@ comment on column merlin.external_event.properties is e''
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
 create function merlin.check_event_times()
- 	returns trigger
- 	language plpgsql as
-$func$
+returns trigger
+language plpgsql as $$
 declare
-	source_start timestamp with time zone;
-	source_end timestamp with time zone;
-	event_start timestamp with time zone;
-	event_end timestamp with time zone;
+  source_start timestamp with time zone;
+  source_end timestamp with time zone;
+  event_start timestamp with time zone;
+  event_end timestamp with time zone;
 begin
-  	select start_time into source_start from merlin.external_source where new.source_key = external_source.key and new.derivation_group_name = external_source.derivation_group_name;
-  	select end_time into source_end from merlin.external_source where new.source_key = external_source.key AND new.derivation_group_name = external_source.derivation_group_name;
-    event_start := new.start_time;
-	event_end := new.start_time + new.duration;
-	if event_start < source_start or event_end < source_start then
-		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
-	end if;
-	if event_start > source_end or event_end > source_end then
-		raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
-	end if;
-	return null;
+  select start_time, end_time into source_start, source_end
+  from merlin.external_source
+  where new.source_key = external_source.key
+    and new.derivation_group_name = external_source.derivation_group_name;
+
+  event_start := new.start_time;
+  event_end := new.start_time + new.duration;
+  if event_start < source_start or event_end > source_end then
+    raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+  end if;
+  return new;
 end;
-$func$;
+$$;
 
 comment on function merlin.check_event_times() is e''
   'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
