@@ -67,7 +67,7 @@ comment on function merlin.check_event_times() is e''
   'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
 create trigger check_event_times
-after insert on merlin.external_event
+before insert on merlin.external_event
 	for each row execute function merlin.check_event_times();
 
 comment on trigger check_event_times on merlin.external_event is e''
