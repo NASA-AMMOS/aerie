@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;

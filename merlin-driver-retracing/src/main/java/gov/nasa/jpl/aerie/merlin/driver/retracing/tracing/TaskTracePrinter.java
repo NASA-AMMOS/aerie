@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 public class TaskTracePrinter {
   private static String indent(final String s) {

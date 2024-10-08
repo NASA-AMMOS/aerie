@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing.TracedTaskFactory.trace;
+import static gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.TracedTaskFactory.trace;
 
 public final class RetracingSimulationDriver {
   /** Mutable cache */

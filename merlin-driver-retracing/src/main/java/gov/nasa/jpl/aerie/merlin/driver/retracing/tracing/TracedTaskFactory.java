@@ -1,11 +1,8 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.concurrent.Executor;
@@ -46,23 +43,6 @@ public class TracedTaskFactory<T> implements TaskFactory<T> {
     @Override
     public void release() {
       // TODO
-    }
-
-    private TaskStatus<Output> replaceContinuation(TaskStatus<Output> taskStatus) {
-      switch (taskStatus) {
-        case TaskStatus.Completed<Output> s -> {
-          return s;
-        }
-        case TaskStatus.Delayed<Output> s -> {
-          return new TaskStatus.Delayed<>(s.delay(), this);
-        }
-        case TaskStatus.CallingTask<Output> s -> {
-          return new TaskStatus.CallingTask<>(s.childSpan(), s.child(), this);
-        }
-        case TaskStatus.AwaitingCondition<Output> s -> {
-          return new TaskStatus.AwaitingCondition<>(s.condition(), this);
-        }
-      }
     }
 
     private TaskStatus<Output> withContinuation(Action.Status<Output> status) {

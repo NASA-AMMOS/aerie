@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 
-import static gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing.Utilities.extractTask;
+import static gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.Utilities.extractTask;
 
 public class TaskTrace<T> {
   public List<Action<T>> actions = new ArrayList<>();

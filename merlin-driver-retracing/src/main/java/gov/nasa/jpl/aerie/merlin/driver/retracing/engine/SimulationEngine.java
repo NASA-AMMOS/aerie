@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.UnfinishedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing.ActionLog;
+import gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.ActionLog;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.LiveCells;

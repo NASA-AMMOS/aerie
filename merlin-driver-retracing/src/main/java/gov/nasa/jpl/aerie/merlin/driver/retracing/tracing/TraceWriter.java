@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -33,12 +33,6 @@ public class TraceWriter<T> {
     } else {
       this.trace.add(new Action.Yield<>(taskStatus));
     }
-  }
-
-  public TaskStatus<T> stepInstrumented(Task<T> task, Scheduler scheduler) {
-    final var status = task.step(this.instrument(scheduler));
-    this.yield(status);
-    return status;
   }
 
   public Scheduler instrument(Scheduler scheduler) {
