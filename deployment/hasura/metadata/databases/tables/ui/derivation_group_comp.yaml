@@ -1,6 +1,6 @@
 table:
   name: derivation_group_comp
-  schema: merlin
+  schema: ui
 configuration:
   custom_name: "derivation_group_comp"
 object_relationships: # nothing for the arrays, can't grab string values and associate as ids in hasura. but shouldn't need to...
