@@ -21,7 +21,7 @@ comment on column merlin.plan_derivation_group.derivation_group_name is e''
   'The derivation group being associated with the plan.';
 
 -- if an external source is linked to a plan it cannot be deleted
-create function merlin.check_if_associated()
+create function merlin.external_source_pdg_association_delete()
   returns trigger
   language plpgsql as $$
 begin
@@ -33,6 +33,6 @@ begin
 end;
 $$;
 
-create trigger check_if_associated
+create trigger external_source_pdg_association_delete
 before delete on merlin.external_source
-  for each row execute function merlin.check_if_associated();
+  for each row execute function merlin.external_source_pdg_association_delete();
