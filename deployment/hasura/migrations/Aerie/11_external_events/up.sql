@@ -312,7 +312,7 @@ order by start_time;
 comment on view  merlin.derived_events is e''
   'Details all derived events from all derivation groups.';
 
-create view merlin.derivation_group_comp
+create view ui.derivation_group_comp
   as
 select
   name,
@@ -343,7 +343,7 @@ full outer join ( select derived_events.event_key,
 			            from merlin.derived_events) counted on counted.derivation_group_name = with_event_types.name
 group by with_event_types.name, with_event_types.source_type_name;
 
-comment on view  merlin.derivation_group_comp is e''
+comment on view ui.derivation_group_comp is e''
   'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
 
 call migrations.mark_migration_applied('11');

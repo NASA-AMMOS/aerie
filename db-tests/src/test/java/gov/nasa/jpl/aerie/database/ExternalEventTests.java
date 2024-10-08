@@ -172,7 +172,7 @@ public class ExternalEventTests {
         final var res = statement.get().executeQuery(
             // language-sql
             """
-                SELECT * FROM merlin.derivation_group_comp;
+                SELECT * FROM ui.derivation_group_comp;
                 """
         );
 
