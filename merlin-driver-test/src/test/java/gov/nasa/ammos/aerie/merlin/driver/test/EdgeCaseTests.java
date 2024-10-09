@@ -671,7 +671,7 @@ public class EdgeCaseTests {
     final var schedule2 = schedule.schedule2();
 
     final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var simulatorUnderTest = RETRACING_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var simulatorUnderTest = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
     {
       System.out.println("Reference simulation 1");
       final var expectedProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
