@@ -6,7 +6,10 @@ create table merlin.external_source_type (
 );
 
 comment on table merlin.external_source_type is e''
-  'Externally imported event source types.';
+  'Externally imported event source types.\n'
+  'Each external source has to be of a certain type, which in future releases will hold information about what metadata and event types are allowed within.\n'
+  'They are also helpful to classify external sources.\n'
+  'Derivation groups are a subclass of external source type.';
 
 comment on column merlin.external_source_type.name is e''
   'The identifier for this external_source_type, as well as its name.';
@@ -25,7 +28,7 @@ comment on column merlin.external_event_type.name is e''
   'The identifier for this external_event_type, as well as its name.';
 
 create table merlin.derivation_group (
-    name text not null unique,
+    name text not null,
     source_type_name text not null,
 
     constraint derivation_group_pkey
@@ -36,7 +39,7 @@ create table merlin.derivation_group (
 );
 
 comment on table merlin.derivation_group is e''
-  'A representation of the names of groups of sources to run derivation operations over.';
+  'A collection of external sources of the same type that the derivation operation is run against.';
 
 comment on column merlin.derivation_group.name is e''
   'The name and primary key of the derivation group.';
@@ -58,8 +61,6 @@ create table merlin.external_source (
       primary key (key, derivation_group_name),
     -- a given dg cannot have two sources with the same valid_at!
     CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
-    -- TODO: going forward, we might want to consider making an exception to the above if sources have no overlap. That
-    --        being said, this may be overkill or an unnecessary complication to the general rule.
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name),
@@ -105,10 +106,12 @@ create table merlin.external_event (
       primary key (key, source_key, derivation_group_name, event_type_name),
     constraint external_event_references_source_key_derivation_group
       foreign key (source_key, derivation_group_name)
-      references merlin.external_source (key, derivation_group_name),
+      references merlin.external_source (key, derivation_group_name)
+      on delete cascade,
     constraint external_event_references_event_type_name
       foreign key (event_type_name)
       references merlin.external_event_type(name)
+      on delete restrict
 );
 
 comment on table merlin.external_event is e''
@@ -133,9 +136,16 @@ comment on column merlin.external_event.properties is e''
   'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
 
+create trigger check_external_event_duration_is_nonnegative_trigger
+before insert or update on merlin.external_event
+for each row
+when (new.duration < '0')
+execute function util_functions.raise_duration_is_negative();
+
 create table merlin.plan_derivation_group (
     plan_id integer not null,
     derivation_group_name text not null,
+    last_acknowledged_at timestamp with time zone default now() not null,
 
     constraint plan_derivation_group_pkey
       primary key (plan_id, derivation_group_name),
@@ -148,15 +158,18 @@ create table merlin.plan_derivation_group (
 );
 
 comment on table merlin.plan_derivation_group is e''
-  'Links externally imported event sources & plans.';
+  'Links externally imported event sources & plans.\n'
+  'Additionally, tracks the last time a plan owner/contributor(s) have acknowledged additions to the derivation group.\n';
 
 comment on column merlin.plan_derivation_group.plan_id is e''
   'The plan with which the derivation group is associated.';
 comment on column merlin.plan_derivation_group.derivation_group_name is e''
   'The derivation group being associated with the plan.';
+comment on column merlin.plan_derivation_group.last_acknowledged_at is e''
+  'The time at which changes to the derivation group were last acknowledged.';
 
 -- if an external source is linked to a plan it cannot be deleted
-create function merlin.check_if_associated()
+create function merlin.external_source_pdg_association_delete()
   returns trigger
   language plpgsql as $$
 begin
@@ -168,84 +181,42 @@ begin
 end;
 $$;
 
-create trigger check_if_associated
+create trigger external_source_pdg_association_delete
 before delete on merlin.external_source
-  for each row execute function merlin.check_if_associated();
+  for each row execute function merlin.external_source_pdg_association_delete();
 
 create function merlin.check_external_event_boundaries()
- 	returns trigger
- 	language plpgsql as
-$func$
+returns trigger
+language plpgsql as $$
 declare
-	source_start timestamp with time zone;
-	source_end timestamp with time zone;
-	event_start timestamp with time zone;
-	event_end timestamp with time zone;
+  source_start timestamp with time zone;
+  source_end timestamp with time zone;
+  event_start timestamp with time zone;
+  event_end timestamp with time zone;
 begin
-  	select start_time into source_start from merlin.external_source where new.source_key = external_source.key and new.derivation_group_name = external_source.derivation_group_name;
-  	select end_time into source_end from merlin.external_source where new.source_key = external_source.key AND new.derivation_group_name = external_source.derivation_group_name;
-    event_start := new.start_time;
-	event_end := new.start_time + new.duration;
-	if event_start < source_start or event_end < source_start then
-		raise exception 'Event % out of bounds of source %', new.key, new.source_key;
-	end if;
-	if event_start > source_end or event_end > source_end then
-		raise exception 'Event % out of bounds of source %', new.key, new.source_key;
-	end if;
-	return null;
+  select start_time, end_time into source_start, source_end
+  from merlin.external_source
+  where new.source_key = external_source.key
+    and new.derivation_group_name = external_source.derivation_group_name;
+
+  event_start := new.start_time;
+  event_end := new.start_time + new.duration;
+  if event_start < source_start or event_end > source_end then
+    raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+  end if;
+  return new;
 end;
-$func$;
+$$;
 
 comment on function merlin.check_external_event_boundaries() is e''
   'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
 create trigger check_external_event_boundaries
-after insert on merlin.external_event
+before insert on merlin.external_event
 	for each row execute function merlin.check_external_event_boundaries();
 
 comment on trigger check_external_event_boundaries on merlin.external_event is e''
   'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
-
-create table ui.seen_sources
-(
-    plan_id integer not null,
-    derivation_group_name text not null,
-    last_acknowledged_at timestamp with time zone default now() not null,
-
-    constraint seen_sources_pkey
-      primary key (plan_id, derivation_group_name),
-    constraint seen_sources_references_plan_derivation_group
-      foreign key (plan_id, derivation_group_name)
-      references merlin.plan_derivation_group (plan_id, derivation_group_name)
-      on delete cascade
-);
-
-comment on table ui.seen_sources is e''
-  'Tracks whether a plan (specifically any of its contributors/owners) has acknowledged that a source is now associated with a plan by virtue of being a member of an associated derivation group.\n'
-  'Membership indicates that the new source has been acknowledged and is now understood to be a member.\n'
-  'A source in external_source that is part of a derivation group associated with this plan but not in this table is unacknowledged.\n'
-  'Acknowledgements are performed in the UI, and upon doing so new entries are appended to this table.';
-
-comment on column ui.seen_sources.plan_id is e''
-  'The plan that any new source is now associated with by virtue of being a member of the named derivation group.';
-comment on column ui.seen_sources.derivation_group_name is e''
-  'The derivation group of the plan is associated with.';
-comment on column ui.seen_sources.last_acknowledged_at is e''
-  'The time at which changes to the derivation group were last acknowledged.';
-
--- add a trigger that adds to seen sources whenever an association is made
-create function ui.add_seen_source_on_assoc()
-  returns trigger
-  language plpgsql as $$
-begin
-  insert into ui.seen_sources values (new.plan_id, new.derivation_group_name);
-  return new;
-end;
-$$;
-
-create trigger add_seen_source_on_assoc
-after insert on merlin.plan_derivation_group
-  for each row execute function ui.add_seen_source_on_assoc();
 
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
@@ -268,6 +239,10 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
   'For example, if a source is valid at t=0, and covers span s=1 to s=5, and there is a source valid at t=1 with a span s=2 to s=3\n'
   'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
 
+-- Rule 1. An External Event superceded by nothing will be present in the final, derived result.
+-- Rule 2. An External Event partially superceded by a later External Source, but whose start time occurs before the start of said External Source(s), will be present in the final, derived result.
+-- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
+-- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
 create view merlin.derived_events
 as
 select
