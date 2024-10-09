@@ -3,8 +3,11 @@ package gov.nasa.jpl.aerie.e2e.procedural.scheduling.procedures;
 import gov.nasa.ammos.aerie.procedural.scheduling.plan.EditablePlan;
 import gov.nasa.ammos.aerie.procedural.scheduling.Goal;
 import gov.nasa.ammos.aerie.procedural.scheduling.annotations.SchedulingProcedure;
+import gov.nasa.ammos.aerie.procedural.scheduling.plan.NewDirective;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.DirectiveStart;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -23,9 +26,12 @@ public record DumbRecurrenceGoal(int quantity) implements Goal {
     var currentTime = firstTime;
     for (var i = 0; i < quantity; i++) {
       plan.create(
-          "BiteBanana",
-          new DirectiveStart.Absolute(currentTime),
-          Map.of()
+          new NewDirective(
+              new AnyDirective(Map.of("biteSize", SerializedValue.of(1))),
+              "It's a bite banana activity",
+              "BiteBanana",
+              new DirectiveStart.Absolute(currentTime)
+          )
       );
       currentTime = currentTime.plus(step);
     }
