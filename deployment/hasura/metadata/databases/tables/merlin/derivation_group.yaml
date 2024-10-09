@@ -42,10 +42,14 @@ insert_permissions:
     permission:
       columns: [name, source_type_name]
       check: {}
+      set:
+        owner: "x-hasura-user-id"
   - role: user
     permission:
       columns: [name, source_type_name]
       check: {}
+      set:
+        owner: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:

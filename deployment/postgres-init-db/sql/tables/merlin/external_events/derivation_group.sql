@@ -1,6 +1,7 @@
 create table merlin.derivation_group (
     name text not null,
     source_type_name text not null,
+    owner text,
 
     constraint derivation_group_pkey
       primary key (name),
