@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -35,6 +34,14 @@ public class TraceWriter<T> {
     }
   }
 
+  public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+    // TODO
+  }
+
+  public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+    // TODO
+  }
+
   public Scheduler instrument(Scheduler scheduler) {
     return new Scheduler() {
       @Override
@@ -58,12 +65,14 @@ public class TraceWriter<T> {
 
       @Override
       public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
-        // TODO
+        scheduler.startActivity(activity, inputTopic);
+        TraceWriter.this.startActivity(activity, inputTopic);
       }
 
       @Override
       public <T> void endActivity(final T result, final Topic<T> outputTopic) {
-        // TODO
+        scheduler.endActivity(result, outputTopic);
+        TraceWriter.this.endActivity(result, outputTopic);
       }
     };
   }

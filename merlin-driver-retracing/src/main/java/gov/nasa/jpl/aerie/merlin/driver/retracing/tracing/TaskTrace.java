@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.ArrayList;
@@ -14,20 +13,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 
-import static gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.Utilities.extractTask;
-
+/**
+ * Represents the tree of actions taken by a particular task factory
+ */
 public class TaskTrace<T> {
   public List<Action<T>> actions = new ArrayList<>();
   public End<T> end;
   public MutableObject<Executor> executor;
 
-  private TaskTrace(MutableObject<Executor> executor, final TaskResumptionInfo<T> info) {
+  public TaskTrace(MutableObject<Executor> executor, final TaskResumptionInfo<T> info) {
     this.end = new End.Unfinished<>(info);
     this.executor = executor;
   }
 
   public static <T> TaskTrace<T> root(TaskFactory<T> rootTask) {
-    return new TaskTrace<>(new MutableObject<>(null), new TaskResumptionInfo<>(new ArrayList<>(), new MutableInt(0), rootTask));
+    return new TaskTrace<>(new MutableObject<>(null), TaskResumptionInfo.init(rootTask));
   }
 
   public void add(Action<T> entry) {
@@ -56,7 +56,7 @@ public class TaskTrace<T> {
     return newTip;
   }
 
-  TaskStatus<T> step(Scheduler scheduler, Cursor<T> cursor) {
+  TaskStatus<T> step(Scheduler scheduler, TraceCursor<T> cursor) {
     if (!(this.end instanceof End.Unfinished<T> unfinished)) throw new IllegalStateException();
     return unfinished.step(this, scheduler, cursor, unfinished.info(), this.executor.getValue());
   }
@@ -66,7 +66,7 @@ public class TaskTrace<T> {
         End<T>
     {
       public record Entry<T>(Object value, String string, TaskTrace<T> rest) {}
-      private <ReadValue> Optional<TaskTrace<T>> lookup(ReadValue readValue) {
+      public <ReadValue> Optional<TaskTrace<T>> lookup(ReadValue readValue) {
         for (final var readRecord : entries()) {
           if (Objects.equals(readRecord.value(), readValue)) {
             return Optional.of(readRecord.rest);
@@ -78,9 +78,15 @@ public class TaskTrace<T> {
 
     record Exit<T>(T returnValue) implements End<T> {}
 
+    /**
+     * Represents an unfinished task trace, and can be used to extend the task trace.
+     *
+     * It is live if it holds a handle to a running task
+     */
     final class Unfinished<T> implements End<T> {
       private TraceWriter<T> writer;
       private Task<T> continuation;
+      private boolean finished = false;
       private final TaskResumptionInfo<T> info;
 
       public Unfinished(TaskResumptionInfo<T> info) {
@@ -91,93 +97,69 @@ public class TaskTrace<T> {
         return info;
       }
 
-      boolean isActive() {
+      private boolean isLive() {
         if ((writer == null || continuation == null) && !(writer == null && continuation == null)) {
-          throw new IllegalStateException();
+          throw new IllegalStateException("Either both writer and continuation should be set, or neither");
         }
         return !(writer == null);
       }
 
-      void init(TraceWriter<T> writer, Task<T> continuation) {
-        this.writer = Objects.requireNonNull(writer);
-        this.continuation = Objects.requireNonNull(continuation);
-      }
+      public TaskStatus<T> step(TaskTrace<T> trace, Scheduler scheduler, TraceCursor<T> cursor, TaskResumptionInfo<T> resumptionInfo, Executor executor) {
+        if (this.finished) throw new IllegalStateException("Stepping End.Unfinished after its task has already finished");
 
-      public TaskStatus<T> step(TaskTrace<T> trace, Scheduler scheduler, Cursor<T> cursor, TaskResumptionInfo<T> resumptionInfo, Executor executor) {
-        if (!this.isActive()) {
-          final var tr = new TaskRestarter<>(resumptionInfo.duplicate(), executor);
-          final var writer = new TraceWriter<>(trace);
-          final var status = tr.restart(writer.instrument(scheduler));
-          writer.yield(status);
-
-          if (!(status instanceof TaskStatus.Completed<T>)) {
-            this.init(writer, extractTask(status).orElse(null));
-          }
-          cursor.trace = writer.trace;
-          cursor.traceCounter = cursor.trace.actions.size();
-          return status;
-        } else {
+        final TaskStatus<T> status;
+        if (this.isLive()) {
           resumptionInfo.numSteps().increment();
-          final var status = this.continuation.step(this.writer.instrument(scheduler));
-          this.writer.yield(status);
-
-          cursor.trace = this.writer.trace;
-          cursor.traceCounter = cursor.trace.actions.size();
-
-          return status;
+          status = this.continuation.step(this.writer.instrument(scheduler));
+        } else {
+          this.writer = new TraceWriter<>(trace);
+          status = resumptionInfo.restart(this.writer.instrument(scheduler), executor);
         }
+        this.writer.yield(status);
+        cursor.update(this.writer.trace);
+
+        {
+          final var continuation = extractTask(status);
+          if (continuation.isPresent()) {
+            this.continuation = continuation.get();
+          } else {
+            this.writer = null;
+            this.continuation = null;
+            this.finished = true;
+          }
+        }
+
+        return status;
+      }
+
+      void release() {
+        if (this.continuation != null) this.continuation.release();
+      }
+
+      private static <T> Optional<Task<T>> extractTask(TaskStatus<T> status) {
+        return switch (status) {
+          case TaskStatus.AwaitingCondition<T> v -> Optional.of(v.continuation());
+          case TaskStatus.CallingTask<T> v -> Optional.of(v.continuation());
+          case TaskStatus.Completed<T> v -> Optional.empty();
+          case TaskStatus.Delayed<T> v -> Optional.of(v.continuation());
+        };
       }
     }
   }
 
-  static <T> Cursor<T> cursor(TaskTrace<T> rbt) {
-    return new Cursor<>(rbt);
-  }
+  void release() {
+    switch (this.end) {
+      case End.Unfinished<T> e -> e.release();
 
-  public static class Cursor<T> {
-    private TaskTrace<T> trace;
-    private int traceCounter;
-
-    public Cursor(TaskTrace<T> trace) {
-      this.trace = trace;
-    }
-
-    public Action.Status<T> step(Scheduler scheduler) {
-      while (true) {
-        List<Action<T>> actions = this.trace.actions;
-        while (traceCounter < actions.size()) {
-          final var action = actions.get(traceCounter);
-          traceCounter++;
-          switch (action) {
-            case Action.Yield<T> a -> { return a.taskStatus(); }
-            case Action.Emit<T, ?> a -> a.apply(scheduler);
-            case Action.Spawn<T> a -> scheduler.spawn(a.childSpan(), a.child());
-          }
-        }
-
-        switch (this.trace.end) {
-          case End.Exit<T> e -> { return new Action.Status.Completed<>(e.returnValue()); }
-          case End.Unfinished<T> e -> {
-            return Action.Status.of(this.trace.step(scheduler, this));
-          }
-          case End.Read<T> read -> {
-            // Read the current value and use it to decide whether to continue down a trace, or start a new one
-            final var readValue = scheduler.get(read.query());
-            Optional<TaskTrace<T>> foundTrace = read.lookup(readValue);
-            if (foundTrace.isPresent()) {
-              this.trace = foundTrace.get();
-              this.traceCounter = 0;
-              continue;
-            } else {
-              final TaskResumptionInfo<T> resumptionInfo = read.info().duplicate();
-              resumptionInfo.reads().add(readValue);
-              final var rest = new TaskTrace<>(this.trace.executor, resumptionInfo);
-              read.entries().add(new End.Read.Entry<>(readValue, readValue.toString(), rest));
-              return Action.Status.of(rest.step(scheduler, this)); // This will mutate this.trace
-            }
-          }
-        }
+      case End.Exit<T> v -> {
+      }
+      case End.Read<T> v -> {
+        for (final var entry : v.entries) {
+          entry.rest.release();
       }
     }
+    }
+
   }
+
 }

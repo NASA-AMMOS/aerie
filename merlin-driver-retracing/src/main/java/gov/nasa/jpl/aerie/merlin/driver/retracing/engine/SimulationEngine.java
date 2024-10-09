@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.UnfinishedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.ActionLog;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.LiveCells;
@@ -77,8 +76,6 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<SpanId, Span> spans = new HashMap<>();
   /** A count of the direct contributors to each span, including child spans and tasks. */
   private final Map<SpanId, MutableInt> spanContributorCount = new HashMap<>();
-
-  public final ActionLog actionLog = new ActionLog();
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -203,12 +200,10 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) throws SpanException {
     // Step the modeling state forward.
-    final ActionLog.Writer writer = this.actionLog.writer(task);
-    final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame, writer);
+    final var scheduler = new EngineScheduler(currentTime, progress.span(), progress.caller(), frame);
     final TaskStatus<Output> status;
     try {
       status = progress.state().step(scheduler);
-      writer.yield(status);
     } catch (Throwable ex) {
       throw new SpanException(scheduler.span, ex);
     }
@@ -715,20 +710,17 @@ public final class SimulationEngine implements AutoCloseable {
     private final SpanId span;
     private final Optional<TaskId> caller;
     private final TaskFrame<JobId> frame;
-    private final ActionLog.Writer actionLog;
 
     public EngineScheduler(
         final Duration currentTime,
         final SpanId span,
         final Optional<TaskId> caller,
-        final TaskFrame<JobId> frame,
-        final ActionLog.Writer actionLog
-    ) {
+        final TaskFrame<JobId> frame)
+    {
       this.currentTime = Objects.requireNonNull(currentTime);
       this.span = Objects.requireNonNull(span);
       this.caller = Objects.requireNonNull(caller);
       this.frame = Objects.requireNonNull(frame);
-      this.actionLog = Objects.requireNonNull(actionLog);
     }
 
     @Override
@@ -740,7 +732,6 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
       final var state$ = this.frame.getState(query.query());
-      this.actionLog.get(token, state$.orElseThrow(IllegalArgumentException::new));
       return state$.orElseThrow(IllegalArgumentException::new);
     }
 
@@ -748,7 +739,6 @@ public final class SimulationEngine implements AutoCloseable {
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       // Append this event to the timeline.
       this.frame.emit(Event.create(topic, event, this.span));
-      this.actionLog.emit(event, topic);
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
