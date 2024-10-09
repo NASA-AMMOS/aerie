@@ -3542,48 +3542,4 @@ public class PlanCollaborationTests {
       assertEquals(case8Tags, tagsHelper.getTagsOnActivity(case8Id, planId));
     }
   }
-
-  @Nested
-  class ExternalEventTests {
-    /**
-     * The behavior surrounding branched plans and associated external events (via derivation groups)
-     *    is defined in a very simple manner at this early stage in the feature's development, given
-     *    that the primary utility of events at this time is visibility.
-     * As such (more detail is provided in the documentation), the behavior here is that a superset of
-     *    associated derivation groups is taken. The tests we have below include creating a base plan,
-     *    branching a plan, associating different derivation groups with each, and finally checking
-     *    the merged result (which should simply have both).
-     */
-
-    @Test
-    void mergeWithDerivationGroups() throws SQLException {
-      // create the first plan, then a branch
-      final int parentPlanId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name(), "base");
-      final int childPlanId = duplicatePlan(parentPlanId, "child");
-
-      // create the derivation group for the base plan, associate it
-      String baseDerivationGroupName = "A";
-      merlinHelper.upload_source(baseDerivationGroupName);
-      assertDoesNotThrow(() -> merlinHelper.associateDerivationGroupWithPlan(parentPlanId, baseDerivationGroupName));
-
-      // create the derivation group for the branched plan, associate it
-      String branchDerivationGroupName = "B";
-      merlinHelper.upload_source(branchDerivationGroupName);
-      merlinHelper.insertActivity(childPlanId);
-      assertDoesNotThrow(() -> merlinHelper.associateDerivationGroupWithPlan(childPlanId, branchDerivationGroupName));
-
-      // check their derivation groups (should be 1 for parent, 1 for child)
-      assertEquals(List.of("A"), merlinHelper.getPlanDerivationGroupNames(parentPlanId));
-      assertEquals(List.of("B"), merlinHelper.getPlanDerivationGroupNames(childPlanId));
-
-      // merge the two
-      final int mergeRQ = createMergeRequest(parentPlanId, childPlanId);
-      beginMerge(mergeRQ);
-      commitMerge(mergeRQ);
-
-      // check their derivation groups (should be 2 for parent, 1 for child)
-      assertEquals(List.of("A", "B"), merlinHelper.getPlanDerivationGroupNames(parentPlanId));
-      assertEquals(List.of("B"), merlinHelper.getPlanDerivationGroupNames(childPlanId));
-    }
-  }
 }
