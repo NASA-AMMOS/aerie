@@ -172,7 +172,7 @@ create trigger check_if_associated
 before delete on merlin.external_source
   for each row execute function merlin.check_if_associated();
 
-create function merlin.check_event_times()
+create function merlin.check_external_event_boundaries()
  	returns trigger
  	language plpgsql as
 $func$
@@ -196,14 +196,14 @@ begin
 end;
 $func$;
 
-comment on function merlin.check_event_times() is e''
+comment on function merlin.check_external_event_boundaries() is e''
   'Checks that an external_event added to the database has a start time and duration that fall in bounds of the associated external_source.';
 
-create trigger check_event_times
+create trigger check_external_event_boundaries
 after insert on merlin.external_event
-	for each row execute function merlin.check_event_times();
+	for each row execute function merlin.check_external_event_boundaries();
 
-comment on trigger check_event_times on merlin.external_event is e''
+comment on trigger check_external_event_boundaries on merlin.external_event is e''
   'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
 
 create table ui.seen_sources

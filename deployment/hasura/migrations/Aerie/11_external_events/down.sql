@@ -7,6 +7,6 @@ DROP TABLE merlin.external_source_type CASCADE;
 DROP TABLE merlin.external_event_type CASCADE;
 DROP TABLE merlin.derivation_group CASCADE;
 DROP FUNCTION merlin.subtract_later_ranges CASCADE;
-DROP FUNCTION merlin.check_event_times CASCADE;
+DROP FUNCTION merlin.check_external_event_boundaries CASCADE;
 
 call migrations.mark_migration_rolled_back('11');
