@@ -41,6 +41,3 @@ delete_permissions:
   - role: aerie_admin
     permission:
       filter: {}
-  - role: user
-    permission:
-      filter: {}
