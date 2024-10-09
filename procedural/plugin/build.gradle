@@ -5,7 +5,7 @@ plugins {
 
 // adding this as an implementation dependency here allows usage in our convention plugin
 dependencies {
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.2")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.3")
 }
 
 tasks.publish {
@@ -20,8 +20,8 @@ publishing {
   }
   repositories {
     maven {
-      name = "GitHubPackages"
-      url = "https://maven.pkg.github.com/skovati/copie"
+      name = findProperty("publishing.name")
+      url = findProperty("publishing.url")
       credentials {
         username = System.getenv("GITHUB_ACTOR")
         password = System.getenv("GITHUB_TOKEN")

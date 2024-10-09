@@ -2,7 +2,7 @@ pluginManagement {
   repositories {
     maven {
       name = "GitHubPackages"
-      url = "https://maven.pkg.github.com/skovati/copie"
+      url = "https://maven.pkg.github.com/NASA-AMMOS/aerie"
       credentials {
         username = System.getenv("GITHUB_ACTOR")
         password = System.getenv("GITHUB_TOKEN")
