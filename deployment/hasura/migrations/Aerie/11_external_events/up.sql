@@ -99,6 +99,23 @@ comment on column merlin.external_source.owner is e''
   'The user who uploaded the external source.\n'
   'Set by Hasura.';
 
+-- if an external source is linked to a plan it cannot be deleted
+create function merlin.external_source_pdg_association_delete()
+  returns trigger
+  language plpgsql as $$
+begin
+  if exists(select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
+    raise foreign_key_violation
+    using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
+  end if;
+  return old;
+end;
+$$;
+
+create trigger external_source_pdg_association_delete
+before delete on merlin.external_source
+  for each row execute function merlin.external_source_pdg_association_delete();
+
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
@@ -173,23 +190,6 @@ comment on column merlin.plan_derivation_group.derivation_group_name is e''
   'The derivation group being associated with the plan.';
 comment on column merlin.plan_derivation_group.last_acknowledged_at is e''
   'The time at which changes to the derivation group were last acknowledged.';
-
--- if an external source is linked to a plan it cannot be deleted
-create function merlin.external_source_pdg_association_delete()
-  returns trigger
-  language plpgsql as $$
-begin
-  if exists(select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
-    raise foreign_key_violation
-    using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
-  end if;
-  return null;
-end;
-$$;
-
-create trigger external_source_pdg_association_delete
-before delete on merlin.external_source
-  for each row execute function merlin.external_source_pdg_association_delete();
 
 create function merlin.check_external_event_boundaries()
 returns trigger

@@ -55,4 +55,9 @@ delete_permissions:
       filter: {}
   - role: user
     permission:
-      filter: {}
+      filter: {
+        "_or": [
+          { "owner": { "_eq": "x-hasura-user-id" } },
+          { "derivation_group": { "owner": { "_eq": "x-hasura-user-id" } } }
+        ]
+      }

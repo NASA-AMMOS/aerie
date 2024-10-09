@@ -56,4 +56,4 @@ delete_permissions:
       filter: {}
   - role: user
     permission:
-      filter: {}
+      filter: {"owner":{"_eq":"x-hasura-user-id"}}
