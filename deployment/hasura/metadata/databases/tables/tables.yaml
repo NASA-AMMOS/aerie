@@ -99,12 +99,12 @@
 
 # External Events
 - "!include merlin/derivation_group.yaml"
-- "!include merlin/external_source.yaml"
-- "!include merlin/external_event.yaml"
-- "!include merlin/plan_derivation_group.yaml"
-- "!include merlin/external_source_type.yaml"
-- "!include merlin/external_event_type.yaml"
 - "!include merlin/derived_events.yaml"
+- "!include merlin/external_event.yaml"
+- "!include merlin/external_event_type.yaml"
+- "!include merlin/external_source.yaml"
+- "!include merlin/external_source_type.yaml"
+- "!include merlin/plan_derivation_group.yaml"
 
 # Constraints
 - "!include merlin/constraints/constraint_metadata.yaml"
@@ -173,7 +173,7 @@
 ############
 #### UI ####
 ############
+- "!include ui/derivation_group_comp.yaml"
 - "!include ui/extension_roles.yaml"
 - "!include ui/extensions.yaml"
 - "!include ui/view.yaml"
-- "!include ui/derivation_group_comp.yaml"
