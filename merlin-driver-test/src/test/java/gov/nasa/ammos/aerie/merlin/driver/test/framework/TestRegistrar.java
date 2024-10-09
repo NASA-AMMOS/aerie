@@ -1,4 +1,4 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
@@ -15,43 +15,36 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class TestRegistrar {
   List<Pair<String, Consumer<String>>> activities = new ArrayList<>();
-  List<SideBySideTest.Cell> cells = new ArrayList<>();
+  List<Cell> cells = new ArrayList<>();
   List<Runnable> daemons = new ArrayList<>();
   List<Pair<String, Supplier<?>>> resources = new ArrayList<>();
 
-  public <T> SideBySideTest.Cell cell() {
-    final SideBySideTest.Cell cell = SideBySideTest.Cell.of();
+  public <T> Cell cell() {
+    final Cell cell = Cell.of();
     cells.add(cell);
     return cell;
   }
 
-  public <T> SideBySideTest.Cell linearCell() {
-    final SideBySideTest.Cell cell = SideBySideTest.Cell.ofLinear();
+  public <T> Cell linearCell() {
+    final Cell cell = Cell.ofLinear();
     cells.add(cell);
     return cell;
   }
-
-//  public <T> SideBySideTest.Cell<T, T> cell(T initialValue) {
-//    return this.cell(initialValue, List::getLast);
-//  }
-
-//  public <T> SideBySideTest.Cell<T, T> cell(T initialValue, Function<List<T>, T> apply) {
-//    final var cell = SideBySideTest.Cell.of(initialValue, apply);
-//    cells.add(cell);
-//    return cell;
-//  }
 
   public void activity(String name, Consumer<String> effectModel) {
     this.activities.add(Pair.of(name, effectModel));
@@ -65,8 +58,24 @@ public final class TestRegistrar {
     this.resources.add(Pair.of(name, supplier));
   }
 
-  public ModelType<Unit, TestContext.CellMap> asModelType() {
-    final var directives = new HashMap<String, DirectiveType<TestContext.CellMap, Map<String, SerializedValue>, Unit>>();
+  public static final class CellMap {
+
+    private final Map<Cell, CellId<?>> cells = new LinkedHashMap<>();
+    public <T> void put(Cell cell, CellId<MutableObject<T>> cellId) {
+      cells.put(Objects.requireNonNull(cell), Objects.requireNonNull(cellId));
+    }
+    @SuppressWarnings("unchecked")
+    public <T> CellId<T> get(Cell cell) {
+      return (CellId<T>) Objects.requireNonNull(cells.get(Objects.requireNonNull(cell)));
+    }
+
+  }
+  /**
+   * Produce a simulatable ModeLType. The two values are the config and the model itself. Using a CellMap as the model\
+   * object helps thread the CellMap through to where it's needed without the need for out-of-band communication.
+   */
+  public ModelType<Unit, CellMap> asModelType() {
+    final var directives = new HashMap<String, DirectiveType<CellMap, Map<String, SerializedValue>, Unit>>();
     final var inputTopics = new HashMap<String, Topic<String>>();
     final var outputTopics = new HashMap<String, Topic<Unit>>();
 
@@ -79,16 +88,41 @@ public final class TestRegistrar {
 
         @Override
         public InputType<Map<String, SerializedValue>> getInputType() {
-          return Stubs.PASS_THROUGH_INPUT_TYPE;
+          return new InputType<>() {
+            @Override
+            public List<Parameter> getParameters() {
+              return List.of();
+            }
+
+            @Override
+            public List<String> getRequiredParameters() {
+              return List.of();
+            }
+
+            @Override
+            public Map<String, SerializedValue> instantiate(final Map<String, SerializedValue> arguments) {
+              return arguments;
+            }
+
+            @Override
+            public Map<String, SerializedValue> getArguments(final Map<String, SerializedValue> value) {
+              return Map.of();
+            }
+
+            @Override
+            public List<ValidationNotice> getValidationFailures(final Map<String, SerializedValue> value) {
+              return List.of();
+            }
+          };
         }
 
         @Override
         public OutputType<Unit> getOutputType() {
-          return Stubs.UNIT_OUTPUT_TYPE;
+          return stubOutputType();
         }
 
         @Override
-        public TaskFactory<Unit> getTaskFactory(final TestContext.CellMap cellMap, final Map<String, SerializedValue> args) {
+        public TaskFactory<Unit> getTaskFactory(final CellMap cellMap, final Map<String, SerializedValue> args) {
           return executor -> ThreadedTask.of(executor, cellMap, () -> {
             final SerializedValue value = args.get("value");
             final String input = value == null ? "" : value.asString().get();
@@ -101,20 +135,44 @@ public final class TestRegistrar {
       });
     }
 
-
     return new ModelType<>() {
       @Override
-      public Map<String, ? extends DirectiveType<TestContext.CellMap, ?, ?>> getDirectiveTypes() {
+      public Map<String, ? extends DirectiveType<CellMap, ?, ?>> getDirectiveTypes() {
         return directives;
       }
 
       @Override
       public InputType<Unit> getConfigurationType() {
-        return Stubs.UNIT_INPUT_TYPE;
+        return new InputType<>() {
+          @Override
+          public List<Parameter> getParameters() {
+            return List.of();
+          }
+
+          @Override
+          public List<String> getRequiredParameters() {
+            return List.of();
+          }
+
+          @Override
+          public Unit instantiate(final Map<String, SerializedValue> arguments) {
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Map<String, SerializedValue> getArguments(final Unit value) {
+            return Map.of();
+          }
+
+          @Override
+          public List<ValidationNotice> getValidationFailures(final Unit value) {
+            return List.of();
+          }
+        };
       }
 
       @Override
-      public TestContext.CellMap instantiate(
+      public CellMap instantiate(
           final Instant planStart,
           final Unit configuration,
           final Initializer builder)
@@ -123,18 +181,28 @@ public final class TestRegistrar {
           builder.topic(
               "ActivityType.Input." + directive.getKey(),
               inputTopics.get(directive.getKey()),
-              Stubs.STRING_OUTPUT_TYPE);
+              new OutputType<String>() {
+                @Override
+                public ValueSchema getSchema() {
+                  return ValueSchema.ofStruct(Map.of("value", ValueSchema.STRING));
+                }
+
+                @Override
+                public SerializedValue serialize(final String value) {
+                  return SerializedValue.of(Map.of("value", SerializedValue.of(value)));
+                }
+              });
           builder.topic(
               "ActivityType.Output." + directive.getKey(),
               outputTopics.get(directive.getKey()),
-              Stubs.UNIT_OUTPUT_TYPE);
+              stubOutputType());
         }
-        final var cellMap = new TestContext.CellMap();
+        final var cellMap = new CellMap();
         for (final var cell : cells) {
           if (cell.isLinear()) {
-            cellMap.put(cell, SideBySideTest.allocateLinear(builder, cell.linearTopic()));
+            cellMap.put(cell, LinearDynamics.allocate(builder, cell.linearTopic()));
           } else {
-            cellMap.put(cell, SideBySideTest.allocate(builder, cell.topic()));
+            cellMap.put(cell, History.allocate(builder, cell.topic()));
           }
         }
         for (final var daemon : daemons) {
@@ -164,12 +232,9 @@ public final class TestRegistrar {
 
             @Override
             public Object getDynamics(final Querier querier) {
-              TestContext.set(new TestContext.Context(cellMap, schedulerOfQuerier(querier), null));
-              try {
-                return resource.getRight().get();
-              } finally {
-                TestContext.clear();
-              }
+              return TestContext.set(
+                  new TestContext.Context(cellMap, schedulerOfQuerier(querier), null),
+                  resource.getRight()::get);
             }
           });
         }
@@ -178,7 +243,7 @@ public final class TestRegistrar {
     };
   }
 
-  private Scheduler schedulerOfQuerier(Querier querier) {
+  public static Scheduler schedulerOfQuerier(Querier querier) {
     return new Scheduler() {
       @Override
       public <State> State get(final CellId<State> cellId) {
@@ -211,6 +276,20 @@ public final class TestRegistrar {
           final Topic<ActivityDirectiveId> activityTopic)
       {
         throw new UnsupportedOperationException();
+      }
+    };
+  }
+
+  private static <T> OutputType<T> stubOutputType() {
+    return new OutputType<>() {
+      @Override
+      public ValueSchema getSchema() {
+        return ValueSchema.ofStruct(Map.of());
+      }
+
+      @Override
+      public SerializedValue serialize(final T value) {
+        return SerializedValue.of(Map.of());
       }
     };
   }

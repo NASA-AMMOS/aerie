@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -28,17 +28,12 @@ public sealed interface Action<T> {
 
     @Override
     public String toString() {
-      if (taskStatus instanceof Status.Completed<?> s) {
-        return "Completed(" + s.returnValue().toString() + ")";
-      } else if (taskStatus instanceof Status.Delayed<?> s) {
-        return "delay(" + s.delay().toString() + ")";
-      } else if (taskStatus instanceof Status.CallingTask<?> s) {
-        return "call(" + s.child().toString() + ")";
-      } else if (taskStatus instanceof Status.AwaitingCondition<?> s) {
-        return "waitUntil(" + s.condition().toString() + ")";
-      } else {
-        throw new Error("Unhandled variant of TaskStatus: " + taskStatus);
-      }
+      return switch (taskStatus) {
+        case Status.Completed<?> s -> "Completed(" + s.returnValue().toString() + ")";
+        case Status.Delayed<?> s -> "delay(" + s.delay().toString() + ")";
+        case Status.CallingTask<?> s -> "call(" + s.child().toString() + ")";
+        case Status.AwaitingCondition<?> s -> "waitUntil(" + s.condition().toString() + ")";
+      };
     }
   }
 

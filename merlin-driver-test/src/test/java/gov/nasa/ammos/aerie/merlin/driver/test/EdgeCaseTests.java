@@ -1,5 +1,7 @@
 package gov.nasa.ammos.aerie.merlin.driver.test;
 
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Simulator;
 import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
@@ -19,11 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.IncrementalSimPropertyTests.assertLastSegmentsEqual;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.spawn;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.waitUntil;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.spawn;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.waitUntil;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.assertLastSegmentsEqual;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
@@ -42,14 +44,14 @@ public class EdgeCaseTests {
   private Model model;
 
   record Cells(
-      SideBySideTest.Cell x,
-      SideBySideTest.Cell y,
-      SideBySideTest.Cell z,
-      SideBySideTest.Cell history,
-      SideBySideTest.Cell u,
-      SideBySideTest.Cell linear
+      Cell x,
+      Cell y,
+      Cell z,
+      Cell history,
+      Cell u,
+      Cell linear
   ) {
-    SideBySideTest.Cell lookup(String name) {
+    Cell lookup(String name) {
       return switch (name) {
         case "x" -> x;
         case "y" -> y;
@@ -335,7 +337,7 @@ public class EdgeCaseTests {
       assertions.add(new NoRerunAssertion(type, Optional.of(arg)));
     }
 
-    public ModelType<Unit, TestContext.CellMap> asModelType() {
+    public ModelType<Unit, TestRegistrar.CellMap> asModelType() {
       return model.asModelType();
     }
   }
@@ -669,7 +671,7 @@ public class EdgeCaseTests {
     final var schedule2 = schedule.schedule2();
 
     final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var simulatorUnderTest = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var simulatorUnderTest = RETRACING_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
     {
       System.out.println("Reference simulation 1");
       final var expectedProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();

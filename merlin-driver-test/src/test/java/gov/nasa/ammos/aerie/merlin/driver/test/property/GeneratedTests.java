@@ -1,5 +1,7 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.Directive;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Schedule;
@@ -15,12 +17,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.IncrementalSimPropertyTests.assertLastSegmentsEqual;
-import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.rightmostNumber;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.spawn;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.waitUntil;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.assertLastSegmentsEqual;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.rightmostNumber;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
@@ -36,7 +36,7 @@ public class GeneratedTests {
   @Test
   void test6() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[1];
+    Cell[] cells = new Cell[1];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -88,7 +88,7 @@ public class GeneratedTests {
   @Test
   void test5() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[2];
+    Cell[] cells = new Cell[2];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -150,7 +150,7 @@ public class GeneratedTests {
   @Test
   void test3() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[1];
+    Cell[] cells = new Cell[1];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -209,7 +209,7 @@ public class GeneratedTests {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[2];
+    Cell[] cells = new Cell[2];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -386,7 +386,7 @@ public class GeneratedTests {
   @Test
   void test1() {
     final var model = new TestRegistrar();
-    final var cells = new SideBySideTest.Cell[1];
+    final var cells = new Cell[1];
 
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();

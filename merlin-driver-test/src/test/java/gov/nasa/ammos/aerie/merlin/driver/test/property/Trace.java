@@ -1,4 +1,4 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

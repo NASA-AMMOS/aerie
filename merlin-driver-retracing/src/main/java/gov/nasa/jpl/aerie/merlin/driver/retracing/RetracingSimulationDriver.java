@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.retracing.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.engine.SpanException;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.driver.retracing.tracing.TracedTaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -23,8 +24,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing.TracedTaskFactory.trace;
-
 public final class RetracingSimulationDriver {
   /** Mutable cache */
   public record Cache(MissionModel<?> model, Map<SerializedActivity, TaskFactory<?>> taskFactoryCache) {
@@ -35,7 +34,7 @@ public final class RetracingSimulationDriver {
       if (taskFactoryCache.containsKey(serializedDirective)) {
         return taskFactoryCache.get(serializedDirective);
       } else {
-        final var taskFactory = trace(model.getTaskFactory(serializedDirective));
+        final var taskFactory = new TracedTaskFactory<>(model.getTaskFactory(serializedDirective));
         taskFactoryCache.put(serializedDirective, taskFactory);
         return taskFactory;
       }

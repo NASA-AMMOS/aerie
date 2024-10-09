@@ -1,8 +1,9 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import com.squareup.javapoet.CodeBlock;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
-import gov.nasa.ammos.aerie.simulation.protocol.Schedule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -16,16 +17,16 @@ import java.util.List;
 import java.util.Map;
 
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.IncrementalSimPropertyTests.printEffectModel;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.call;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.delay;
-import static gov.nasa.ammos.aerie.merlin.driver.test.SideBySideTest.spawn;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.spawn;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.printEffectModel;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
 public record Scenario(
     // Cells
-    SideBySideTest.Cell[] cells,
+    Cell[] cells,
     List<DirectiveType> directiveTypes,
     Map<String, Trace.Owner> traces,
     TestRegistrar model,
@@ -116,7 +117,7 @@ public record Scenario(
     return res.toString();
   }
 
-  public static void interpret(EffectModel effectModel, SideBySideTest.Cell[] cells, Trace.Writer tracer) {
+  public static void interpret(EffectModel effectModel, Cell[] cells, Trace.Writer tracer) {
     for (int i = 0; i < effectModel.steps().size(); i++) {
       final int stepIndex = i;
       switch (effectModel.steps().get(i)) {

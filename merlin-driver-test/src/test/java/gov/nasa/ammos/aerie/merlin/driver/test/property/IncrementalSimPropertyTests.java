@@ -1,10 +1,11 @@
-package gov.nasa.ammos.aerie.merlin.driver.test;
+package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import com.squareup.javapoet.CodeBlock;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.ResourceProfile;
 import gov.nasa.ammos.aerie.simulation.protocol.Simulator;
-import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.develop.MerlinDriverAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.RetracingDriverAdapter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -26,8 +27,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.directiveType;
-import static gov.nasa.ammos.aerie.merlin.driver.test.Scenario.effectModels;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.directiveType;
+import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.effectModels;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
@@ -187,7 +188,7 @@ public class IncrementalSimPropertyTests {
               directiveTypes(numDirectiveTypes, integers).flatMap(directiveTypes -> schedules(numDirectiveTypes).map(
                   schedules -> {
                     final var model = new TestRegistrar();
-                    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[numCells];
+                    Cell[] cells = new Cell[numCells];
                     for (int i = 0; i < cells.length; i++) {
                       cells[i] = model.cell();
                     }

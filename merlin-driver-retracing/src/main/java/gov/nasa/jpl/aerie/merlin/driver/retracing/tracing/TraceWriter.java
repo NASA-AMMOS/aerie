@@ -1,9 +1,8 @@
-package gov.nasa.jpl.aerie.merlin.driver.retracing.engine.tracing;
+package gov.nasa.jpl.aerie.merlin.driver.retracing.tracing;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InSpan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -35,10 +34,12 @@ public class TraceWriter<T> {
     }
   }
 
-  public TaskStatus<T> stepInstrumented(Task<T> task, Scheduler scheduler) {
-    final var status = task.step(this.instrument(scheduler));
-    this.yield(status);
-    return status;
+  public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+    // TODO
+  }
+
+  public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+    // TODO
   }
 
   public Scheduler instrument(Scheduler scheduler) {
@@ -60,6 +61,18 @@ public class TraceWriter<T> {
       public void spawn(final InSpan taskSpan, final TaskFactory<?> task) {
         scheduler.spawn(taskSpan, task);
         TraceWriter.this.spawn(taskSpan, task);
+      }
+
+      @Override
+      public <T> void startActivity(final T activity, final Topic<T> inputTopic) {
+        scheduler.startActivity(activity, inputTopic);
+        TraceWriter.this.startActivity(activity, inputTopic);
+      }
+
+      @Override
+      public <T> void endActivity(final T result, final Topic<T> outputTopic) {
+        scheduler.endActivity(result, outputTopic);
+        TraceWriter.this.endActivity(result, outputTopic);
       }
     };
   }
