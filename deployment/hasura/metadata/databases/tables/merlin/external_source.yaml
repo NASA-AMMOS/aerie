@@ -41,10 +41,14 @@ insert_permissions:
     permission:
       columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_name, created_at]
       check: {}
+      set:
+        owner: "x-hasura-user-id"
   - role: user
     permission:
       columns: [key, source_type_name, valid_at, start_time, end_time, metadata, derivation_group_name, created_at]
       check: {}
+      set:
+        owner: "x-hasura-user-id"
 delete_permissions:
   - role: aerie_admin
     permission:
