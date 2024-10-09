@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import com.squareup.javapoet.CodeBlock;
-import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
 import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.ResourceProfile;
@@ -188,7 +188,7 @@ public class IncrementalSimPropertyTests {
               directiveTypes(numDirectiveTypes, integers).flatMap(directiveTypes -> schedules(numDirectiveTypes).map(
                   schedules -> {
                     final var model = new TestRegistrar();
-                    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[numCells];
+                    Cell[] cells = new Cell[numCells];
                     for (int i = 0; i < cells.length; i++) {
                       cells[i] = model.cell();
                     }

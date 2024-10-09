@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
 import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
-import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
 import gov.nasa.ammos.aerie.simulation.protocol.Directive;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Schedule;
@@ -36,7 +36,7 @@ public class GeneratedTests {
   @Test
   void test6() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[1];
+    Cell[] cells = new Cell[1];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -88,7 +88,7 @@ public class GeneratedTests {
   @Test
   void test5() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[2];
+    Cell[] cells = new Cell[2];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -150,7 +150,7 @@ public class GeneratedTests {
   @Test
   void test3() {
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[1];
+    Cell[] cells = new Cell[1];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -209,7 +209,7 @@ public class GeneratedTests {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     final var model = new TestRegistrar();
-    SideBySideTest.Cell[] cells = new SideBySideTest.Cell[2];
+    Cell[] cells = new Cell[2];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
@@ -386,7 +386,7 @@ public class GeneratedTests {
   @Test
   void test1() {
     final var model = new TestRegistrar();
-    final var cells = new SideBySideTest.Cell[1];
+    final var cells = new Cell[1];
 
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();

@@ -1,6 +1,6 @@
 package gov.nasa.ammos.aerie.merlin.driver.test;
 
-import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
 import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Simulator;
@@ -44,14 +44,14 @@ public class EdgeCaseTests {
   private Model model;
 
   record Cells(
-      SideBySideTest.Cell x,
-      SideBySideTest.Cell y,
-      SideBySideTest.Cell z,
-      SideBySideTest.Cell history,
-      SideBySideTest.Cell u,
-      SideBySideTest.Cell linear
+      Cell x,
+      Cell y,
+      Cell z,
+      Cell history,
+      Cell u,
+      Cell linear
   ) {
-    SideBySideTest.Cell lookup(String name) {
+    Cell lookup(String name) {
       return switch (name) {
         case "x" -> x;
         case "y" -> y;

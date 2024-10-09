@@ -30,18 +30,18 @@ import java.util.function.Supplier;
 
 public final class TestRegistrar {
   List<Pair<String, Consumer<String>>> activities = new ArrayList<>();
-  List<SideBySideTest.Cell> cells = new ArrayList<>();
+  List<Cell> cells = new ArrayList<>();
   List<Runnable> daemons = new ArrayList<>();
   List<Pair<String, Supplier<?>>> resources = new ArrayList<>();
 
-  public <T> SideBySideTest.Cell cell() {
-    final SideBySideTest.Cell cell = SideBySideTest.Cell.of();
+  public <T> Cell cell() {
+    final Cell cell = Cell.of();
     cells.add(cell);
     return cell;
   }
 
-  public <T> SideBySideTest.Cell linearCell() {
-    final SideBySideTest.Cell cell = SideBySideTest.Cell.ofLinear();
+  public <T> Cell linearCell() {
+    final Cell cell = Cell.ofLinear();
     cells.add(cell);
     return cell;
   }
@@ -59,17 +59,17 @@ public final class TestRegistrar {
   }
 
   public static final class CellMap {
-    private final Map<SideBySideTest.Cell, CellId<?>> cells = new LinkedHashMap<>();
-    public <T> void put(SideBySideTest.Cell cell, CellId<MutableObject<T>> cellId) {
+
+    private final Map<Cell, CellId<?>> cells = new LinkedHashMap<>();
+    public <T> void put(Cell cell, CellId<MutableObject<T>> cellId) {
       cells.put(Objects.requireNonNull(cell), Objects.requireNonNull(cellId));
     }
-
     @SuppressWarnings("unchecked")
-    public <T> CellId<T> get(SideBySideTest.Cell cell) {
+    public <T> CellId<T> get(Cell cell) {
       return (CellId<T>) Objects.requireNonNull(cells.get(Objects.requireNonNull(cell)));
     }
-  }
 
+  }
   /**
    * Produce a simulatable ModeLType. The two values are the config and the model itself. Using a CellMap as the model\
    * object helps thread the CellMap through to where it's needed without the need for out-of-band communication.
@@ -88,12 +88,37 @@ public final class TestRegistrar {
 
         @Override
         public InputType<Map<String, SerializedValue>> getInputType() {
-          return StubInputOutputTypes.PASS_THROUGH_INPUT_TYPE;
+          return new InputType<>() {
+            @Override
+            public List<Parameter> getParameters() {
+              return List.of();
+            }
+
+            @Override
+            public List<String> getRequiredParameters() {
+              return List.of();
+            }
+
+            @Override
+            public Map<String, SerializedValue> instantiate(final Map<String, SerializedValue> arguments) {
+              return arguments;
+            }
+
+            @Override
+            public Map<String, SerializedValue> getArguments(final Map<String, SerializedValue> value) {
+              return Map.of();
+            }
+
+            @Override
+            public List<ValidationNotice> getValidationFailures(final Map<String, SerializedValue> value) {
+              return List.of();
+            }
+          };
         }
 
         @Override
         public OutputType<Unit> getOutputType() {
-          return StubInputOutputTypes.UNIT_OUTPUT_TYPE;
+          return stubOutputType();
         }
 
         @Override
@@ -118,7 +143,32 @@ public final class TestRegistrar {
 
       @Override
       public InputType<Unit> getConfigurationType() {
-        return StubInputOutputTypes.UNIT_INPUT_TYPE;
+        return new InputType<>() {
+          @Override
+          public List<Parameter> getParameters() {
+            return List.of();
+          }
+
+          @Override
+          public List<String> getRequiredParameters() {
+            return List.of();
+          }
+
+          @Override
+          public Unit instantiate(final Map<String, SerializedValue> arguments) {
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Map<String, SerializedValue> getArguments(final Unit value) {
+            return Map.of();
+          }
+
+          @Override
+          public List<ValidationNotice> getValidationFailures(final Unit value) {
+            return List.of();
+          }
+        };
       }
 
       @Override
@@ -131,18 +181,28 @@ public final class TestRegistrar {
           builder.topic(
               "ActivityType.Input." + directive.getKey(),
               inputTopics.get(directive.getKey()),
-              StubInputOutputTypes.STRING_OUTPUT_TYPE);
+              new OutputType<String>() {
+                @Override
+                public ValueSchema getSchema() {
+                  return ValueSchema.ofStruct(Map.of("value", ValueSchema.STRING));
+                }
+
+                @Override
+                public SerializedValue serialize(final String value) {
+                  return SerializedValue.of(Map.of("value", SerializedValue.of(value)));
+                }
+              });
           builder.topic(
               "ActivityType.Output." + directive.getKey(),
               outputTopics.get(directive.getKey()),
-              StubInputOutputTypes.UNIT_OUTPUT_TYPE);
+              stubOutputType());
         }
         final var cellMap = new CellMap();
         for (final var cell : cells) {
           if (cell.isLinear()) {
-            cellMap.put(cell, SideBySideTest.allocateLinear(builder, cell.linearTopic()));
+            cellMap.put(cell, LinearDynamics.allocate(builder, cell.linearTopic()));
           } else {
-            cellMap.put(cell, SideBySideTest.allocate(builder, cell.topic()));
+            cellMap.put(cell, History.allocate(builder, cell.topic()));
           }
         }
         for (final var daemon : daemons) {
@@ -216,6 +276,20 @@ public final class TestRegistrar {
           final Topic<ActivityDirectiveId> activityTopic)
       {
         throw new UnsupportedOperationException();
+      }
+    };
+  }
+
+  private static <T> OutputType<T> stubOutputType() {
+    return new OutputType<>() {
+      @Override
+      public ValueSchema getSchema() {
+        return ValueSchema.ofStruct(Map.of());
+      }
+
+      @Override
+      public SerializedValue serialize(final T value) {
+        return SerializedValue.of(Map.of());
       }
     };
   }

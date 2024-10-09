@@ -1,7 +1,7 @@
 package gov.nasa.ammos.aerie.merlin.driver.test.property;
 
 import com.squareup.javapoet.CodeBlock;
-import gov.nasa.ammos.aerie.merlin.driver.test.framework.SideBySideTest;
+import gov.nasa.ammos.aerie.merlin.driver.test.framework.Cell;
 import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
@@ -26,7 +26,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
 public record Scenario(
     // Cells
-    SideBySideTest.Cell[] cells,
+    Cell[] cells,
     List<DirectiveType> directiveTypes,
     Map<String, Trace.Owner> traces,
     TestRegistrar model,
@@ -117,7 +117,7 @@ public record Scenario(
     return res.toString();
   }
 
-  public static void interpret(EffectModel effectModel, SideBySideTest.Cell[] cells, Trace.Writer tracer) {
+  public static void interpret(EffectModel effectModel, Cell[] cells, Trace.Writer tracer) {
     for (int i = 0; i < effectModel.steps().size(); i++) {
       final int stepIndex = i;
       switch (effectModel.steps().get(i)) {
