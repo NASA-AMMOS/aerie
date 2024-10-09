@@ -326,6 +326,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  private int daemonStartupStepIndex = 0;
   /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
   public void init(boolean rerunning) {
     // Begin tracking all resources.
@@ -334,6 +335,12 @@ public final class SimulationEngine implements AutoCloseable {
     // Start daemon task(s) immediately, before anything else happens.
     if (!rerunning) {
       startDaemons(curTime().duration());
+      daemonStartupStepIndex = stepIndexAtTime;
+    } else {
+      if (oldEngine != null && oldEngine.daemonStartupStepIndex > 0) {
+        stepIndexAtTime = oldEngine.daemonStartupStepIndex;
+        setCurTime(new SubInstantDuration(Duration.ZERO, stepIndexAtTime));
+      }
     }
   }
 
@@ -410,6 +417,7 @@ public final class SimulationEngine implements AutoCloseable {
           curTime(),
           nextTime);  // might want to not limit by nextTime and cache for future iterations
       staleReadTime = earliestStaleReads.getLeft();
+      if (debug) System.out.println("earliestStaleReads(" + curTime() + ", " + nextTime + ") = " + earliestStaleReads + "; lastStaleReadTime = " + lastStaleReadTime + (staleReadTime.equals(lastStaleReadTime) ? " -> ignore" : ""));
       if (!staleReadTime.isEqualTo(lastStaleReadTime)) {
         nextTime = SubInstantDuration.min(nextTime, staleReadTime);
       }
@@ -417,8 +425,8 @@ public final class SimulationEngine implements AutoCloseable {
       // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
       // by index=1, and the window searched must be 1 index before the current time.
       earliestConditionTopics = earliestConditionTopics(curTime().minus(1), nextTime);
-      if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestConditionTopics);
       conditionTime = earliestConditionTopics.getRight().plus(1);
+      if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestConditionTopics + "; lastConditionTime = " + lastConditionTime + (conditionTime.equals(lastConditionTime) ? " -> ignore" : ""));
       if (!conditionTime.isEqualTo(lastConditionTime)) {
         nextTime = SubInstantDuration.min(nextTime, conditionTime);
       }
@@ -1615,7 +1623,7 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Arrange for the parent task to resume.... later.
         SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
-        wireTasksAndSpans(childTask, task, childSpan, scheduler.span);
+        wireTasksAndSpans(childTask, task, childSpan, scheduler.span); //null);  // considering not wiring span parent to span child
         if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);
         this.tasks.put(task, progress.continueWith(s.continuation()));
       }
@@ -2137,7 +2145,7 @@ public final class SimulationEngine implements AutoCloseable {
             spanToActivityInstanceId.get(activityParents.get(span)),
             activityChildren
                 .getOrDefault(span, emptySet)
-                .stream()
+                .stream().filter(spanToActivityInstanceId::containsKey)
                 .map(spanToActivityInstanceId::get)
                 .toList(),
             Optional.ofNullable(directiveId),
@@ -2528,7 +2536,7 @@ public final class SimulationEngine implements AutoCloseable {
             state.create(SimulationEngine.this.executor),
             currentTime.duration()));
         this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
-        wireTasksAndSpans(task, this.activeTask, childSpan, this.span);
+        wireTasksAndSpans(task, this.activeTask, childSpan, this.span); //null);  // considering not recording span parent/child
         SimulationEngine.this.taskFactories.put(task, state);
         SimulationEngine.this.taskIdsForFactories.put(state, task);
         this.frame.signal(JobId.forTask(task));
