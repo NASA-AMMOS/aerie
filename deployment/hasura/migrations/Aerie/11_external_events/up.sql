@@ -6,8 +6,7 @@ create table merlin.external_source_type (
 );
 
 comment on table merlin.external_source_type is e''
-  'Externally imported event source types.\n'
-  'Each external source has to be of a certain type, which in future releases will hold information about what metadata and event types are allowed within.\n'
+  'Externally imported event source types (each external source has to be of a certain type).\n'
   'They are also helpful to classify external sources.\n'
   'Derivation groups are a subclass of external source type.';
 
@@ -30,6 +29,7 @@ comment on column merlin.external_event_type.name is e''
 create table merlin.derivation_group (
     name text not null,
     source_type_name text not null,
+    owner text,
 
     constraint derivation_group_pkey
       primary key (name),
@@ -45,6 +45,8 @@ comment on column merlin.derivation_group.name is e''
   'The name and primary key of the derivation group.';
 comment on column merlin.derivation_group.source_type_name is e''
   'The name of the external_source_type of sources in this derivation group.';
+comment on column merlin.derivation_group.owner is e''
+  'The name of the user that created this derivation_group.';
 
 create table merlin.external_source (
     key text not null,
@@ -56,6 +58,7 @@ create table merlin.external_source (
     CHECK (end_time > start_time),
     created_at timestamp with time zone default now() not null,
     metadata jsonb,
+    owner text,
 
     constraint external_source_pkey
       primary key (key, derivation_group_name),
@@ -92,6 +95,9 @@ comment on column merlin.external_source.created_at is e''
 comment on column merlin.external_source.metadata is e''
   'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
   'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
+comment on column merlin.external_source.owner is e''
+  'The user who uploaded the external source.\n'
+  'Set by Hasura.';
 
 create table merlin.external_event (
     key text not null,

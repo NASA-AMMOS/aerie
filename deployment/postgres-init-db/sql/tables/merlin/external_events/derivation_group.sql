@@ -17,3 +17,5 @@ comment on column merlin.derivation_group.name is e''
   'The name and primary key of the derivation group.';
 comment on column merlin.derivation_group.source_type_name is e''
   'The name of the external_source_type of sources in this derivation group.';
+comment on column merlin.derivation_group.owner is e''
+  'The name of the user that created this derivation_group.';
