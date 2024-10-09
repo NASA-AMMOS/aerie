@@ -6,8 +6,7 @@ create table merlin.external_source_type (
 );
 
 comment on table merlin.external_source_type is e''
-  'Externally imported event source types.\n'
-  'Each external source has to be of a certain type, which in future releases will hold information about what metadata and event types are allowed within.\n'
+  'Externally imported event source types (each external source has to be of a certain type).\n'
   'They are also helpful to classify external sources.\n'
   'Derivation groups are a subclass of external source type.';
 
