@@ -324,7 +324,7 @@ void unassignPreset(int presetId, int activityId, int planId) throws SQLExceptio
           INSERT INTO
             merlin.derivation_group
           VALUES ('%s', '%s')
-          ON CONFLICT(name, source_type_name) DO NOTHING;
+          ON CONFLICT(name) DO NOTHING;
           """.formatted(externalEvent.derivation_group_name, externalSource.source_type_name)
       );
 
