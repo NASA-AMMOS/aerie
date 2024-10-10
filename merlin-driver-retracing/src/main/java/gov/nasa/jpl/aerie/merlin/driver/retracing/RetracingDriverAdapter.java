@@ -21,7 +21,7 @@ public class RetracingDriverAdapter<Config, Model> implements Simulator {
   private final Instant startTime;
   private final Duration duration;
   private final MissionModel<Model> model;
-  private RetracingSimulationDriver.Cache cache;
+  private final RetracingSimulationDriver.Cache cache;
 
   public RetracingDriverAdapter(ModelType<Config, Model> modelType, Config config, Instant startTime, Duration duration) {
     this.config = config;

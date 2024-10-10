@@ -665,6 +665,10 @@ public class EdgeCaseTests {
   }
 
   // TODO test case: await condition when Z passed through the interval of interest between two simulation steps
+  // TODO complex condition with multiple reads
+  // TODO case where condition fires in the future, and is invalidated by an event before that future time arrives
+  // TODO test expiry
+  // TODO test anchors
 
   private void runTest(DualSchedule schedule, Consumer<Model> assertions) {
     model.clearAssertions();
