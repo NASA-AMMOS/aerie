@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -679,6 +680,11 @@ public class EdgeCaseTests {
       System.out.println("Test simulation 1");
       final var actualProfiles = simulatorUnderTest.simulate(schedule1).discreteProfiles();
       assertLastSegmentsEqual(expectedProfiles, actualProfiles);
+      final var expected = new LinkedHashMap<String, String>();
+      for (final var entry : expectedProfiles.entrySet()) {
+        expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
+      }
+      System.out.println("Expected last segment: " + expected);
     }
 
     {
@@ -689,7 +695,11 @@ public class EdgeCaseTests {
       System.out.println("Test simulation 2");
       final var retracingProfiles = simulatorUnderTest.simulate(schedule2).discreteProfiles();
       assertLastSegmentsEqual(expectedProfiles, retracingProfiles);
-
+      final var expected = new LinkedHashMap<String, String>();
+      for (final var entry : expectedProfiles.entrySet()) {
+        expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
+      }
+      System.out.println("Expected last segment: " + expected);
       assertEquals(List.of(), model.violations);
     }
   }
