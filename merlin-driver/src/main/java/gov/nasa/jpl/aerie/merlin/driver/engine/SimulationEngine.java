@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import com.google.common.collect.Range;
 import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -101,6 +102,18 @@ public final class SimulationEngine implements AutoCloseable {
   private HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
   private TreeMap<SubInstantDuration, HashSet<TaskId>> removedCellReadHistory = new TreeMap<>();
 
+  private final HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> conditionHistoryByTopic =
+      new HashMap<>();
+  //  private final TreeMap<SubInstantDuration, Map<TaskId, Map<ConditionId, Set<Topic<?>>>>> conditionHistoryByTime = new TreeMap<>();
+//  private final RangeMap<SubInstantDuration, Map<TaskId, Map<ConditionId, Set<Topic<?>>>>> conditionHistoryByTime2 = TreeRangeMap.create();
+  //private final Map<ConditionId, Pair<SubInstantDuration, SubInstantDuration>> conditionHistory = new HashMap<>();
+  //RangeSetMap<SubInstantDuration, Triple<ConditionId, TaskId, Set<Topic<?>>>> conditionHistory;
+  RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> conditionHistory = new RangeMapMap<>();
+
+  private final Map<ConditionId, TaskId> taskForCondition = new HashMap<>();
+  private final Map<ConditionId, Topic<?>> topicsForCondition = new HashMap<>();
+
+
   private final MissionModel<?> missionModel;
 
   /** The start time of the simulation, from which other times are offsets */
@@ -123,8 +136,10 @@ public final class SimulationEngine implements AutoCloseable {
   private SimulationResults simulationResults = null;
   public static final Topic<ActivityDirectiveId> defaultActivityTopic = new Topic<>();
   private HashMap<String, ActivityInstanceId> taskToSimulatedActivityId = null;
-  private HashMap<SpanId, SpanId> activityParents = new HashMap<SpanId, SpanId>();;
-  private HashMap<SpanId, LinkedHashSet<SpanId>> activityChildren = new HashMap<SpanId, LinkedHashSet<SpanId>>();;
+  private HashMap<SpanId, SpanId> activityParents = new HashMap<SpanId, SpanId>();
+  ;
+  private HashMap<SpanId, LinkedHashSet<SpanId>> activityChildren = new HashMap<SpanId, LinkedHashSet<SpanId>>();
+  ;
   private HashMap<SpanId, ActivityDirectiveId> activityDirectiveIds = null;
 
   /** When tasks become stale */
@@ -175,6 +190,7 @@ public final class SimulationEngine implements AutoCloseable {
   public boolean failed;
 
   private SubInstantDuration lastStaleReadTime = SubInstantDuration.MAX_VALUE;
+  private SubInstantDuration lastStaleConditionReadTime = SubInstantDuration.MAX_VALUE;
   private SubInstantDuration lastStaleTopicTime = SubInstantDuration.MAX_VALUE;
   private SubInstantDuration lastStaleTopicOldEventTime = SubInstantDuration.MAX_VALUE;
   private SubInstantDuration lastConditionTime = SubInstantDuration.MAX_VALUE;
@@ -327,6 +343,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private int daemonStartupStepIndex = 0;
+
   /** Initialize the engine by tracking resources and kicking off daemon tasks. **/
   public void init(boolean rerunning) {
     // Begin tracking all resources.
@@ -389,6 +406,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
     SubInstantDuration staleReadTime = null;
+    Pair<SubInstantDuration, Map<Topic<?>, Set<ConditionId>>> earliestStaleConditionReads = null;
+    SubInstantDuration staleConditionReadTime = null;
     Pair<List<Topic<?>>, SubInstantDuration> earliestStaleTopics = null;
     Pair<List<Topic<?>>, SubInstantDuration> earliestStaleTopicOldEvents = null;
     SubInstantDuration staleTopicTime = SubInstantDuration.MAX_VALUE;
@@ -413,20 +432,30 @@ public final class SimulationEngine implements AutoCloseable {
         nextTime = SubInstantDuration.min(nextTime, staleTopicOldEventTime);
       }
 
-      earliestStaleReads = earliestStaleReads(
-          curTime(),
-          nextTime);  // might want to not limit by nextTime and cache for future iterations
-      staleReadTime = earliestStaleReads.getLeft();
+      earliestStaleReads = earliestStaleReads(curTime().minus(1), nextTime);  // might want to not limit by nextTime and cache for future iterations
+      staleReadTime = SubInstantDuration.max(curTime(), earliestStaleReads.getLeft());
       if (debug) System.out.println("earliestStaleReads(" + curTime() + ", " + nextTime + ") = " + earliestStaleReads + "; lastStaleReadTime = " + lastStaleReadTime + (staleReadTime.equals(lastStaleReadTime) ? " -> ignore" : ""));
       if (!staleReadTime.isEqualTo(lastStaleReadTime)) {
         nextTime = SubInstantDuration.min(nextTime, staleReadTime);
+      }
+
+      earliestStaleConditionReads = earliestStaleConditionReads(curTime().minus(1), nextTime);
+      staleConditionReadTime = SubInstantDuration.max(curTime(), earliestStaleConditionReads.getLeft());  // max with curTime for when it is curTime().minus(1)
+      if (debug) System.out.println("earliestStaleConditionReads(" + curTime() + ", " + nextTime + ") = "
+                                    + earliestStaleConditionReads + "; lastConditionStaleReadTime = "
+                                    + lastStaleConditionReadTime
+                                    + (staleConditionReadTime.equals(lastStaleConditionReadTime) ? " -> ignore" : ""));
+      if (!staleConditionReadTime.isEqualTo(lastStaleConditionReadTime)) {
+        nextTime = SubInstantDuration.min(nextTime, staleConditionReadTime);
       }
 
       // Need to invalidate stale topics just after the event, so the time of the events returned must be incremented
       // by index=1, and the window searched must be 1 index before the current time.
       earliestConditionTopics = earliestConditionTopics(curTime().minus(1), nextTime);
       conditionTime = earliestConditionTopics.getRight().plus(1);
-      if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " + earliestConditionTopics + "; lastConditionTime = " + lastConditionTime + (conditionTime.equals(lastConditionTime) ? " -> ignore" : ""));
+      if (debug) System.out.println("earliestConditionTopics(" + curTime().minus(1) + ", " + nextTime + ") = " +
+                                    earliestConditionTopics + "; lastConditionTime = " + lastConditionTime +
+                                    (conditionTime.equals(lastConditionTime) ? " -> ignore" : ""));
       if (!conditionTime.isEqualTo(lastConditionTime)) {
         nextTime = SubInstantDuration.min(nextTime, conditionTime);
       }
@@ -439,7 +468,9 @@ public final class SimulationEngine implements AutoCloseable {
 //    elapsedTime = batch.offsetFromStart();
 //    timeline.add(delta);
 
-    elapsedTime = Duration.min(maximumTime, Duration.max(elapsedTime, nextTime.duration()));  // avoid lowering elapsed time
+    elapsedTime = Duration.min(
+        maximumTime,
+        Duration.max(elapsedTime, nextTime.duration()));  // avoid lowering elapsed time
     // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
     //   even if they occur at the same real time.
 
@@ -506,12 +537,22 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
     }
+    boolean doJobs = invalidatedTopics.isEmpty();
     if (staleReadTime != null && staleReadTime.isEqualTo(nextTime) && !staleReadTime.isEqualTo(lastStaleReadTime)) {
       if (debug) System.out.println("earliestStaleReads at " + nextTime + " = " + earliestStaleReads);
       lastStaleReadTime = staleReadTime;
       rescheduleStaleTasks(earliestStaleReads);
-    } else
-    if (timeOfNextJobs.isEqualTo(nextTime) && invalidatedTopics.isEmpty()) {
+      doJobs = false;
+    }
+    if (staleConditionReadTime != null && staleConditionReadTime.isEqualTo(nextTime) &&
+        !staleConditionReadTime.isEqualTo(lastStaleConditionReadTime)) {
+      if (debug) System.out.println("earliestStaleConditionReads at " + nextTime + " = " + earliestStaleConditionReads);
+      lastStaleConditionReadTime = staleConditionReadTime;
+      rescheduleStaleTasks(earliestStaleConditionReads.getKey(), earliestStaleConditionReads.getRight());
+      doJobs = false;
+    }
+
+    if (doJobs && timeOfNextJobs.isEqualTo(nextTime)) {
 
       // Run the jobs in this batch.
       final var batch = extractNextJobs(maximumTime);
@@ -522,7 +563,7 @@ public final class SimulationEngine implements AutoCloseable {
 
         if (!(tip instanceof EventGraph.Empty) ||
             (!batch.jobs().isEmpty() && (batch.jobs().stream().findFirst().get() instanceof JobId.TaskJobId ||
-                                         batch.jobs().stream().findFirst().get() instanceof JobId.SignalJobId ))) {
+                                         batch.jobs().stream().findFirst().get() instanceof JobId.SignalJobId))) {
           this.timeline.add(tip, curTime().duration(), stepIndexAtTime, MissionModel.queryTopic);
           //updateTaskInfo(tip);
           if (stepIndexAtTime < Integer.MAX_VALUE) {
@@ -676,7 +717,6 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
 
-
   /**
    * Get the earliest time within a specified range that potentially stale cells are read by tasks not scheduled
    * to be re-run.
@@ -709,7 +749,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    if (readEvents.isEmpty()) return Pair.of( SubInstantDuration.MAX_VALUE, Collections.emptyMap());
+    if (readEvents.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
     for (var entry : timeline.staleTopics.entrySet()) {
       Topic<?> topic = entry.getKey();
       var subMap = entry.getValue().subMap(after, false, earliest, true);
@@ -760,7 +800,7 @@ public final class SimulationEngine implements AutoCloseable {
         var d = entry.getKey();
         HashMap<TaskId, Event> taskIds = new HashMap<>();
         // Don't include tasks which are being re-executed
-        for (var e :  entry.getValue().entrySet()) {
+        for (var e : entry.getValue().entrySet()) {
           if (!staleTasks.containsKey(e.getKey())) {
             taskIds.put(e.getKey(), e.getValue());
           }
@@ -787,6 +827,70 @@ public final class SimulationEngine implements AutoCloseable {
     }
     if (tasks.isEmpty()) earliest = SubInstantDuration.MAX_VALUE;
     return Pair.of(earliest, tasks);
+  }
+
+  public Pair<SubInstantDuration, Map<Topic<?>, Set<ConditionId>>> earliestStaleConditionReads(SubInstantDuration after, SubInstantDuration before) {
+    Map<Topic<?>, Set<ConditionId>> staleReads = new HashMap<>();
+    if (before.shorterThan(after)) {
+      return Pair.of(SubInstantDuration.MAX_VALUE, Collections.EMPTY_MAP);
+    }
+    //var staleTopics = earliestStaleTopics(after, before);
+    //var list = new ArrayList<ConditionId>();
+    var earliest = before;
+    for (var entry : timeline.staleTopics.entrySet()) {
+      Topic<?> topic = entry.getKey();
+      Optional<Map.Entry<Range<SubInstantDuration>, Set<ConditionId>>> conditionsAtTime = Optional.empty(); // this will be the result for the topic
+      var subMap = entry.getValue().subMap(after, true, earliest, true);
+      SubInstantDuration staleStart = null;
+      SubInstantDuration staleEnd = null;
+      for (var e : subMap.entrySet()) {
+        // if we are entering a stale period, remember this as staleStart
+        if (e.getValue() && staleStart == null) {
+          staleStart = e.getKey();
+          if (staleStart != null && staleStart.longerThan(earliest)) break;
+        }
+        // if we are exiting a stale period, remember this as staleEnd
+        if (!e.getValue() && staleStart != null) {  // have we found the end of the stale period
+          staleEnd = e.getKey();
+          conditionsAtTime =
+              oldEngine.getEarliestConditionsWaitingOnTopic(topic, staleStart, SubInstantDuration.min(staleEnd, earliest));
+          if (conditionsAtTime.isPresent()) break;
+          staleStart = null;
+          staleEnd = null;
+        }
+      }
+      if (staleStart == null || staleStart.longerThan(earliest)) continue;
+      // stale period never ended
+      if (!conditionsAtTime.isPresent() && staleEnd == null) {
+        conditionsAtTime =
+            oldEngine.getEarliestConditionsWaitingOnTopic(topic, staleStart, earliest);
+        //continue;
+      }
+      if (conditionsAtTime.isEmpty()) continue;
+      SubInstantDuration start = conditionsAtTime.get().getKey().lowerEndpoint();
+      if (start.longerThan(earliest)) continue;  // this should be impossible
+      if (start.shorterThan(earliest)) {
+        earliest = start;
+        staleReads.clear();
+      }
+      staleReads.put(topic, conditionsAtTime.get().getValue());
+    }
+    if (staleReads.isEmpty()) earliest = SubInstantDuration.MAX_VALUE;
+    return Pair.of(earliest, staleReads);
+  }
+
+  private Optional<Map.Entry<Range<SubInstantDuration>, Set<ConditionId>>> getEarliestConditionsWaitingOnTopic(
+      Topic<?> topic,
+      SubInstantDuration after,
+      SubInstantDuration before)
+  {
+    if (after.longerThan(before)) return Optional.empty();
+    var conditionHistoryforTopic = conditionHistoryByTopic.get(topic);
+    if (conditionHistoryforTopic != null) {
+      var topicSubMap = conditionHistoryforTopic.subMap(Range.closed(after, before));
+      return topicSubMap.asMapOfRanges().entrySet().stream().findFirst();
+    }
+    return Optional.empty();
   }
 
   /**
@@ -997,6 +1101,32 @@ public final class SimulationEngine implements AutoCloseable {
     }
     return false;
   }
+
+  TaskId getTaskIdForConditionId(ConditionId id) {
+    TaskId taskId = taskForCondition.get(id);
+    if (taskId == null && oldEngine != null) {
+      taskId = oldEngine.getTaskIdForConditionId(id);
+    }
+    return taskId;
+  }
+
+  private void rescheduleStaleTasks(SubInstantDuration time, Map<Topic<?>, Set<ConditionId>> staleConditionReads) {
+    //Map<TaskId, HashSet<Pair<Topic<?>, Event>>> staleReads = new HashMap<>();
+    Set<TaskId> processedTasks = new HashSet<>();
+    for (var e : staleConditionReads.entrySet()) {
+      Topic<?> topic = e.getKey();
+      for (ConditionId c : e.getValue()) {
+        TaskId taskId = getTaskIdForConditionId(c);
+        if (!processedTasks.contains(taskId)) {
+          setTaskStale(taskId, time, null);
+          processedTasks.add(taskId);
+        }
+        //staleReads.computeIfAbsent(taskId, $ -> new HashSet<>()).add(Pair.of(topic, null));
+      }
+    }
+    //rescheduleStaleTasks(Pair.of(time, staleReads));
+  }
+
 
   /**
    * For the next time t that a set of tasks could potentially have a stale read, check if any read is stale for
@@ -1428,6 +1558,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var job : batch.jobs()) {
       if (!(job instanceof JobId.SignalJobId s)) continue;
 
+      endConditionHistory(s.id());
       this.conditions.remove(s.id());
       this.waitingConditions.unsubscribeQuery(s.id());
     }
@@ -1679,6 +1810,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     if (trace) System.out.println("updateCondition(): waitingConditions.subscribeQuery(conditionId=" + condition + ", querier.referencedTopics=" + querier.referencedTopics + ")");
     this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
+    addConditionHistory(condition, querier.referencedTopics);
 
     final Optional<Duration> expiry = querier.expiry.map(d -> currentTime.duration().plus((Duration)d));
     if (trace) System.out.println("updateCondition(): expiry = " + expiry);
@@ -1695,6 +1827,64 @@ public final class SimulationEngine implements AutoCloseable {
       if (trace) System.out.println("updateCondition(): schedule(ConditionJobId " + cjid + " at time " + t + ")");
       this.scheduledJobs.schedule(cjid, t);
     }
+  }
+
+  // TODO !!!!!!!!
+  /**
+   * During incremental simulation, a task may be re-run, in which case it can have a different history of condition
+   * reads.  Thus, the previous read data must be hidden/removed by the current engine.
+   * @return
+   */
+  private RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> getCombinedConditionHistory() {
+    return conditionHistory;
+  }
+
+  // TODO !!!!!!!!
+  private HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> getCombinedConditionHistoryByTopic() {
+    return conditionHistoryByTopic;
+  }
+
+  /**
+   * Condition history records when a condition/task is waiting on different topics (i.e. cells).  Do not assume
+   * that the topics referenced by the condition will be the same every time the condition is evaluated.
+   *
+   * @param conditionId
+   * @param referencedTopics
+   */
+  private void addConditionHistory(ConditionId conditionId, Set<Topic<?>> referencedTopics) {
+    var task = waitingTasks.get(conditionId);
+    if (task == null) {
+      throw new RuntimeException("No task waiting for conditionId " + conditionId);
+    }
+    taskForCondition.put(conditionId, task);  // Assumes only one task for a condition
+    conditionHistory.add(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId, referencedTopics);
+    referencedTopics.forEach(tt -> conditionHistoryByTopic
+        .computeIfAbsent(tt, $ -> new RangeSetMap<>())
+        .add(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId));
+  }
+
+  private void endConditionHistory(ConditionId conditionId) {
+    // Find topics in conditionHistory for conditionId, remove the conditionId from conditionHistoryByTopic per topic
+    // from now forward, and then also remove conditionId from conditionHistory from now forward.
+    final Map<ConditionId, Set<Topic<?>>> waitingConditionHistory = conditionHistory.get(SubInstantDuration.MAX_VALUE);
+    if (waitingConditionHistory == null) {
+      if (debug) System.out.println("WARNING!  No history for conditionId " + conditionId + " extending to SubInstantDuration.MAX_VALUE");
+    } else {
+      var topics = waitingConditionHistory.get(conditionId);
+      if (topics == null) {
+        if (debug) System.out.println("WARNING!  No topics in history for conditionId " + conditionId + " extending to SubInstantDuration.MAX_VALUE");
+      } else {
+        for (var topic : topics) {
+          final RangeSetMap<SubInstantDuration, ConditionId> topicHistory = conditionHistoryByTopic.get(topic);
+          if (topicHistory == null) {
+            if (debug) System.out.println("WARNING!  No condition history for topic " + topic + " as expected for conditionId + " + conditionId + " extending to SubInstantDuration.MAX_VALUE");
+          } else {
+            topicHistory.remove(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId);
+          }
+        }
+      }
+    }
+    conditionHistory.remove(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId);
   }
 
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
@@ -2731,6 +2921,11 @@ public final class SimulationEngine implements AutoCloseable {
     return children;
   }
 
+  /**
+   * This method gets a {@link TaskFactory} for the old {@link TaskId} and calls {@link SimulationEngine#scheduleTask(Duration, TaskFactory, TaskId)}
+   * @param taskId
+   * @param startOffset
+   */
   public void rescheduleTask(TaskId taskId, Duration startOffset) {  // TODO -- don't we need the startOffset to be a SubInstantDuration?
     if (debug) System.out.println("rescheduleTask(" + taskId + ", " + startOffset + ")");
     if (oldEngine.isDaemonTask(taskId)) {
