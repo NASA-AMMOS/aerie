@@ -3,13 +3,15 @@ create view ui.derivation_group_comp
 select
   name,
   source_type_name,
+  owner,
   array_agg(distinct concat(sources.source_key, ', ', sources.derivation_group_name, ', ', sources.contained_events)) as sources,
   array_remove(array_agg(distinct event_type_name), null) as event_types,
 	count(distinct counted.event_key) as derived_total
 from (
 	select derivation_group.name,
 		     derivation_group.source_type_name,
-		     types.event_type_name
+		     types.event_type_name,
+		     derivation_group.owner
   from merlin.derivation_group
 	left outer join ( select external_event.source_key,
 	                         external_event.derivation_group_name,
@@ -27,7 +29,7 @@ full outer join ( select external_event.source_key,
 full outer join ( select derived_events.event_key,
 				                 derived_events.derivation_group_name
 			            from merlin.derived_events) counted on counted.derivation_group_name = with_event_types.name
-group by with_event_types.name, with_event_types.source_type_name;
+group by with_event_types.name, with_event_types.source_type_name, with_event_types.owner;
 
 comment on view ui.derivation_group_comp is e''
   'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
