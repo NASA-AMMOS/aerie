@@ -19,8 +19,14 @@ public class RangeSetMap<K extends Comparable<K>, V> {
   public RangeSetMap() {
     this.rangeMap = TreeRangeMap.create();
   }
+
   public RangeSetMap(RangeMap<K, Set<V>> map) {
     this.rangeMap = map;
+  }
+
+  public RangeSetMap(RangeSetMap r) {
+    this();
+    merge(r);
   }
 
   public RangeSetMap<K, V> subMap(Range<K> range) {
@@ -34,6 +40,7 @@ public class RangeSetMap<K extends Comparable<K>, V> {
   public void add(Range<K> range, V value) {
     addAll(range, Sets.newHashSet(value));
   }
+
   public void addAll(Range<K> range, Set<V> value) {
     rangeMap.subRangeMap(range).merge(range, value, (existingSet, newSet) -> {
       Set<V> mergedSet = new HashSet<>(existingSet);
@@ -42,11 +49,22 @@ public class RangeSetMap<K extends Comparable<K>, V> {
     });
 
     coalesce(rangeMap.subRangeMap(range));
+    // coalesce around range
+    var entry = rangeMap.getEntry(range.lowerEndpoint());
+    if (entry != null) rangeMap.putCoalescing(entry.getKey(), entry.getValue());
+    entry = rangeMap.getEntry(range.upperEndpoint());
+    if (entry != null) rangeMap.putCoalescing(entry.getKey(), entry.getValue());
+  }
+
+  public void merge(RangeSetMap<K, V> r) {
+    if (r == null) return;
+    r.asMapOfRanges().entrySet().forEach(e -> addAll(e.getKey(), e.getValue()));
   }
 
   public void remove(Range<K> range, V value) {
     removeAll(range, Sets.newHashSet(value));
   }
+
   public void removeAll(Range<K> range, Set<V> value) {
     var list = new ArrayList<Pair<Range<K>, Set<V>>>();
     for (var e : rangeMap.subRangeMap(range).asMapOfRanges().entrySet()) {
@@ -91,6 +109,14 @@ public class RangeSetMap<K extends Comparable<K>, V> {
 
   public Map<Range<K>, Set<V>> asMapOfRanges() {
     return rangeMap.asMapOfRanges();
+  }
+
+  public boolean isEmpty() {
+    return asMapOfRanges().isEmpty();
+  }
+
+  public Range<K> span() {
+    return rangeMap.span();
   }
 
   @Override

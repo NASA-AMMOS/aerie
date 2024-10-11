@@ -303,6 +303,7 @@ public final class SimulationDriver<Model> {
       directives = new HashMap<>(engine.directivesDiff.get("added"));
       directives.putAll(engine.directivesDiff.get("modified"));
       engine.directivesDiff.get("modified").forEach((k, v) -> engine.removeTaskHistory(engine.getTaskIdForDirectiveId(k), SubInstantDuration.MIN_VALUE, null));
+      // FIXME? -- Above, modified directives have their task history removed, but the new activities/tasks will have new TaskIds, SpanIds, etc.  Don't we assume they stay the same, or does it not matter?
       //engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeTaskHistory(engine.oldEngine.getTaskIdForDirectiveId(k)));
       engine.directivesDiff.get("removed").forEach((k, v) -> engine.removeActivity(k));
     }

@@ -16,11 +16,25 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
-public class RangeMapMap<K1 extends Comparable<K1>, K2, V> {
-  private final TreeRangeMap<K1, Map<K2, V>> rangeMap;
+public class RangeMapMap<K1 extends Comparable<K1>, K2, V> {  // TODO -- should this just extend RangeSetMap?
+  private final RangeMap<K1, Map<K2, V>> rangeMap;
 
   public RangeMapMap() {
     this.rangeMap = TreeRangeMap.create();
+  }
+
+  public RangeMapMap(RangeMap<K1, Map<K2, V>> map) {
+    this.rangeMap = map;
+  }
+
+  public RangeMapMap(RangeMapMap r) {
+    this();
+    merge(r);
+  }
+
+
+  public RangeMapMap<K1, K2, V> subMap(Range<K1> range) {
+    return new RangeMapMap<>(rangeMap.subRangeMap(range));
   }
 
   public void set(Range<K1> range, Map<K2, V> value) {
@@ -32,6 +46,7 @@ public class RangeMapMap<K1 extends Comparable<K1>, K2, V> {
     m.put(key, value);
     addAll(range, m);
   }
+
   public void addAll(Range<K1> range, Map<K2, V> value) {
     rangeMap.subRangeMap(range).merge(range, value, (existingMap, newMap) -> {
       Map<K2, V> mergedMap = new HashMap<>(existingMap);
@@ -48,11 +63,16 @@ public class RangeMapMap<K1 extends Comparable<K1>, K2, V> {
     if (entry != null) rangeMap.putCoalescing(entry.getKey(), entry.getValue());
   }
 
+  public void merge(RangeMapMap<K1, K2, V> r) {
+    r.asMapOfRanges().entrySet().forEach(e -> addAll(e.getKey(), e.getValue()));
+  }
+
   public void remove(Range<K1> range, K2 key) {
     var m = new HashSet<K2>();
     m.add(key);
     removeAll(range, m);
   }
+
   public void removeAll(Range<K1> range, Collection<K2> value) {
     var list = new ArrayList<Pair<Range<K1>, Map<K2, V>>>();
     for (var e : rangeMap.subRangeMap(range).asMapOfRanges().entrySet()) {
@@ -161,6 +181,14 @@ public class RangeMapMap<K1 extends Comparable<K1>, K2, V> {
 
   public Map<Range<K1>, Map<K2, V>> asMapOfRanges() {
     return rangeMap.asMapOfRanges();
+  }
+
+  public boolean isEmpty() {
+    return asMapOfRanges().isEmpty();
+  }
+
+  public Range<K1> span() {
+    return rangeMap.span();
   }
 
   @Override

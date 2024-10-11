@@ -28,7 +28,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public static boolean alwaysfreezable = false; // HACK -- thread unfriendly
   public static boolean neverfreezable = false; // HACK -- thread unfriendly
   public static boolean freezable = alwaysfreezable; // HACK -- thread unfriendly
-  public static boolean debug = false;
+  public static boolean debug = true;
   private boolean frozen = false;
   private SubInstantDuration timeFroze = null;
   public LiveCells liveCells;
@@ -211,6 +211,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   private Map<? extends Topic<?>, TreeMap<Duration, List<EventGraph<Event>>>> _eventsByTopic = null;
   private long _numEventsByTopic = 0;
 
+  public static <K, V> HashMap<K, V> mergeHashMapsFirstWins(HashMap<K, V> m1, HashMap<K, V> m2) {
+    if (m1 == null) return m2;
+    if (m2 == null || m2.isEmpty()) return m1;
+    if (m1.isEmpty()) return m2;
+    return Stream.of(m1, m2).flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(t -> t.getKey(),
+                                                                                          t -> t.getValue(),
+                                                                                          (v1, v2) -> v1,
+                                                                                          HashMap::new));
+  }
   public static <K, V> TreeMap<K, V> mergeMapsFirstWins(TreeMap<K, V> m1, TreeMap<K, V> m2) {
     if (m1 == null) return m2;
     if (m2 == null || m2.isEmpty()) return m1;
@@ -218,6 +227,15 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     return Stream.of(m1, m2).flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(t -> t.getKey(),
                                                                                           t -> t.getValue(),
                                                                                           (v1, v2) -> v1,
+                                                                                          TreeMap::new));
+  }
+  public static <K, V> TreeMap<K, V> deepMergeMapsFirstWins(TreeMap<K, V> m1, TreeMap<K, V> m2) {
+    if (m1 == null) return m2;
+    if (m2 == null || m2.isEmpty()) return m1;
+    if (m1.isEmpty()) return m2;
+    return Stream.of(m1, m2).flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(t -> t.getKey(),
+                                                                                          t -> t.getValue(),
+                                                                                          (v1, v2) -> (v1 instanceof TreeMap mm1 && v2 instanceof TreeMap mm2) ? (V)deepMergeMapsFirstWins(mm1, mm2) : v1,
                                                                                           TreeMap::new));
   }
 

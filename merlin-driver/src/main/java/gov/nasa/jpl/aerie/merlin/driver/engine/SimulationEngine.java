@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import com.google.common.collect.Range;
 import gov.nasa.jpl.aerie.merlin.driver.CombinedSimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.EventGraphFlattener;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.types.ActivityInstance;
@@ -62,11 +61,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Integer.max;
 
@@ -99,20 +98,14 @@ public final class SimulationEngine implements AutoCloseable {
   private HashMap<ResourceId, Set<Topic<?>>> referencedTopics = new HashMap<>();
   /** Separates generation of resource profile results from other parts of the simulation */
   /** The history of when tasks read topics/cells */
-  private HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> cellReadHistory = new HashMap<>();
+  private HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>>> cellReadHistory = new HashMap<>();
   private TreeMap<SubInstantDuration, HashSet<TaskId>> removedCellReadHistory = new TreeMap<>();
 
-  private final HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> conditionHistoryByTopic =
-      new HashMap<>();
-  //  private final TreeMap<SubInstantDuration, Map<TaskId, Map<ConditionId, Set<Topic<?>>>>> conditionHistoryByTime = new TreeMap<>();
-//  private final RangeMap<SubInstantDuration, Map<TaskId, Map<ConditionId, Set<Topic<?>>>>> conditionHistoryByTime2 = TreeRangeMap.create();
-  //private final Map<ConditionId, Pair<SubInstantDuration, SubInstantDuration>> conditionHistory = new HashMap<>();
-  //RangeSetMap<SubInstantDuration, Triple<ConditionId, TaskId, Set<Topic<?>>>> conditionHistory;
+  private final HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> conditionHistoryByTopic = new HashMap<>();
   RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> conditionHistory = new RangeMapMap<>();
 
   private final Map<ConditionId, TaskId> taskForCondition = new HashMap<>();
-  private final Map<ConditionId, Topic<?>> topicsForCondition = new HashMap<>();
-
+  private final Map<TaskId, Set<ConditionId>> conditionsForTask = new HashMap<>();
 
   private final MissionModel<?> missionModel;
 
@@ -194,6 +187,9 @@ public final class SimulationEngine implements AutoCloseable {
   private SubInstantDuration lastStaleTopicTime = SubInstantDuration.MAX_VALUE;
   private SubInstantDuration lastStaleTopicOldEventTime = SubInstantDuration.MAX_VALUE;
   private SubInstantDuration lastConditionTime = SubInstantDuration.MAX_VALUE;
+  /** switch for whether an engine can be the oldEngine of more than one engines; this is used to determine whether
+   *  to clear an oldEngine's caches to save memory */
+  private boolean allowMultipleParentEngines = false;
 
   public SimulationEngine(
       Instant startTime,
@@ -283,7 +279,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
     cellReadHistory = new HashMap<>();
     for (final var entry : other.cellReadHistory.entrySet()) {
-      var newVal = new TreeMap<SubInstantDuration, HashMap<TaskId, Event>>();
+      var newVal = new TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>>();
       for (final var e2 : entry.getValue().entrySet()) {
         newVal.put(e2.getKey(), new HashMap<>(e2.getValue()));
       }
@@ -404,7 +400,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     var nextTime = timeOfNextJobs;
 
-    Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads = null;
+    Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>> earliestStaleReads = null;
     SubInstantDuration staleReadTime = null;
     Pair<SubInstantDuration, Map<Topic<?>, Set<ConditionId>>> earliestStaleConditionReads = null;
     SubInstantDuration staleConditionReadTime = null;
@@ -538,13 +534,13 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     boolean doJobs = invalidatedTopics.isEmpty();
-    if (staleReadTime != null && staleReadTime.isEqualTo(nextTime) && !staleReadTime.isEqualTo(lastStaleReadTime)) {
+    if (oldEngine != null &&staleReadTime != null && staleReadTime.isEqualTo(nextTime) && !staleReadTime.isEqualTo(lastStaleReadTime)) {
       if (debug) System.out.println("earliestStaleReads at " + nextTime + " = " + earliestStaleReads);
       lastStaleReadTime = staleReadTime;
       rescheduleStaleTasks(earliestStaleReads);
       doJobs = false;
     }
-    if (staleConditionReadTime != null && staleConditionReadTime.isEqualTo(nextTime) &&
+    if (oldEngine != null && staleConditionReadTime != null && staleConditionReadTime.isEqualTo(nextTime) &&
         !staleConditionReadTime.isEqualTo(lastStaleConditionReadTime)) {
       if (debug) System.out.println("earliestStaleConditionReads at " + nextTime + " = " + earliestStaleConditionReads);
       lastStaleConditionReadTime = staleConditionReadTime;
@@ -617,7 +613,7 @@ public final class SimulationEngine implements AutoCloseable {
   public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Event noop, SubInstantDuration time) {
     // TODO: Can't we just get this from eventsByTopic instead of having a separate data structure?
     var inner = cellReadHistory.computeIfAbsent(topic, $ -> new TreeMap<>());
-    inner.computeIfAbsent(time, $ -> new HashMap<>()).put(taskId, noop);
+    inner.computeIfAbsent(time, $ -> new HashMap<>()).computeIfAbsent(taskId, $ -> new HashSet<>()).add(noop);
   }
 
   /**
@@ -625,12 +621,12 @@ public final class SimulationEngine implements AutoCloseable {
    * the cache for the child engine per topic and clears it for the grandchild per topic.  This assumes that an engine
    * will not have more than one parent.
    */
-  protected HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> _combinedHistory = new HashMap<>();
+  protected HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>>> _combinedHistory = new HashMap<>();
   /**
    * A cache of part of the combinedHistory computation that is the old combined history without the removed task history.
    * This should be cleared by the parent engine.
    */
-  protected HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Event>>> _oldCleanedHistory = new HashMap<>();
+  //protected HashMap<Topic<?>, TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>>> _oldCleanedHistory = new HashMap<>();
   // protected Duration _combinedHistoryTime = null;
 
 //  public HashMap<Topic<?>, TreeMap<Duration, HashMap<TaskId, Event>>> getCombinedCellReadHistory() {
@@ -640,37 +636,59 @@ public final class SimulationEngine implements AutoCloseable {
 //    return getCombinedCellReadHistory().get(topic);
 //  }
 
-  private static TreeMap<SubInstantDuration, HashMap<TaskId, Event>> _emptyTreeMap = new TreeMap<>();
+  // An empty map constant that would be immutable if it didn't require significant more code
+  private static final TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> _emptyTreeMap = new TreeMap<>();
 
-  public TreeMap<SubInstantDuration, HashMap<TaskId, Event>> getCombinedCellReadHistory(Topic<?> topic) {
+  /**
+   * Combine a cell topic's read history of past engines with this engine's history to get a complete view.
+   * @param topic the topic of a cell whose read history is sought
+   * @return the combined cell read history across engines as a map from time to task to the task's read events
+   */
+  public TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> getCombinedCellReadHistory(Topic<?> topic) {
+    // The strategy below is to cache the combined results of the oldEngine in the oldEngine and flush the cache
+    // of the oldEngine's oldEngine.  Then those results are combined with the current to give to the caller.
+    // History per topic is cached separately; the history of some topics may be computed and
+    // cached while those of others are not.  The results must be cleaned by removing the reads of removed tasks.
+    // Those cleaned results are also cached and then combined with the current engine's history, which will
+    // be cached by its parent engine's combined history.
+    //
+    // The tricky part is that the parent stores the oldEngine's results in the oldEngine's cache because the
+    // oldEngine by itself does not check to see if it is finished simulating.  So, the engine caches the
+    // cleaned history before applying its own history and does not cache the final results because the parent will.
+    // TODO -- consider checking this.closed to determine whether to cache results to avoid this trickiness
+
     // check cache
-    var inner = _combinedHistory.get(topic);
+    var inner = _combinedHistory.get(topic); // TODO -- REVIEW -- does this take into account this engine's results?
     if (inner != null) return inner;
 
     inner = cellReadHistory.get(topic);
     if (oldEngine == null) {
-      // If there's no history from an old engine, then just set the cache to the local history
+      // If there's no history from an old engine, then just set the cache to the local history because if it doesn't
+      // already have a child engine, it never will.
       _combinedHistory = cellReadHistory;
       if (inner == null) return _emptyTreeMap;
       return inner;
     }
 
+    // Cache oldEngine's combined history and clear cache of the oldEngine's oldEngine for this topic to save memory
     var oldInner = oldEngine.getCombinedCellReadHistory(topic);
     if (oldInner == null) oldInner = _emptyTreeMap;
+    // If the oldEngine's cache doesn't have results in the cache, then add them to its cache
     if (oldEngine._combinedHistory.get(topic) == null) {
       oldEngine._combinedHistory.put(topic, oldInner);
-      if (oldEngine.oldEngine != null && oldEngine.oldEngine._combinedHistory != null) {
+      // clear the cache of the oldEngine.oldEngine for this topic
+      if (!allowMultipleParentEngines && oldEngine.oldEngine != null && oldEngine.oldEngine._combinedHistory != null) {
         oldEngine.oldEngine._combinedHistory.remove(topic);
-        oldEngine.oldEngine._oldCleanedHistory.remove(topic);
+        //oldEngine.oldEngine._oldCleanedHistory.remove(topic);
         oldEngine.oldEngine.cellReadHistory.remove(topic);
       }
     }
 
     // Clean the removed tasks from the old read history
     // Check for cached computation first
-    var oldCleanedHistory = _oldCleanedHistory.get(topic);
-    if (oldCleanedHistory == null) {
-      //TreeMap<Duration, HashMap<TaskId, Event>> oldCleanedHistory = null;
+    //var oldCleanedHistory = new TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>>(); //_oldCleanedHistory.get(topic);
+    //if (oldCleanedHistory == null) {
+    TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> oldCleanedHistory = null;
       Set<SubInstantDuration> commonKeys = oldInner.keySet().stream().filter(d -> removedCellReadHistory.containsKey(d)).collect(
           Collectors.toSet());
       if (commonKeys.isEmpty()) {
@@ -683,7 +701,7 @@ public final class SimulationEngine implements AutoCloseable {
           if (rTasks == null) {
             oldCleanedHistory.put(oDur, oTaskMap);
           }
-          HashMap<TaskId, Event> cleanTaskMap = new HashMap<>();
+          HashMap<TaskId, Set<Event>> cleanTaskMap = new HashMap<>();
           Set<TaskId> commonTasks = oTaskMap.keySet().stream().filter(t -> rTasks.contains(t)).collect(
               Collectors.toSet());
           if (commonTasks.isEmpty()) {
@@ -701,19 +719,41 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
       // Now cache the results
-      _oldCleanedHistory.put(topic, oldCleanedHistory);
-    }
+      //_oldCleanedHistory.put(topic, oldCleanedHistory);
+    //}
 
     // Now merge local history with old cleaned history
-    TreeMap<SubInstantDuration, HashMap<TaskId, Event>> combinedTopicHistory = null;
+    TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> combinedTopicHistory = oldCleanedHistory;
     if (oldCleanedHistory.isEmpty()) {
       combinedTopicHistory = inner;
     } else if (inner == null || inner.isEmpty()) {
-      combinedTopicHistory = oldCleanedHistory;
+    } else if (closed) {
+      // merge the new history with the old cleaned history
+      combinedTopicHistory = deepMergeMapsFirstWins(inner, oldCleanedHistory);
+//      // first make a deep copy of the first
+//      combinedTopicHistory = new TreeMap<>();
+//      for (final Map.Entry<SubInstantDuration, HashMap<TaskId, Set<Event>>> entry : oldCleanedHistory.entrySet()) {
+//        combinedTopicHistory.put(entry.getKey(), new HashMap<>(entry.getValue()));
+//      }
+//      for (final var entry : inner.entrySet()) {
+//        var oldMap = combinedTopicHistory.get(entry.getKey());
+//        var mergedMap = TemporalEventSource.mergeHashMapsFirstWins(entry.getValue(), oldMap);
+//        combinedTopicHistory.put(entry.getKey(), new HashMap<>(entry.getValue()));
+//      }
     }
 
     // No need to cache this.  The parent engine caches this.
-    return combinedTopicHistory;
+    return closed ? combinedTopicHistory : oldCleanedHistory;
+  }
+
+  public static <K, V> TreeMap<K, V> deepMergeMapsFirstWins(TreeMap<K, V> m1, TreeMap<K, V> m2) {
+    if (m1 == null) return m2;
+    if (m2 == null || m2.isEmpty()) return m1;
+    if (m1.isEmpty()) return m2;
+    return Stream.of(m1, m2).flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(t -> t.getKey(),
+                                                                                          t -> t.getValue(),
+                                                                                          (v1, v2) -> (v1 instanceof HashMap mm1 && v2 instanceof HashMap mm2) ? (V)TemporalEventSource.mergeHashMapsFirstWins(mm1, mm2) : v1,
+                                                                                          TreeMap::new));
   }
 
 
@@ -725,94 +765,90 @@ public final class SimulationEngine implements AutoCloseable {
    * @return the time of the earliest read, the tasks doing the reads, and the noop Events/Topics read by each task
    */
   /** Get the earliest time that topics become stale and return those topics with the time */
-  public Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReadsNew(SubInstantDuration after, SubInstantDuration before, Topic<Topic<?>> queryTopic) {
-    // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
-    // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
-    var earliest = before;
-    final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
-    ConcurrentSkipListSet<SubInstantDuration> durs = timeline.staleTopics.entrySet().stream().collect(ConcurrentSkipListSet::new,
-                                                                                            (set, entry) -> set.addAll(entry.getValue().keySet().stream().filter(d -> entry.getValue().get(d)).toList()),
-                                                                                            (set1, set2) -> set1.addAll(set2));
-    if (durs.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
-    var earliestStaleTopic = durs.higher(after);
-    final TreeMap<Duration, List<EventGraph<Event>>> readEvents = oldEngine.timeline.getCombinedEventsByTopic().get(queryTopic);
-    if (readEvents == null || readEvents.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
-    var readEventsSubmap = readEvents.subMap(after.duration(), false, before.duration(), true);
-    for (var te : readEventsSubmap.entrySet()) {
-      final List<EventGraph<Event>> graphList = te.getValue();
-      for (var eventGraph : graphList) {
-        final List<Pair<String, Event>> flatGraph = EventGraphFlattener.flatten(eventGraph);
-        for (var pair : flatGraph) {
-          Event event = pair.getRight();
-          // HERE!
-        }
-      }
-    }
-
-    if (readEvents.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
-    for (var entry : timeline.staleTopics.entrySet()) {
-      Topic<?> topic = entry.getKey();
-      var subMap = entry.getValue().subMap(after, false, earliest, true);
-      SubInstantDuration d = null;
-      for (var e : subMap.entrySet()) {
-        if (e.getValue()) {
-          d = e.getKey();
-          var topicEventsSubMap = readEventsSubmap.subMap(d.duration(), true, earliest.duration(), true);
-          break;
-        }
-      }
-      if (d == null) {
-        continue;
-      }
-      int comp = d.compareTo(earliest);
-      if (comp <= 0) {
-        if (comp < 0) tasks.clear();
-        //tasks.add(topic);
-        earliest = d;
-      }
-    }
-    if (tasks.isEmpty()) earliest = SubInstantDuration.MAX_VALUE;
-    return Pair.of(earliest, tasks);
-  }
-
+//  public Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReadsNew(SubInstantDuration after, SubInstantDuration before, Topic<Topic<?>> queryTopic) {
+//    // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
+//    // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
+//    // TODO -- This case is
+//    var earliest = before;
+//    final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
+//    ConcurrentSkipListSet<SubInstantDuration> durs = timeline.staleTopics.entrySet().stream().collect(ConcurrentSkipListSet::new,
+//                                                                                            (set, entry) -> set.addAll(entry.getValue().keySet().stream().filter(d -> entry.getValue().get(d)).toList()),
+//                                                                                            (set1, set2) -> set1.addAll(set2));
+//    if (durs.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
+//    var earliestStaleTopic = durs.higher(after);
+//    final TreeMap<Duration, List<EventGraph<Event>>> readEvents = oldEngine.timeline.getCombinedEventsByTopic().get(queryTopic);
+//    if (readEvents == null || readEvents.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
+//    var readEventsSubmap = readEvents.subMap(after.duration(), false, before.duration(), true);
+//    for (var te : readEventsSubmap.entrySet()) {
+//      final List<EventGraph<Event>> graphList = te.getValue();
+//      for (var eventGraph : graphList) {
+//        final List<Pair<String, Event>> flatGraph = EventGraphFlattener.flatten(eventGraph);
+//        for (var pair : flatGraph) {
+//          Event event = pair.getRight();
+//          // HERE!
+//        }
+//      }
+//    }
+//
+//    if (readEvents.isEmpty()) return Pair.of(SubInstantDuration.MAX_VALUE, Collections.emptyMap());
+//    for (var entry : timeline.staleTopics.entrySet()) {
+//      Topic<?> topic = entry.getKey();
+//      var subMap = entry.getValue().subMap(after, false, earliest, true);
+//      SubInstantDuration d = null;
+//      for (var e : subMap.entrySet()) {
+//        if (e.getValue()) {
+//          d = e.getKey();
+//          var topicEventsSubMap = readEventsSubmap.subMap(d.duration(), true, earliest.duration(), true);
+//          break;
+//        }
+//      }
+//      if (d == null) {
+//        continue;
+//      }
+//      int comp = d.compareTo(earliest);
+//      if (comp <= 0) {
+//        if (comp < 0) tasks.clear();
+//        //tasks.add(topic);
+//        earliest = d;
+//      }
+//    }
+//    if (tasks.isEmpty()) earliest = SubInstantDuration.MAX_VALUE;
+//    return Pair.of(earliest, tasks);
+//  }
+//
 //public String whatsThis(Topic<?> topic) {
 //    return missionModel.getResources().entrySet().stream().filter(e -> e.getValue().toString()).findFirst()
 //}
 
 
-  public Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads(SubInstantDuration after, SubInstantDuration before) {
-    // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
-    // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
+  public Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>> earliestStaleReads(SubInstantDuration after, SubInstantDuration before) {
+    // Reads are not sorted according to the event graph.  This function needs to support
+    // handling a task reading a cell more than once in a graph.
+    // DONE -- This case seems handled in that multiple read events are collected; elsewhere, the events are individually
+    //         tested stepping up to them.  If any of them fail, the task will be rescheduled on a SubInstantDuration
+    //         boundary.  So, we would need to clean out all of the tasks events in the graph anyway.
     var earliest = before;
-    final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
+    final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>();
     final var topicsStale = timeline.staleTopics.keySet();
     for (var topic : topicsStale) {
       var topicReads = getCombinedCellReadHistory(topic);
       if (topicReads == null || topicReads.isEmpty()) {
         continue;
       }
-      NavigableMap<SubInstantDuration, HashMap<TaskId, Event>> topicReadsAfter =
+      NavigableMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> topicReadsAfter =
           topicReads.subMap(after, true, earliest, true);
       if (topicReadsAfter == null || topicReadsAfter.isEmpty()) {
         continue;
       }
       for (var entry : topicReadsAfter.entrySet()) {
         var d = entry.getKey();
-        HashMap<TaskId, Event> taskIds = new HashMap<>();
+        HashMap<TaskId, Set<Event>> taskIds = new HashMap<>();
         // Don't include tasks which are being re-executed
         for (var e : entry.getValue().entrySet()) {
           if (!staleTasks.containsKey(e.getKey())) {
             taskIds.put(e.getKey(), e.getValue());
           }
         }
-//        // filter out tasks of removed activities
-//        // Moved and removed activities have
-//        var filteredStream = entry.getValue().entrySet().stream().filter(e -> !removedActivities.contains(e.getKey()) &&
-//                                                                              !(oldEngine.getSimulatedActivityIdForTaskId(e.getKey()) != null &&
-//                                                                                removedActivities.contains(oldEngine.getSimulatedActivityIdForTaskId(e.getKey()))));
-//        HashMap<TaskId, Event> taskIds = filteredStream.collect(() -> new HashMap<TaskId, Event>(),
-//                                                                (map, e) -> map.put(e.getKey(), e.getValue()),
-//                                                                (map1, map2) -> map1.putAll(map2));
         if (timeline.isTopicStale(topic, d)) {
           if (d.shorterThan(earliest)) {
             earliest = d;
@@ -853,7 +889,7 @@ public final class SimulationEngine implements AutoCloseable {
         if (!e.getValue() && staleStart != null) {  // have we found the end of the stale period
           staleEnd = e.getKey();
           conditionsAtTime =
-              oldEngine.getEarliestConditionsWaitingOnTopic(topic, staleStart, SubInstantDuration.min(staleEnd, earliest));
+              getEarliestConditionsWaitingOnTopic(topic, staleStart, SubInstantDuration.min(staleEnd, earliest));
           if (conditionsAtTime.isPresent()) break;
           staleStart = null;
           staleEnd = null;
@@ -863,7 +899,7 @@ public final class SimulationEngine implements AutoCloseable {
       // stale period never ended
       if (!conditionsAtTime.isPresent() && staleEnd == null) {
         conditionsAtTime =
-            oldEngine.getEarliestConditionsWaitingOnTopic(topic, staleStart, earliest);
+            getEarliestConditionsWaitingOnTopic(topic, staleStart, earliest);
         //continue;
       }
       if (conditionsAtTime.isEmpty()) continue;
@@ -885,7 +921,7 @@ public final class SimulationEngine implements AutoCloseable {
       SubInstantDuration before)
   {
     if (after.longerThan(before)) return Optional.empty();
-    var conditionHistoryforTopic = conditionHistoryByTopic.get(topic);
+    var conditionHistoryforTopic = getCombinedConditionHistoryByTopic().get(topic);
     if (conditionHistoryforTopic != null) {
       var topicSubMap = conditionHistoryforTopic.subMap(Range.closed(after, before));
       return topicSubMap.asMapOfRanges().entrySet().stream().findFirst();
@@ -1110,6 +1146,14 @@ public final class SimulationEngine implements AutoCloseable {
     return taskId;
   }
 
+  Set<ConditionId> getConditionIdsForTaskId(TaskId id) {
+    Set<ConditionId> s = conditionsForTask.get(id);
+    if (s == null && oldEngine != null) {
+      s = oldEngine.getConditionIdsForTaskId(id);
+    }
+    return s == null ? Collections.EMPTY_SET : s;
+  }
+
   private void rescheduleStaleTasks(SubInstantDuration time, Map<Topic<?>, Set<ConditionId>> staleConditionReads) {
     //Map<TaskId, HashSet<Pair<Topic<?>, Event>>> staleReads = new HashMap<>();
     Set<TaskId> processedTasks = new HashSet<>();
@@ -1138,15 +1182,15 @@ public final class SimulationEngine implements AutoCloseable {
    *
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
    */
-  public void rescheduleStaleTasks(Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
+  public void rescheduleStaleTasks(Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>> earliestStaleReads) {
     if (debug) System.out.println("rescheduleStaleTasks(" + earliestStaleReads + ")");
     // Test to see if read value has changed.  If so, reschedule the affected task
     var timeOfStaleReads = earliestStaleReads.getLeft();
-    for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>> entry : earliestStaleReads.getRight().entrySet()) {
+    for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>> entry : earliestStaleReads.getRight().entrySet()) {
       final var taskId = entry.getKey();
-      for (Pair<Topic<?>, Event> pair : entry.getValue()) {
+      for (Pair<Topic<?>, Set<Event>> pair : entry.getValue()) {
         final var topic = pair.getLeft();
-        final var noop = pair.getRight();
+        final var events = pair.getRight();
         // Need to step cell up to the point of the read
         // First, step up the cell to the time before the event graph where the read takes place and then
         // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
@@ -1156,26 +1200,30 @@ public final class SimulationEngine implements AutoCloseable {
                                                                              timeOfStaleReads.index()-1)) :
                               timeline.liveCells.getCells(topic).stream().findFirst().orElseThrow().cell;
         if (debug) System.out.println("rescheduleStaleTasks(): steppedCell = " + steppedCell + ", cell time = " + timeline.getCellTime(steppedCell));
-        final Cell<?> tempCell = steppedCell.duplicate();
-        timeline.putCellTime(tempCell,timeline.getCellTime(steppedCell));
-        timeline.stepUp(tempCell, timeOfStaleReads, noop);
-        timeline.putCellTime(tempCell, null);
+        boolean didSetTaskStale = false;
+        for (Event noop : events) {
+          final Cell<?> tempCell = steppedCell.duplicate();
+          timeline.putCellTime(tempCell,timeline.getCellTime(steppedCell));
+          timeline.stepUp(tempCell, timeOfStaleReads, noop);
+          timeline.putCellTime(tempCell, null);
 
-        Cell<?> oldCell = timeline.oldTemporalEventSource.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
-                                                                                                max(0, timeOfStaleReads.index()-1)));
-        if (debug) System.out.println("rescheduleStaleTasks(): oldCell = " + oldCell + ", cell time = " + timeline.oldTemporalEventSource.getCellTime(oldCell));
-        final Cell<?> tempOldCell = oldCell.duplicate();
-        timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.oldTemporalEventSource.getCellTime(oldCell));
-        timeline.oldTemporalEventSource.stepUp(tempOldCell, timeOfStaleReads, noop);
-        timeline.oldTemporalEventSource.putCellTime(tempOldCell, null);
+          Cell<?> oldCell = timeline.oldTemporalEventSource.getCell(topic, new SubInstantDuration(timeOfStaleReads.duration(),
+                                                                                                  max(0, timeOfStaleReads.index()-1)));
+          if (debug) System.out.println("rescheduleStaleTasks(): oldCell = " + oldCell + ", cell time = " + timeline.oldTemporalEventSource.getCellTime(oldCell));
+          final Cell<?> tempOldCell = oldCell.duplicate();
+          timeline.oldTemporalEventSource.putCellTime(tempOldCell,timeline.oldTemporalEventSource.getCellTime(oldCell));
+          timeline.oldTemporalEventSource.stepUp(tempOldCell, timeOfStaleReads, noop);
+          timeline.oldTemporalEventSource.putCellTime(tempOldCell, null);
 
           if (!tempCell.getState().equals(tempOldCell.getState())) {
             if (debug) System.out.println("rescheduleStaleTasks(): Stale read: new cell state (" + tempCell + ") != old cell state (" + tempOldCell + ")");
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads, noop);
+            didSetTaskStale = true;
             break;  // rescheduled task, so can move on to the next task
           }
-//        }
+        }
+        if (didSetTaskStale) break;
       }  // for Pair<Topic<?>, Event>
     }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
   }
@@ -1412,28 +1460,28 @@ public final class SimulationEngine implements AutoCloseable {
     if (debug) System.out.println("removeTaskHistory(taskId=" + taskId + " : " + getNameForTask(taskId) + ", startingAfterTime=" + startingAfterTime + ", afterEvent=" + afterEvent + ") END");
   }
 
-  private static ExecutorService getLoomOrFallback() {
-    // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
-    // This approach is inspired by that of Javalin 5.
-    // https://github.com/javalin/javalin/blob/97e9e23ebe8f57aa353bc7a45feb560ad61e50a0/javalin/src/main/java/io/javalin/util/ConcurrencyUtil.kt#L48-L51
-    try {
-      // Use reflection to avoid needing `--enable-preview` at compile-time.
-      // If the runtime JVM is run with `--enable-preview`, this should succeed.
-      return (ExecutorService) Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
-    } catch (final ReflectiveOperationException ex) {
-      return Executors.newCachedThreadPool($ -> {
-        final var t = new Thread($);
-        // TODO: Make threads non-daemons.
-        //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
-        //  proper model lifecycle management.
-        //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
-        //  from a dead thread.
-        t.setDaemon(true);
-        return t;
-      });
-    }
-  }
-
+//  private static ExecutorService getLoomOrFallback() {
+//    // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
+//    // This approach is inspired by that of Javalin 5.
+//    // https://github.com/javalin/javalin/blob/97e9e23ebe8f57aa353bc7a45feb560ad61e50a0/javalin/src/main/java/io/javalin/util/ConcurrencyUtil.kt#L48-L51
+//    try {
+//      // Use reflection to avoid needing `--enable-preview` at compile-time.
+//      // If the runtime JVM is run with `--enable-preview`, this should succeed.
+//      return (ExecutorService) Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
+//    } catch (final ReflectiveOperationException ex) {
+//      return Executors.newCachedThreadPool($ -> {
+//        final var t = new Thread($);
+//        // TODO: Make threads non-daemons.
+//        //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
+//        //  proper model lifecycle management.
+//        //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
+//        //  from a dead thread.
+//        t.setDaemon(true);
+//        return t;
+//      });
+//    }
+//  }
+//
   /** Schedule a new task to be performed at the given time. */
   public <Output> SpanId scheduleTask(final Duration startTime, final TaskFactory<Output> state, TaskId taskIdToUse) {
     if (this.closed) throw new IllegalStateException("Cannot schedule task on closed simulation engine");
@@ -1829,20 +1877,91 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  // TODO !!!!!!!!
+//  public static <K1 extends Comparable<K1>, K2, V> RangeMapMap<K1, K2, V> deepMergeMapsFirstWins(
+//      RangeMapMap<K1, K2, V> m1, RangeMapMap<K1, K2, V> m2) {
+//    if (m1 == null) return m2;
+//    if (m2 == null || m2.asMapOfRanges().isEmpty()) return m1;
+//    if (m1.isEmpty()) return m2;
+////    Collector<Map<K2, V>, TreeMap, RangeMapMap> c = Collectors.toMap(t -> t.getKey(),
+////                     t -> t.getValue(),
+////                                                                     (v1, v2) -> (v1 instanceof TreeMap mm1 && v2 instanceof TreeMap mm2) ? (V)TemporalEventSource.deepMergeMapsFirstWins(mm1, mm2) : v1,
+////                                                                     TreeMap::new);
+//    return Stream.of(m1, m2).flatMap(m -> m.asMapOfRanges().entrySet().stream()).collect(TreeMap::new, (r, e) -> r.put(e.getKey(), e.getValue()), (r1, r2) -> {
+//      r1.putAll()
+//      return ;
+//    });
+//  }
+
   /**
    * During incremental simulation, a task may be re-run, in which case it can have a different history of condition
    * reads.  Thus, the previous read data must be hidden/removed by the current engine.
    * @return
    */
   private RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> getCombinedConditionHistory() {
-    return conditionHistory;
+    if (_combinedConditionHistory != null) return _combinedConditionHistory;
+    if (oldEngine == null) {
+      return conditionHistory;
+    }
+    // Clean history by getting the oldEngine's combined history and remove history for conditions whose tasks were
+    // removed (found in removedCellReadHistory)
+    RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> cleanedConditionHistory = null;
+      RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> oldHistory = oldEngine.getCombinedConditionHistory();
+      Set<TaskId> removedTasks = new HashSet<>();
+      removedCellReadHistory.values().forEach(removedTasks::addAll);
+      cleanedConditionHistory = new RangeMapMap<>(oldHistory);
+      for (var taskId : removedTasks) {
+        var conditions = conditionsForTask.get(taskId);
+        for (ConditionId c : conditions) {
+          cleanedConditionHistory.remove(_combinedConditionHistory.span(), c);
+        }
+      }
+    //}
+    var result = cleanedConditionHistory;
+    if (closed) {
+      result.merge(conditionHistory);
+      _combinedConditionHistory = result;
+    }
+    return result;
   }
+  private RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> _combinedConditionHistory = null;
 
-  // TODO !!!!!!!!
+  // TODO -- consider doing this like getCombinedCellReadHistory() and cache each topic separately
   private HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> getCombinedConditionHistoryByTopic() {
-    return conditionHistoryByTopic;
+    if (_combinedConditionHistoryByTopic != null) return _combinedConditionHistoryByTopic;
+    if (oldEngine == null) {
+      return conditionHistoryByTopic;
+    }
+    // Clean history by getting the oldEngine's combined history and remove history for conditions whose tasks were
+    // removed (found in removedCellReadHistory)
+    var tempCleanedConditionHistoryByTopic = new HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>>();
+    final HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> oldHistory =
+        oldEngine.getCombinedConditionHistoryByTopic();
+    Set<TaskId> removedTasks = new HashSet<>();
+    removedCellReadHistory.values().forEach(removedTasks::addAll);
+    for (Topic<?> t : oldHistory.keySet()) {
+      tempCleanedConditionHistoryByTopic.put(t, new RangeSetMap<>(oldHistory.get(t)));
+      var cleanedConditionHistoryForTopic = tempCleanedConditionHistoryByTopic.get(t);
+      for (var taskId : removedTasks) {
+        var conditions = oldEngine.getConditionIdsForTaskId(taskId);
+        if (conditions != null) {
+          for (ConditionId c : conditions) {
+            cleanedConditionHistoryForTopic.remove(cleanedConditionHistoryForTopic.span(), c);
+          }
+        }
+      }
+    }
+    var result = tempCleanedConditionHistoryByTopic;
+    Set<Topic<?>> topics = new HashSet<>(tempCleanedConditionHistoryByTopic.keySet());
+    topics.addAll(conditionHistoryByTopic.keySet());
+    if (closed) {
+      for (Topic<?> t : topics) {
+        result.computeIfAbsent(t, $ -> new RangeSetMap<>()).merge(conditionHistoryByTopic.get(t));
+      }
+      _combinedConditionHistoryByTopic = result;
+    }
+    return result;
   }
+  private HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> _combinedConditionHistoryByTopic = null;
 
   /**
    * Condition history records when a condition/task is waiting on different topics (i.e. cells).  Do not assume
@@ -1857,6 +1976,7 @@ public final class SimulationEngine implements AutoCloseable {
       throw new RuntimeException("No task waiting for conditionId " + conditionId);
     }
     taskForCondition.put(conditionId, task);  // Assumes only one task for a condition
+    conditionsForTask.computeIfAbsent(task, $ -> new HashSet<>()).add(conditionId);
     conditionHistory.add(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId, referencedTopics);
     referencedTopics.forEach(tt -> conditionHistoryByTopic
         .computeIfAbsent(tt, $ -> new RangeSetMap<>())
@@ -1885,6 +2005,18 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     conditionHistory.remove(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId);
+  }
+
+  // TODO?
+  private void removeConditionHistory(TaskId task) {
+    var conditions = conditionsForTask.get(task);
+    if (conditions == null && oldEngine != null) {
+      oldEngine.removeConditionHistory(task);
+    }
+    if (conditions == null) return;
+    for (ConditionId cid :  conditions) {
+
+    }
   }
 
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
@@ -2603,9 +2735,10 @@ public final class SimulationEngine implements AutoCloseable {
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
       if (isTaskStale(this.activeTask, currentTime)) {
-        // TODO: REVIEW: What if the task becomes stale in the middle of a sequence of events within the same
+        // TODONE: REVIEW: What if the task becomes stale in the middle of a sequence of events within the same
         //       timepoint/EventGraph?  Should this be emitting an event in that case?
         //       Is there a problem of combining the existing or old EventGraph with a new one?
+        // ANSWER: The task is conservatively considered stale before the EventGraph.
 
         // Create a noop event to mark when the read occurred in the EventGraph
         var noop = Event.create(queryTopic, query.topic(), activeTask);
