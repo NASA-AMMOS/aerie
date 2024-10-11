@@ -29,7 +29,7 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [plan_id, derivation_group_name, last_acknowledged_at]
+      columns: [plan_id, derivation_group_name]
       check: {}
   - role: user
     permission:
