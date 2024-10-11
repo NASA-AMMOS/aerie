@@ -6,6 +6,7 @@ import gov.nasa.ammos.aerie.merlin.driver.test.framework.TestRegistrar;
 import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.ResourceProfile;
 import gov.nasa.ammos.aerie.simulation.protocol.Simulator;
+import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.develop.MerlinDriverAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.RetracingDriverAdapter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -36,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IncrementalSimPropertyTests {
   private static final Simulator.Factory REGULAR_SIM_FACTORY = MerlinDriverAdapter::new;
-  private static final Simulator.Factory INCREMENTAL_SIM_FACTORY = RetracingDriverAdapter::new;
+  private static final Simulator.Factory INCREMENTAL_SIM_FACTORY = IncrementalSimAdapter::new;
 
   private static boolean failed = false;
 
@@ -67,13 +68,13 @@ public class IncrementalSimPropertyTests {
         .simulate(scenario.schedule().schedule2(), cancelSim::getValue)
         .getDiscreteProfiles();
 
-    new Timer().schedule(new TimerTask() {
-      @Override
-      public void run() {
-        cancelSim.setTrue();
-        System.out.println(scenario);
-      }
-    }, 30 * 1000);
+//    new Timer().schedule(new TimerTask() {
+//      @Override
+//      public void run() {
+//        cancelSim.setTrue();
+//        System.out.println(scenario);
+//      }
+//    }, 30 * 1000);
 
     if (!lastSegmentsEqual(regularProfiles, incrementalProfiles)) {
       if (!failed) {
@@ -83,6 +84,7 @@ public class IncrementalSimPropertyTests {
       scenario.resetTraces();
       regularSimulator.simulate(scenario.schedule().schedule2());
       scenario.shrinkToTraces();
+      System.out.println(scenario);
       assertEquals(regularProfiles, incrementalProfiles);
     }
   }

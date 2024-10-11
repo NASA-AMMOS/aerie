@@ -19,11 +19,13 @@ import java.util.Map;
 
 import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.call;
 import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.delay;
+import static gov.nasa.ammos.aerie.merlin.driver.test.framework.ModelActions.spawn;
 import static gov.nasa.ammos.aerie.merlin.driver.test.property.IncrementalSimPropertyTests.assertLastSegmentsEqual;
 import static gov.nasa.ammos.aerie.merlin.driver.test.property.Scenario.rightmostNumber;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Unit.UNIT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +34,58 @@ public class GeneratedTests {
   static final Simulator.Factory INCREMENTAL_SIMULATOR = IncrementalSimAdapter::new;
   static final Simulator.Factory REGULAR_SIMULATOR = MerlinDriverAdapter::new;
   static final Simulator.Factory RETRACING_SIMULATOR = RetracingDriverAdapter::new;
+
+  @Test
+  void test7() {
+    final var model = new TestRegistrar();
+    Cell[] cells = new Cell[4];
+    for (int i = 0; i < cells.length; i++) {
+      cells[i] = model.cell();
+    }
+    model.activity("DT1", it -> {
+       cells[0].emit(1);
+       delay(ZERO);
+       cells[0].get();
+     });
+    model.activity("DT2", it -> {
+      cells[0].emit(2);
+    });
+    for (int i = 0; i < cells.length; i++) {
+      final var cell = cells[i];
+      model.resource("cell" + i, () -> cell.get().toString());
+    }
+    final var schedule = new DualSchedule();
+    schedule.add(duration(10, SECONDS), "DT1");
+    schedule.thenAdd(duration(10, SECONDS), "DT2");
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    final var schedule1 = schedule.schedule1();
+    final var schedule2 = schedule.schedule2();
+
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var testSimulator = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+
+    {
+      System.out.println("Reference simulation 1");
+      final var referenceProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
+
+
+      System.out.println("Test simulation 1");
+      final var testProfiles = testSimulator.simulate(schedule1).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
+    }
+
+    {
+      System.out.println("Reference simulation 2");
+      final var referenceProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
+
+
+      System.out.println("Test simulation 2");
+      final var testProfiles = testSimulator.simulate(schedule2).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
+    }
+  }
 
   @Test
   void test6() {
@@ -61,27 +115,27 @@ public class GeneratedTests {
     final var schedule1 = schedule.schedule1();
     final var schedule2 = schedule.schedule2();
 
-    final var regularSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var retracingSimulator = RETRACING_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var simulatorUnderTest = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
 
     {
-      System.out.println("Regular simulation 1");
-      final var regularProfiles = regularSimulator.simulate(schedule1).discreteProfiles();
+      System.out.println("Reference simulation 1");
+      final var referenceProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
 
 
-      System.out.println("Retracing simulation 1");
-      final var retracingProfiles = retracingSimulator.simulate(schedule1).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation 1");
+      final var testProfiles = simulatorUnderTest.simulate(schedule1).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
     }
 
     {
-      System.out.println("Regular simulation 2");
-      final var regularProfiles = regularSimulator.simulate(schedule2).discreteProfiles();
+      System.out.println("Reference simulation 2");
+      final var referenceProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
 
 
-      System.out.println("Retracing simulation 2");
-      final var retracingProfiles = retracingSimulator.simulate(schedule2).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation 2");
+      final var testProfiles = simulatorUnderTest.simulate(schedule2).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
     }
   }
 
@@ -113,8 +167,8 @@ public class GeneratedTests {
     });
     model.resource("cell0", () -> cells[0].get().toString());
 
-    final var regularSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var retracingSimulator = RETRACING_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var testSimulator = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
 
     System.out.println("Schedule 1");
     {
@@ -124,11 +178,11 @@ public class GeneratedTests {
       schedule = schedule.plus(duration(15, SECONDS), "DT2");
 
       System.out.println("Regular simulation");
-      final var regularProfiles = regularSimulator.simulate(schedule).discreteProfiles();
+      final var referenceProfiles = referenceSimulator.simulate(schedule).discreteProfiles();
 
-      System.out.println("Retracing simulation");
-      final var retracingProfiles = retracingSimulator.simulate(schedule).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation");
+      final var testProfiles = testSimulator.simulate(schedule).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
     }
 
     System.out.println("Schedule 2");
@@ -138,11 +192,11 @@ public class GeneratedTests {
       schedule = schedule.plus(duration(5, SECONDS), "DT2");
       schedule = schedule.plus(duration(15, SECONDS), "DT2");
       System.out.println("Regular simulation");
-      final var regularProfiles = regularSimulator.simulate(schedule).discreteProfiles();
+      final var referenceProfiles = referenceSimulator.simulate(schedule).discreteProfiles();
 
-      System.out.println("Retracing simulation");
-      final var retracingProfiles = retracingSimulator.simulate(schedule).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation");
+      final var testProfiles = testSimulator.simulate(schedule).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
     }
   }
 
@@ -170,37 +224,37 @@ public class GeneratedTests {
     final var schedule2 = schedule.schedule2();
 
     final var incrementalSimulator = (Simulator) INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var regularSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
-    final var retracingSimulator = RETRACING_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var testSimulator = INCREMENTAL_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
 
     {
-      System.out.println("Regular simulation 1");
-      final var regularProfiles = regularSimulator.simulate(schedule1).discreteProfiles();
+      System.out.println("Reference simulation 1");
+      final var referenceProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
 
 
-      System.out.println("Retracing simulation 1");
-      final var retracingProfiles = retracingSimulator.simulate(schedule1).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation 1");
+      final var testProfiles = testSimulator.simulate(schedule1).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
 
 
       System.out.println("Incremental simulation 1");
       final var incrementalProfiles = incrementalSimulator.simulate(schedule1).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, incrementalProfiles);
+      assertLastSegmentsEqual(referenceProfiles, incrementalProfiles);
     }
 
     {
-      System.out.println("Regular simulation 2");
-      final var regularProfiles = regularSimulator.simulate(schedule2).discreteProfiles();
+      System.out.println("Reference simulation 2");
+      final var referenceProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
 
 
-      System.out.println("Retracing simulation 2");
-      final var retracingProfiles = retracingSimulator.simulate(schedule2).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, retracingProfiles);
+      System.out.println("Test simulation 2");
+      final var testProfiles = testSimulator.simulate(schedule2).discreteProfiles();
+      assertLastSegmentsEqual(referenceProfiles, testProfiles);
 
 
       System.out.println("Incremental simulation 2");
       final var incrementalProfiles = incrementalSimulator.simulate(schedule2).discreteProfiles();
-      assertLastSegmentsEqual(regularProfiles, incrementalProfiles);
+      assertLastSegmentsEqual(referenceProfiles, incrementalProfiles);
     }
   }
 
@@ -339,14 +393,14 @@ public class GeneratedTests {
         UNIT,
         Instant.EPOCH,
         HOUR);
-    final var regularSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
 
     {
-      System.out.println("Regular simulation 1");
-      final var regularProfiles = regularSimulator.simulate(schedule1).discreteProfiles();
+      System.out.println("Reference simulation 1");
+      final var referenceProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
 
       final var expected = new LinkedHashMap<String, String>();
-      for (final var entry : regularProfiles.entrySet()) {
+      for (final var entry : referenceProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
 
@@ -362,11 +416,11 @@ public class GeneratedTests {
     }
 
     {
-      System.out.println("Regular simulation 2");
-      final var regularProfiles = regularSimulator.simulate(schedule2).discreteProfiles();
+      System.out.println("Reference simulation 2");
+      final var referenceProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
 
       final var expected = new LinkedHashMap<String, String>();
-      for (final var entry : regularProfiles.entrySet()) {
+      for (final var entry : referenceProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
 
@@ -418,18 +472,18 @@ public class GeneratedTests {
         UNIT,
         Instant.EPOCH,
         HOUR);
-    final var regularSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
+    final var referenceSimulator = REGULAR_SIMULATOR.create(model.asModelType(), UNIT, Instant.EPOCH, HOUR);
 
     Schedule schedule1 = Schedule.empty();
     {
       for (final var directiveType : List.of("DT1", "DT2", "DT3")) {
         schedule1 = schedule1.plus(Schedule.build(Pair.of(SECOND, new Directive(directiveType, Map.of()))));
       }
-      System.out.println("Regular simulation 1");
-      final var regularProfiles = regularSimulator.simulate(schedule1).discreteProfiles();
+      System.out.println("Reference simulation 1");
+      final var referenceProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
 
       final var expected = new LinkedHashMap<String, String>();
-      for (final var entry : regularProfiles.entrySet()) {
+      for (final var entry : referenceProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
 
@@ -449,11 +503,11 @@ public class GeneratedTests {
       for (final var entry : schedule1.entries()) {
         schedule2 = schedule2.setStartTime(entry.id(), entry.startTime().plus(SECOND));
       }
-      System.out.println("Regular simulation 2");
-      final var regularProfiles = regularSimulator.simulate(schedule2).discreteProfiles();
+      System.out.println("Reference simulation 2");
+      final var referenceProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
 
       final var expected = new LinkedHashMap<String, String>();
-      for (final var entry : regularProfiles.entrySet()) {
+      for (final var entry : referenceProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
 
