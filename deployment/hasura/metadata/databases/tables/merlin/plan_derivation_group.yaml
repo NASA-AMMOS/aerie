@@ -33,7 +33,7 @@ insert_permissions:
       check: {}
   - role: user
     permission:
-      columns: [plan_id, derivation_group_name, last_acknowledged_at]
+      columns: [plan_id, derivation_group_name]
       check: {
         "plan": {
           "_or": [

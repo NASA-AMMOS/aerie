@@ -5,10 +5,10 @@ create table merlin.plan_derivation_group (
 
     constraint plan_derivation_group_pkey
       primary key (plan_id, derivation_group_name),
-    constraint plan_derivation_group_references_plan_id
+    constraint pdg_plan_exists
       foreign key (plan_id)
       references merlin.plan(id),
-    constraint plan_derivation_group_references_derivation_group_name
+    constraint pdg_derivation_group_exists
       foreign key (derivation_group_name)
       references merlin.derivation_group(name)
 );

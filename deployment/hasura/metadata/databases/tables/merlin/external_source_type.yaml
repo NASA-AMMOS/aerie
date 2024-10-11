@@ -4,14 +4,14 @@ table:
 configuration:
   custom_name: "external_source_type"
 array_relationships:
-  - name: external_source
+  - name: external_sources
     using:
       foreign_key_constraint_on:
         column: source_type_name
         table:
           name: external_source
           schema: merlin
-  - name: derivation_group
+  - name: derivation_groups
     using:
       foreign_key_constraint_on:
         column: source_type_name

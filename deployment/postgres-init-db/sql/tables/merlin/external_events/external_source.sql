@@ -19,7 +19,11 @@ create table merlin.external_source (
       references merlin.external_source_type(name),
     constraint external_source_type_matches_derivation_group
       foreign key (derivation_group_name)
-      references merlin.derivation_group (name)
+      references merlin.derivation_group (name),
+    constraint external_source_owner_exists
+      foreign key (owner) references permissions.users
+      on update cascade
+      on delete set null
 );
 
 comment on table merlin.external_source is e''
@@ -46,8 +50,7 @@ comment on column merlin.external_source.metadata is e''
   'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
   'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 comment on column merlin.external_source.owner is e''
-  'The user who uploaded the external source.\n'
-  'Set by Hasura.';
+  'The user who uploaded the external source.';
 
 -- if an external source is linked to a plan it cannot be deleted
 create function merlin.external_source_pdg_association_delete()

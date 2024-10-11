@@ -4,7 +4,7 @@ table:
 configuration:
   custom_name: "external_event_type"
 array_relationships:
-  - name: external_event
+  - name: external_events
     using:
       foreign_key_constraint_on:
         column: event_type_name
