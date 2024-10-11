@@ -6,12 +6,7 @@ configuration:
 object_relationships:
   - name: external_source_type
     using:
-      manual_configuration:
-        remote_table:
-          name: external_source_type
-          schema: merlin
-        column_mapping:
-          source_type_name: name
+      foreign_key_constraint_on: source_type_name
 array_relationships:
   - name: external_sources
     using:
