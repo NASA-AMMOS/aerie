@@ -38,7 +38,7 @@ public class GeneratedTests {
   @Test
   void test7() {
     final var model = new TestRegistrar();
-    Cell[] cells = new Cell[4];
+    Cell[] cells = new Cell[1];
     for (int i = 0; i < cells.length; i++) {
       cells[i] = model.cell();
     }
