@@ -7,7 +7,8 @@ create table merlin.derivation_group (
       primary key (name),
     constraint derivation_group_references_external_source_type
       foreign key (source_type_name)
-      references merlin.external_source_type(name),
+      references merlin.external_source_type(name)
+      on delete restrict,
     constraint derivation_group_owner_exists
       foreign key (owner) references permissions.users
       on update cascade

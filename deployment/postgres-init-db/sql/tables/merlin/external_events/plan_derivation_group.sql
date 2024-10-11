@@ -7,10 +7,12 @@ create table merlin.plan_derivation_group (
       primary key (plan_id, derivation_group_name),
     constraint pdg_plan_exists
       foreign key (plan_id)
-      references merlin.plan(id),
+      references merlin.plan(id)
+      on delete cascade,
     constraint pdg_derivation_group_exists
       foreign key (derivation_group_name)
       references merlin.derivation_group(name)
+      on delete restrict
 );
 
 comment on table merlin.plan_derivation_group is e''
