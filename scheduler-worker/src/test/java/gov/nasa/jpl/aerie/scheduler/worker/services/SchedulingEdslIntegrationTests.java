@@ -2479,7 +2479,7 @@ public class SchedulingEdslIntegrationTests {
                  planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var biteBanana = planByActivityType.get("BiteBanana").stream().map((bb) -> bb.startOffset()).toList();
-    assertEquals(biteBanana.size(), 2);
+    assertEquals(2, biteBanana.size());
   }
 
   @Test
