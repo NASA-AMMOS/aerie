@@ -155,6 +155,15 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     Effect r = null;
     while (true) {
       if (g == null) break;
+      // TODO -- use switch on type like this for expected efficiency improvement
+      //      switch (g) {
+      //        case EventGraph.Empty ee:
+      //          r = trait.empty();
+      //          break;
+      //        case EventGraph.Atom<Event> gg:
+      //          r = substitution.apply(gg.atom());
+      //          break;
+      //      }
       if (g instanceof EventGraph.Empty) {
         r = trait.empty();
       } else if (g instanceof EventGraph.Atom<Event> gg) {
