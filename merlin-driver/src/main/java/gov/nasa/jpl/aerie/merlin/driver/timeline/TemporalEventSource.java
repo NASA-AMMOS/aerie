@@ -28,7 +28,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
   public static boolean alwaysfreezable = false; // HACK -- thread unfriendly
   public static boolean neverfreezable = false; // HACK -- thread unfriendly
   public static boolean freezable = alwaysfreezable; // HACK -- thread unfriendly
-  public static boolean debug = true;
+  public static boolean debug = false;
   private boolean frozen = false;
   private SubInstantDuration timeFroze = null;
   public LiveCells liveCells;
@@ -239,7 +239,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
                                                                                           TreeMap::new));
   }
 
-  private Duration getTimeForEventGraph(EventGraph<Event> g) {
+  public Duration getTimeForEventGraph(EventGraph<Event> g) {
     var time = timeForEventGraph.get(g);
     if (time == null && oldTemporalEventSource != null) {
       time = oldTemporalEventSource.getTimeForEventGraph(g);
@@ -247,7 +247,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     return time;
   }
 
-  private Set<TaskId> getTasksForEventGraph(EventGraph<Event> g) {
+  public Set<TaskId> getTasksForEventGraph(EventGraph<Event> g) {
     var tasks = tasksForEventGraph.get(g);
     if (tasks == null && oldTemporalEventSource != null) {
       tasks = oldTemporalEventSource.getTasksForEventGraph(g);

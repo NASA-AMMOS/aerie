@@ -73,6 +73,7 @@ import static java.lang.Integer.max;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  private final Map<TaskId, Event> tasksNeedingTimeAlignment = new HashMap<>();
   private boolean closed = false;
 
   public static boolean debug = false;
@@ -104,7 +105,6 @@ public final class SimulationEngine implements AutoCloseable {
   private final HashMap<Topic<?>, RangeSetMap<SubInstantDuration, ConditionId>> conditionHistoryByTopic = new HashMap<>();
   RangeMapMap<SubInstantDuration, ConditionId, Set<Topic<?>>> conditionHistory = new RangeMapMap<>();
 
-  private final Map<ConditionId, TaskId> taskForCondition = new HashMap<>();
   private final Map<TaskId, Set<ConditionId>> conditionsForTask = new HashMap<>();
 
   private final MissionModel<?> missionModel;
@@ -1071,7 +1071,7 @@ public final class SimulationEngine implements AutoCloseable {
    * @param afterEvent
    */
   public void setTaskStale(TaskId taskId, SubInstantDuration time, final Event afterEvent) {
-    if (debug) System.out.println("setTaskStale(" + taskId + ", " + time + ", afterEvent=" + afterEvent + ")");
+    if (debug) System.out.println("setTaskStale(" + taskId + " (" + getNameForTask(taskId) + "), " + time + ", afterEvent=" + afterEvent + ")");
     var staleTime = staleTasks.get(taskId);
     if (staleTime != null) {
       if (staleTime.shorterThan(time) || (staleTime.isEqualTo(time) &&
@@ -1123,7 +1123,7 @@ public final class SimulationEngine implements AutoCloseable {
         throw new RuntimeException("Can't find task start!");
       }
     }
-    rescheduleTask(parentId, taskStart);
+    rescheduleTask(parentId, taskStart, afterEvent);
     removeTaskHistory(parentId, time, afterEvent);
   }
 
@@ -1139,11 +1139,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   TaskId getTaskIdForConditionId(ConditionId id) {
-    TaskId taskId = taskForCondition.get(id);
-    if (taskId == null && oldEngine != null) {
-      taskId = oldEngine.getTaskIdForConditionId(id);
-    }
-    return taskId;
+    return id.sourceTask();
   }
 
   Set<ConditionId> getConditionIdsForTaskId(TaskId id) {
@@ -1157,18 +1153,16 @@ public final class SimulationEngine implements AutoCloseable {
   private void rescheduleStaleTasks(SubInstantDuration time, Map<Topic<?>, Set<ConditionId>> staleConditionReads) {
     //Map<TaskId, HashSet<Pair<Topic<?>, Event>>> staleReads = new HashMap<>();
     Set<TaskId> processedTasks = new HashSet<>();
+    removedCellReadHistory.values().forEach(processedTasks::addAll); // check if just rescheduled for stale read
     for (var e : staleConditionReads.entrySet()) {
-      Topic<?> topic = e.getKey();
       for (ConditionId c : e.getValue()) {
         TaskId taskId = getTaskIdForConditionId(c);
         if (!processedTasks.contains(taskId)) {
           setTaskStale(taskId, time, null);
           processedTasks.add(taskId);
         }
-        //staleReads.computeIfAbsent(taskId, $ -> new HashSet<>()).add(Pair.of(topic, null));
       }
     }
-    //rescheduleStaleTasks(Pair.of(time, staleReads));
   }
 
 
@@ -1561,6 +1555,7 @@ public final class SimulationEngine implements AutoCloseable {
       // NOTE: No, even if only the start time changed, effects could depend on the start time.  A new interface would
       // NOTE: be needed to convey how to determine staleness.
     }
+    tasksNeedingTimeAlignment.remove(taskId);
     return staleTime.noLongerThan(timeOffset);
   }
 
@@ -1975,7 +1970,6 @@ public final class SimulationEngine implements AutoCloseable {
     if (task == null) {
       throw new RuntimeException("No task waiting for conditionId " + conditionId);
     }
-    taskForCondition.put(conditionId, task);  // Assumes only one task for a condition
     conditionsForTask.computeIfAbsent(task, $ -> new HashSet<>()).add(conditionId);
     conditionHistory.add(Range.closed(curTime(), SubInstantDuration.MAX_VALUE), conditionId, referencedTopics);
     referencedTopics.forEach(tt -> conditionHistoryByTopic
@@ -2647,7 +2641,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A handle for processing requests from a modeled resource or condition. */
   public final class EngineQuerier<Job> implements Querier {
-    private final SubInstantDuration currentTime;
+    private SubInstantDuration currentTime;
     public final TaskFrame<Job> frame;
     public final Set<Topic<?>> referencedTopics = new HashSet<>();
     private final Optional<Triple<Topic<Topic<?>>, TaskId, SpanId>> queryTrackingInfo;
@@ -2680,14 +2674,17 @@ public final class SimulationEngine implements AutoCloseable {
       final var state$ = this.frame.getState(query.query());
 
       this.queryTrackingInfo.ifPresent(info -> {
-        if (isTaskStale(info.getMiddle(), currentTime)) {
-          final SubInstantDuration t = staleTasks.get(info.getMiddle());
-          var causalIndex = this.frame.tip.points.length;
-          var staleIndex = staleCausalEventIndex.get(info.getMiddle());
+        TaskId taskId = info.getMiddle();
+        if (oldEngine != null && tasksNeedingTimeAlignment.containsKey(taskId)) {
+          checkForTimeAlignment(taskId, query.topic());
+          this.currentTime = curTime();
+        }
+
+        if (isTaskStale(taskId, currentTime)) {
           // Create a noop event to mark when the read occurred in the EventGraph
-          var noop = Event.create(info.getLeft(), query.topic(), info.getMiddle());
+          var noop = Event.create(info.getLeft(), query.topic(), taskId);
           this.frame.emit(noop);
-          putInCellReadHistory(query.topic(), info.getMiddle(), noop, currentTime);
+          putInCellReadHistory(query.topic(), taskId, noop, currentTime);
         }
       });
 
@@ -2701,9 +2698,75 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  /**
+   * Reset the current time to the SubInstantDuration that corresponds to the first event
+   * for a task for the specified topic in the oldEngine's history. This is to make sure that
+   * the execution of this task is timed such that it becomes stale at the right time.
+   * If this first event is the cell read event that turns the task stale, the time will be updated
+   * appropriately.  If an initial waiting condition is the reason for staleness, this isn't
+   * guaranteed to work.
+   *
+   * @param taskId the task that may be turning stale
+   * @param topic the topic of the read or emit event, whose time from past sim history will be used
+   *              as the new current time
+   */
+  private void checkForTimeAlignment(TaskId taskId, Topic<?> topic) {
+    if (oldEngine == null || !tasksNeedingTimeAlignment.containsKey(taskId)) {
+      return;
+    }
+    final TreeMap<Duration, List<EventGraph<Event>>> eventsForTask = oldEngine.getCombinedEventsByTask(taskId);
+    // The list of EventGraphs in eventsForTask represents all commits at the Duration, so the step index for a
+    // SubInstantDuration can be inferred.
+    var stepIndex = 0;
+    for (var eventGraph : eventsForTask.firstEntry().getValue()) { // Can assume the first entry has it because the time just needs to be set for the first event
+      Duration d = eventsForTask.firstEntry().getKey();
+      var eventsMatchingThisOne = eventGraph.filter(event -> {
+        if (!event.provenance().equals(taskId)) return false;
+        if (event.topic().equals(topic)) return true;
+        var x = event.extract(defaultActivityTopic);
+        if (x.isPresent() && topic.equals(x.get())) return true;
+        return false;
+      });
+      if (eventsMatchingThisOne.countNonEmpty() > 0) {
+        Duration eventTime = oldEngine.timeline.getTimeForEventGraph(eventGraph);
+        if (!d.equals(eventTime)) {
+          System.err.println("Unexpected time of first event for rescheduled task!  " + d + " != " + eventTime);
+          Thread.dumpStack();
+        }
+        // Need to get stepIndex
+        var newTime = new SubInstantDuration(eventTime, stepIndex);
+        setCurTime(newTime);  // TODO -- create a SubInstantDuration.of() to save instances in a symbol table to reduce memory usage
+        tasksNeedingTimeAlignment.remove(taskId);
+        if (debug) System.out.println("checkForTimeAlignment(" + taskId + " (" + getNameForTask(taskId) + "), " + topic + "): setting current time to " + newTime);
+        return;
+      }
+      ++stepIndex;
+    }
+    if (false) {
+      throw new RuntimeException("Couldn't correlate event by " + taskId + " (" + getNameForTask(taskId) + ") on " + topic + " with history!  " + eventsForTask.firstEntry());
+    } else {
+      if (debug) System.out.println("Assuming timing is self-correlating since we couldn't correlate event by " + taskId + " (" + getNameForTask(taskId) + ") on " + topic + " with history!  " + eventsForTask.firstEntry());
+    }
+  }
+
+  public SubInstantDuration getSubInstantDurationForEvent(EventGraph<Event> eventGraph) {
+    Duration time = timeline.getTimeForEventGraph(eventGraph);
+    var commitsAtTime = timeline.getCombinedCommitsByTime().get(time);
+    int stepIndex = 0;
+    for (var commit : commitsAtTime) {
+      if (commit.events() == eventGraph) {
+        return new SubInstantDuration(time, stepIndex);
+      }
+      ++stepIndex;
+    }
+    throw new RuntimeException("Couldn't find EventGraph in commit history!  " + eventGraph);
+  }
+
+  // Fix time by matching the event
+
   /** A handle for processing requests and effects from a modeled task. */
   private final class EngineScheduler implements Scheduler {
-    private final SubInstantDuration currentTime;
+    private SubInstantDuration currentTime;
     private TaskId activeTask;
     private SpanId span;
     private final Optional<TaskId> caller;
@@ -2734,6 +2797,8 @@ public final class SimulationEngine implements AutoCloseable {
 
       // Don't emit a noop event for the read if the task is not yet stale.
       // The time that this task becomes stale was determined when it was created.
+      checkForTimeAlignment(activeTask, query.topic());
+      currentTime = curTime();
       if (isTaskStale(this.activeTask, currentTime)) {
         // TODONE: REVIEW: What if the task becomes stale in the middle of a sequence of events within the same
         //       timepoint/EventGraph?  Should this be emitting an event in that case?
@@ -2755,6 +2820,8 @@ public final class SimulationEngine implements AutoCloseable {
     @Override
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       if (debug) System.out.println("emit(" + event + ", " + topic + ")");
+      checkForTimeAlignment(activeTask, topic);
+      this.currentTime = curTime();
       if (debug) System.out.println("emit(): isTaskStale() --> " + isTaskStale(this.activeTask, this.currentTime));
       if (isTaskStale(this.activeTask, this.currentTime)) {
         // Append this event to the timeline.
@@ -2764,6 +2831,8 @@ public final class SimulationEngine implements AutoCloseable {
           SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
         }
         SimulationEngine.this.invalidateTopic(topic, this.currentTime.duration());
+      } else {
+        if (debug) System.out.println("emit(): not emitting because task is being rerun and is not yet stale.isTopicStale(" + topic + ") --> " + timeline.isTopicStale(topic, this.currentTime));
       }
     }
 
@@ -2879,10 +2948,13 @@ public final class SimulationEngine implements AutoCloseable {
     final SerializableTopic<T> sTopic = (SerializableTopic<T>) getMissionModel().getTopics().get(inputTopic);
     if (sTopic == null) return; // ignoring unregistered activity types!
     final var activityType = sTopic.name().substring("ActivityType.Input.".length());
+    startActivity(new SerializedActivity(activityType, sTopic.outputType().serialize(activity).asMap().orElseThrow()),
+                  activeSpan);
+  }
 
-    spanInfo.input.put(
-        activeSpan,
-        new SerializedActivity(activityType, sTopic.outputType().serialize(activity).asMap().orElseThrow()));
+  private void startActivity(SerializedActivity serializedActivity, final SpanId activeSpan) {
+    if (trace) System.out.println("startActivity(" + serializedActivity + ", " + activeSpan + ")");
+    spanInfo.input.put(activeSpan, serializedActivity);
   }
 
   private <T> void endActivity(T result, Topic<T> outputTopic, SpanId activeSpan) {
@@ -2891,14 +2963,6 @@ public final class SimulationEngine implements AutoCloseable {
     spanInfo.output.put(
         activeSpan,
         sTopic.outputType().serialize(result));
-  }
-
-  public static <E, T>
-  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
-    return executor -> scheduler -> {
-      scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler);
-    };
   }
 
   private boolean isActivity(final TaskId taskId) {
@@ -3055,12 +3119,15 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /**
-   * This method gets a {@link TaskFactory} for the old {@link TaskId} and calls {@link SimulationEngine#scheduleTask(Duration, TaskFactory, TaskId)}
+   * This method gets a {@link TaskFactory} for the old {@link TaskId} and calls
+   * {@link SimulationEngine#scheduleTask(Duration, TaskFactory, TaskId)}
+   *
    * @param taskId
    * @param startOffset
+   * @param afterEvent
    */
-  public void rescheduleTask(TaskId taskId, Duration startOffset) {  // TODO -- don't we need the startOffset to be a SubInstantDuration?
-    if (debug) System.out.println("rescheduleTask(" + taskId + ", " + startOffset + ")");
+  public void rescheduleTask(TaskId taskId, Duration startOffset, final Event afterEvent) {  // TODO -- don't we need the startOffset to be a SubInstantDuration?
+    if (debug) System.out.println("rescheduleTask(" + taskId + " (" + getNameForTask(taskId) + "), " + startOffset + ")");
     if (oldEngine.isDaemonTask(taskId)) {
       if (trace) System.out.println("rescheduleTask(" + taskId + "): is daemon task");
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
@@ -3098,7 +3165,21 @@ public final class SimulationEngine implements AutoCloseable {
                             .formatted(serializedActivity.getTypeName(), ex.toString()));
       }
       // TODO: What if there is no activityDirectiveId?
-      scheduleTask(startOffset, emitAndThen(activityDirectiveId, defaultActivityTopic, task), taskId);
+      if (activityDirectiveId != null) {
+        scheduleTask(startOffset, //emitAndThen(activityDirectiveId, defaultActivityTopic, task),
+                     executor1 -> scheduler1 -> {
+                       this.startDirective(activityDirectiveId, null, spanId);
+                       return task.create(executor1).step(scheduler1);
+                     },
+                     taskId);
+      } else {
+        scheduleTask(startOffset,
+                     executor1 -> scheduler1 -> {
+                       this.startActivity(serializedActivity, spanId);
+                       return task.create(executor1).step(scheduler1);
+                     },
+                     taskId);
+      }
       // TODO: No need to emit(), right?  So, what about below instead?
       // scheduleTask(startOffset, task, taskId);
     } else {
@@ -3114,6 +3195,13 @@ public final class SimulationEngine implements AutoCloseable {
                                    (factory == null ? " because there is no TaskFactory." : "."));
       }
     }
+
+    // The 0 here may not be right, so we use an EventGraph instead of the time to determine when we've reached
+    // the stale time.  But, we need the accurate time to keep cell times at least.  So, we lookup
+    // the correct time of the first event based on the history.  So, when the activity generates its first event,
+    // we align it with the event history.  If there is no event then the timing isn't a problem.
+    setCurTime(new SubInstantDuration(startOffset, 0));
+    tasksNeedingTimeAlignment.put(taskId, afterEvent);
   }
 
   /** A representation of a job processable by the {@link SimulationEngine}. */
