@@ -92,14 +92,6 @@ public final class MissionModel<Model> {
     return MissionModel.this.daemonIds.keySet().contains(state);
   }
 
-  /**
-   * @return whether daemons should be rerun when reusing a past simulation.
-   */
-  public boolean rerunDaemons() {
-    return false;  // TODO: This should be specified in the adaptation somehow.
-                   //       Default should be false, but unit tests need it true.
-  }
-
   public Map<String, Resource<?>> getResources() {
     return this.resources;
   }

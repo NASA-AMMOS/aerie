@@ -156,7 +156,9 @@ public final class SimulationEngine implements AutoCloseable {
   private Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
-  private Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
+  private Map<TaskId, List<TaskId>> taskChildren = new HashMap<>();
+  /** Whether the task was called from its parent instead of spawned */
+  private HashSet<TaskId> calledTasks = new HashSet<>();
 
   /** Tasks that have been scheduled, but not started */
   private final Map<TaskId, Duration> unstartedTasks;
@@ -307,7 +309,7 @@ public final class SimulationEngine implements AutoCloseable {
     taskParent = new HashMap<>(other.taskParent);
     taskChildren = new HashMap<>();
     for (final var entry : other.taskChildren.entrySet()) {
-      taskChildren.put(entry.getKey(), new HashSet<>(entry.getValue()));
+      taskChildren.put(entry.getKey(), new ArrayList<>(entry.getValue()));
     }
     taskToSpanMap = new HashMap<>(other.taskToSpanMap);
     spanToSimulatedActivityId = other.spanToSimulatedActivityId == null ? null :
@@ -1084,31 +1086,42 @@ public final class SimulationEngine implements AutoCloseable {
       return;
     }
     // find parent task to execute and mark parents stale
+    TaskId childId = null;
     TaskId parentId = taskId;
+    TaskId taskWithFactory = taskId;
     while (parentId != null) {
-      staleTasks.put(parentId, time);
-      staleEvents.put(parentId, afterEvent);
-      // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
-      if (oldEngine.getFactoryForTaskId(parentId) != null) {
-        if (trace) System.out.println("setTaskStale(" + taskId + "): found factory for " + parentId);
-        break;
+      // Don't set the parent stale unless it is calling the child (instead of spawning)
+      boolean parentStale = childId == null || isTaskCalled(childId);
+      if (parentStale) {
+        if (trace) System.out.println("setTaskStale(" + taskId + "): adding staleness entry for " + parentId);
+        staleTasks.put(parentId, time);
+        staleEvents.put(parentId, afterEvent); // TODO -- more efficient to have one map with a pair of (time, afterEvent)
       }
-      if (oldEngine.isActivity(parentId)) {
-        if (trace) System.out.println("setTaskStale(" + taskId + "): isActivity(" + parentId + ") = true");
-        break;
-      }
-      if (oldEngine.isDaemonTask(parentId)) {
-        if (trace) System.out.println("setTaskStale(" + taskId + "): isDaemonTask(" + parentId + ") = true");
-        break;
+      // Need task factory for the highest stale parent, or for its lowest parent if it has no task factory
+      if (parentStale || taskWithFactory == null) {
+        // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
+        if (oldEngine.getFactoryForTaskId(parentId) != null) {
+          if (trace) System.out.println("setTaskStale(" + taskId + "): found factory for " + parentId);
+          taskWithFactory = parentId;
+        } else
+        if (oldEngine.isActivity(parentId)) {
+          if (trace) System.out.println("setTaskStale(" + taskId + "): isActivity(" + parentId + ") = true");
+          taskWithFactory = parentId;
+        } else
+        if (oldEngine.isDaemonTask(parentId)) {
+          if (trace) System.out.println("setTaskStale(" + taskId + "): isDaemonTask(" + parentId + ") = true");
+          taskWithFactory = parentId;
+        }
       }
       var nextParentId = oldEngine.getTaskParent(parentId);
       if (trace) System.out.println("setTaskStale(" + taskId + "): parent of " + parentId + " is " + nextParentId);
       if (nextParentId == null) break;
+      childId = parentId;
       parentId = nextParentId;
     }
 
     Duration taskStart = null;
-    var spanId = oldEngine.taskToSpanMap.get(parentId);
+    var spanId = oldEngine.taskToSpanMap.get(taskWithFactory);
     if (spanId != null) {
       var span = oldEngine.spans.get(spanId);
       if (span != null) {
@@ -1116,15 +1129,21 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
     if (taskStart == null) {
-      final ExecutionState<?> execState = oldEngine.getTaskExecutionState(parentId);
+      final ExecutionState<?> execState = oldEngine.getTaskExecutionState(taskWithFactory);
       if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
       else {
         //taskStart = Duration.ZERO;
         throw new RuntimeException("Can't find task start!");
       }
     }
-    rescheduleTask(parentId, taskStart, afterEvent);
-    removeTaskHistory(parentId, time, afterEvent);
+    rescheduleTask(taskWithFactory, taskStart, afterEvent);
+    removeTaskHistory(taskWithFactory, time, afterEvent);
+  }
+
+  private boolean isTaskCalled(TaskId childId) {
+    if (calledTasks.contains(childId)) return true;
+    if (oldEngine != null) return oldEngine.isTaskCalled(childId); // TODO -- this is inefficient -- need to stop looking if task first introduced in this engine
+    return false;
   }
 
   private boolean eventPrecedes(Event e1, Event e2, SubInstantDuration time) {
@@ -1754,7 +1773,7 @@ public final class SimulationEngine implements AutoCloseable {
           if (this.blockedTasks.get($).decrementAndGet() == 0) {
             this.blockedTasks.remove($);
             if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(blocked caller TaskId = " + $ + ", " + currentTime.duration() + ")");
-            wireTasksAndSpans(task, $, null, null);
+            wireTasksAndSpans(task, $, null, null, true);
 
             this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime.duration()));
           }
@@ -1769,12 +1788,22 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       case TaskStatus.CallingTask<Output> s -> {
+        final boolean daemonTaskOrSpawn = daemonTasks.contains(task) || getMissionModel().isDaemon(s.child());
+
+        // Reuse the child ids of this task from the old engine if possible
+        final TaskId childTask = getNextChildTaskId(task, currentTime);
+
+        if (daemonTaskOrSpawn) {
+          daemonTasks.add(task);
+        }
+
         // Prepare a span for the child task.
         final var childSpan = switch (s.childSpan()) {
           case Parent -> scheduler.span;
 
           case Fresh -> {
-            final var freshSpan = SpanId.generate();
+            var oldChildSpan = getSpanId(childTask);
+            final var freshSpan = oldChildSpan == null ? SpanId.generate() : oldChildSpan;
             SimulationEngine.this.spans.put(
                 freshSpan,
                 new Span(Optional.of(scheduler.span), currentTime.duration(), Optional.empty()));
@@ -1783,8 +1812,14 @@ public final class SimulationEngine implements AutoCloseable {
           }
         };
 
-        // Spawn the child task.
-        final var childTask = TaskId.generate();
+        // Record staleness if currently not stale
+        if (!isTaskStale(task, currentTime)) {
+          var staleTime = staleTasks.get(task);
+          var afterEvent = staleEvents.get(task);
+          staleTasks.put(childTask, staleTime);
+          staleEvents.put(childTask, afterEvent); // TODO -- more efficient to have one map with a pair of (time, afterEvent)
+        }
+
         SimulationEngine.this.spanContributorCount.get(scheduler.span).increment();
         SimulationEngine.this.tasks.put(
             childTask,
@@ -1797,7 +1832,7 @@ public final class SimulationEngine implements AutoCloseable {
 
         // Arrange for the parent task to resume.... later.
         SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
-        wireTasksAndSpans(childTask, task, childSpan, scheduler.span); //null);  // considering not wiring span parent to span child
+        wireTasksAndSpans(childTask, task, childSpan, scheduler.span, true);  // considering not wiring span parent to span child
         if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);
         this.tasks.put(task, progress.continueWith(s.continuation()));
       }
@@ -1816,10 +1851,12 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  private void wireTasksAndSpans(TaskId childTaskId, TaskId parentTaskId, SpanId childSpanId, SpanId parentSpanId) {
+  private void wireTasksAndSpans(TaskId childTaskId, TaskId parentTaskId, SpanId childSpanId, SpanId parentSpanId,
+                                 boolean isCalling) {
     if (childTaskId != null && parentTaskId != null) {
       taskParent.put(childTaskId, parentTaskId);
-      taskChildren.computeIfAbsent(parentTaskId, x -> new HashSet<>()).add(childTaskId);
+      if (isCalling) calledTasks.add(childTaskId);
+      taskChildren.computeIfAbsent(parentTaskId, x -> new ArrayList<>()).add(childTaskId);
     }
     if (childTaskId != null && childSpanId != null) {
       putSpanId(childTaskId, childSpanId);
@@ -1871,21 +1908,6 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(cjid, t);
     }
   }
-
-//  public static <K1 extends Comparable<K1>, K2, V> RangeMapMap<K1, K2, V> deepMergeMapsFirstWins(
-//      RangeMapMap<K1, K2, V> m1, RangeMapMap<K1, K2, V> m2) {
-//    if (m1 == null) return m2;
-//    if (m2 == null || m2.asMapOfRanges().isEmpty()) return m1;
-//    if (m1.isEmpty()) return m2;
-////    Collector<Map<K2, V>, TreeMap, RangeMapMap> c = Collectors.toMap(t -> t.getKey(),
-////                     t -> t.getValue(),
-////                                                                     (v1, v2) -> (v1 instanceof TreeMap mm1 && v2 instanceof TreeMap mm2) ? (V)TemporalEventSource.deepMergeMapsFirstWins(mm1, mm2) : v1,
-////                                                                     TreeMap::new);
-//    return Stream.of(m1, m2).flatMap(m -> m.asMapOfRanges().entrySet().stream()).collect(TreeMap::new, (r, e) -> r.put(e.getKey(), e.getValue()), (r1, r2) -> {
-//      r1.putAll()
-//      return ;
-//    });
-//  }
 
   /**
    * During incremental simulation, a task may be re-run, in which case it can have a different history of condition
@@ -2872,40 +2894,16 @@ public final class SimulationEngine implements AutoCloseable {
       return taskId;
     }
 
+
     @Override
     public void spawn(final InSpan inSpan, final TaskFactory<?> state) {
-      final boolean rerunDaemonTask = oldEngine != null && getMissionModel().rerunDaemons();
       final boolean daemonTaskOrSpawn = daemonTasks.contains(this.activeTask) || getMissionModel().isDaemon(state);
-      boolean settingTaskStale = rerunDaemonTask;
-      // Don't spawn children of stale task unless it's a daemon task that is requested to be rerun.
-      if (isTaskStale(this.activeTask, this.currentTime) || (rerunDaemonTask && daemonTaskOrSpawn)) {
-        final TaskId task;
-        if (rerunDaemonTask && getMissionModel().isDaemon(state)) {
-          var tmpId = getOldTaskIdForDaemon(state); // Get TaskID from old simulation so that we can set it stale.
-          if (tmpId != null) {
-            task = tmpId;
-          } else {
-            // If we can't correlate the state (TaskFactory) to the daemon task run in the old simulation,
-            // and the mission model says we need to re-run them (getMissionModel().rerunDaemons()), then
-            // we rerun without removing the effects of the daemon on the past simulation, potentially
-            // leading to bad behavior.
-            task = TaskId.generate();
-            settingTaskStale = false;
-            System.err.println("WARNING: re-running daemon task as if never run before: " + task);
-          }
-        } else {
-          task = TaskId.generate();
-        }
+
+        // Reuse the child ids of this task from the old engine if possible
+        final TaskId task = getNextChildTaskId(activeTask, currentTime);
+
         if (daemonTaskOrSpawn) {
           daemonTasks.add(task);
-          if (settingTaskStale) {
-            // Indicate that this task is not stale until after the time it last executed.
-            var eventMap = getCombinedEventsByTask(task);
-            var lastEventTimePlusE = eventMap == null ? null : new SubInstantDuration(eventMap.lastKey(), eventMap.lastEntry().getValue().size() + 1);
-            if (lastEventTimePlusE != null) {
-              setTaskStale(task, lastEventTimePlusE, null);
-            }
-          }
         }
 
         // Prepare a span for the child task
@@ -2913,12 +2911,21 @@ public final class SimulationEngine implements AutoCloseable {
           case Parent -> this.span;
 
           case Fresh -> {
-            final var freshSpan = SpanId.generate();
+            var oldChildSpan = getSpanId(task);
+            final var freshSpan = oldChildSpan == null ? SpanId.generate() : oldChildSpan;
             SimulationEngine.this.spans.put(freshSpan, new Span(Optional.of(this.span), currentTime.duration(), Optional.empty()));
             SimulationEngine.this.spanContributorCount.put(freshSpan, new MutableInt(1));
             yield freshSpan;
           }
         };
+
+        // Record staleness if currently not stale
+        if (!isTaskStale(activeTask, currentTime)) {
+          var staleTime = staleTasks.get(activeTask);
+          var afterEvent = staleEvents.get(activeTask);
+          staleTasks.put(task, staleTime);
+          staleEvents.put(task, afterEvent); // TODO -- more efficient to have one map with a pair of (time, afterEvent)
+        }
 
         // Record task information
         if (trace) System.out.println("spawn TaskId = " + task + " from " + activeTask);
@@ -2928,12 +2935,44 @@ public final class SimulationEngine implements AutoCloseable {
             state.create(SimulationEngine.this.executor),
             currentTime.duration()));
         this.caller.ifPresent($ -> SimulationEngine.this.blockedTasks.get($).increment());
-        wireTasksAndSpans(task, this.activeTask, childSpan, this.span); //null);  // considering not recording span parent/child
-        SimulationEngine.this.taskFactories.put(task, state);
+        wireTasksAndSpans(task, this.activeTask, childSpan, this.span, false); // considering not recording span parent/child
+        SimulationEngine.this.taskFactories.put(task, state);  // TODO -- shouldn't we be selective and only save some?
         SimulationEngine.this.taskIdsForFactories.put(state, task);
         this.frame.signal(JobId.forTask(task));
+    }
+  }
+
+  /**
+   * Reuse the child ids of the active task from the old engine if possible
+   * @return the next child taskId corresponding to the past execution if not stale; else, a new one
+   */
+  private TaskId getNextChildTaskId(final TaskId activeTask, final SubInstantDuration currentTime) {
+    final TaskId task;
+    // Reuse the child ids of this task from the old engine
+    if (isTaskStale(activeTask, currentTime)) {
+      return TaskId.generate();
+    }
+    // Get the old taskId of the child.
+    var currentChildren = taskChildren.get(activeTask);
+    var oldChildren = oldEngine.getTaskChildren(activeTask);
+    if (currentChildren == null) {
+      task = oldChildren.get(0);  // oldChildren should not be empty because activeTask is not stale
+    } else {
+      // If the activeTask somehow used to be stale, then we would expect the right child to be the next one
+      // after the last matching child.
+      int i = currentChildren.size()-1;
+      int pos = -1;
+      for (;i >= 0; --i) {
+        pos = oldChildren.lastIndexOf(currentChildren.get(i));
+        if (pos >= 0) break;
+      }
+      if (i >= 0 && pos >= 0 && pos < oldChildren.size()-1) {
+        task = oldChildren.get(pos+1);
+      } else {
+        task = TaskId.generate();
       }
     }
+    return task;
   }
 
 
@@ -3110,7 +3149,7 @@ public final class SimulationEngine implements AutoCloseable {
     return "unknown task";
   }
 
-  public Set<TaskId> getTaskChildren(TaskId taskId) {
+  public List<TaskId> getTaskChildren(TaskId taskId) {
     var children = this.taskChildren.get(taskId);
     if (children == null && oldEngine != null) {
       children = oldEngine.getTaskChildren(taskId);
