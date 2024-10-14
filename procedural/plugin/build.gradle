@@ -12,16 +12,15 @@ tasks.publish {
   dependsOn("check")
 }
 
-version = '0.0.1'
-
 publishing {
   publications {
-    maven(MavenPublication)
+    pluginMaven(MavenPublication)
   }
   repositories {
     maven {
-      name = findProperty("publishing.name")
-      url = findProperty("publishing.url")
+      name="GitHubCopiePackages"
+      url="https://maven.pkg.github.com/skovati/copie"
+      version=findProperty("publishing.version")
       credentials {
         username = System.getenv("GITHUB_ACTOR")
         password = System.getenv("GITHUB_TOKEN")
