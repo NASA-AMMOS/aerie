@@ -37,11 +37,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [name]
+      columns: [name, metadata, required_metadata]
       check: {}
   - role: user
     permission:
-      columns: [name]
+      columns: [name, metadata, required_metadata]
       check: {}
 delete_permissions:
   - role: aerie_admin

@@ -7,6 +7,7 @@ create table merlin.external_source (
     end_time timestamp with time zone not null,
     CHECK (end_time > start_time),
     created_at timestamp with time zone default now() not null,
+    metadata merlin.argument_set,
     owner text,
 
     constraint external_source_pkey
@@ -49,6 +50,9 @@ comment on column merlin.external_source.end_time is e''
 comment on column merlin.external_source.created_at is e''
   'The time (in _planner_ time, NOT plan time) that this particular source was created.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
+comment on column merlin.external_source.metadata is e''
+  'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
+  'The metadata of an external source must follow the schema defined in the source''s source type (i.e., the columns ''metadata'' and ''required_metadata'').';
 comment on column merlin.external_source.owner is e''
   'The user who uploaded the external source.';
 
@@ -87,6 +91,30 @@ begin
 end;
 $$;
 
+-- Add a trigger verifying that the metadata only contains defined metadata for the external source type
+create or replace function merlin.validate_external_source_metadata()
+  returns trigger
+  language plpgsql as $$
+declare
+  source_metadata text[];
+  source_invalid_metadata text[];
+  source_type_required_metadata text[];
+  source_type_valid_metadata text[];
+begin
+  source_metadata := (select array(select jsonb_object_keys(new.metadata)));
+  select array(select jsonb_array_elements_text(required_metadata)) into source_type_required_metadata from merlin.external_source_type where new.source_type_name = external_source_type.name;
+  select array(select jsonb_object_keys(metadata)) into source_type_valid_metadata from merlin.external_source_type where new.source_type_name = external_source_type.name;
+  select array(select metadata from unnest(source_metadata) as metadata except select valid_metadata from unnest(source_type_valid_metadata) as valid_metadata) into source_invalid_metadata;
+  if not (source_type_required_metadata <@ source_metadata) then
+    raise exception 'External source does not contain all the required metadata for a source of type "%s"', new.source_type_name;
+  end if;
+  if array_length(source_invalid_metadata, 1) > 0 then
+    raise exception 'External source contains metadata that are not defined within the source type "%s"', new.source_type_name;
+  end if;
+  return null;
+end;
+$$;
+
 create trigger external_source_pdg_association_delete
 before delete on merlin.external_source
   for each row execute function merlin.external_source_pdg_association_delete();
@@ -105,3 +133,12 @@ $$;
 create trigger external_source_pdg_ack_update
 after insert on merlin.external_source
   for each row execute function merlin.external_source_pdg_ack_update();
+comment on function merlin.validate_external_source_metadata() is e''
+  'Validate that the external source contains only metadata that are defined in the external source type, and all the required metadata for the source type are present.';
+
+create trigger validate_external_source_metadata
+after insert on merlin.external_source
+  for each row execute function merlin.validate_external_source_metadata();
+
+comment on trigger validate_external_source_metadata on merlin.external_source is e''
+  'Fires any time a new external source is added that checks the metadata of the source match the expected required & optional metadata on it''s source type.';
