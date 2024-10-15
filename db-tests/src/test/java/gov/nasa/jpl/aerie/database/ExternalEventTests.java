@@ -616,14 +616,6 @@ public class ExternalEventTests {
         }
       }
 
-      /*
-        A source in present before all sources, in a gap, should be ever present, even if chopped into several
-          subintervals:
-          A:      +++++++++++++++++++++
-          B:  ++++++
-          C:                +++++++
-              BBBBBBAAAAAAAACCCCCCCAAAA
-       */
       /**
        * This test is an overlapping case wherein there is a source preceding all sources in validity, that covers a
        *    larger, more inclusive interval. This source should be ever present, even if chopped into several
