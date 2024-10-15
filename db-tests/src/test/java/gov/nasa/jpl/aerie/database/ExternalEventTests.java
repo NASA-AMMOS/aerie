@@ -229,7 +229,7 @@ public class ExternalEventTests {
    * Repeated function that uploads a source and various events, as well as related types.
    * Used in:
    *  - ExternalEventTests.java:
-   *    + BASIC TESTS (uploadWithoutError, basicDerivedEvents, derivationGroupComp)
+   *    + BASIC TESTS (derivationGroupComp)
    *    + final duplication tests (duplicateSource, duplicatedDG)
    *    + superDerivedEvents
    *
@@ -346,19 +346,9 @@ public class ExternalEventTests {
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   class BasicTests {
     /**
-     * This first test is to verify that a simple upload works, regardless of if its output is correct.
-     * As we do not upload a file we just run the queries that would be run if files were uploaded,
-     * namely tests 01-04 from SSMO-MPS/mission-data-sandbox/derivation_test.
-     */
-    @Test
-    void uploadWithoutError() {
-      assertDoesNotThrow(() -> upload_source(dg));
-    }
-
-    /**
      * This test uploads data (tests 01-04 from SSMO-MPS/mission-data-sandbox/derivation_test) and then confirms
      * derivation_group_comp view associated with upload performs as expected.
-     * This test alone is rigorous enough for derivation_group_comp view, and is an extension of uploadWithoutError.
+     * This test alone is rigorous enough for derivation_group_comp view.
      */
     @Test
     void derivationGroupComp() throws SQLException {
