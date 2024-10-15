@@ -517,81 +517,78 @@ public class ExternalEventTests {
        */
       @Test
       void testForwardOverlap() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T02:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent aE = new ExternalEvent(
+            a.key() + "_event",
+            st,
+            a.key(),
+            dg,
+            "2024-01-01T1:10:00Z",
+            duration,
+            mt
+        );
+        ExternalSource b = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
 
-          // create our sources and their per-window events
-          ExternalSource a = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T02:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent aE = new ExternalEvent(
-              a.key() + "_event",
-              st,
-              a.key(),
-              dg,
-              "2024-01-01T1:10:00Z",
-              duration,
-              mt
-          );
-          ExternalSource b = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        // verify the ranges are as expected
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // verify the ranges are as expected
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(a);
+        insertExternalSource(b);
 
-          // insert sources
-          insertExternalSource(a);
-          insertExternalSource(b);
+        // insert events
+        insertExternalEvent(aE);
+        insertExternalEvent(bE);
 
-          // insert events
-          insertExternalEvent(aE);
-          insertExternalEvent(bE);
+        var results = getDerivedEvents("ORDER BY source_key");
 
-          var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "A_event",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 01:10:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "B_event",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A_event",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 01:10:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "B_event",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -605,81 +602,78 @@ public class ExternalEventTests {
        */
       @Test
       void testBackwardOverlap() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent aE = new ExternalEvent(
+            a.key() + "_event",
+            st,
+            a.key(),
+            dg,
+            "2024-01-01T00:00:00Z",
+            duration,
+            mt
+        ); // have to manually pick this
+        ExternalSource b = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
 
-          // create our sources and their per-window events
-          ExternalSource a = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent aE = new ExternalEvent(
-              a.key() + "_event",
-              st,
-              a.key(),
-              dg,
-              "2024-01-01T00:00:00Z",
-              duration,
-              mt
-          ); // have to manually pick this
-          ExternalSource b = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        // verify the ranges are as expected
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // verify the ranges are as expected
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(a);
+        insertExternalSource(b);
 
-          // insert sources
-          insertExternalSource(a);
-          insertExternalSource(b);
+        // insert events
+        insertExternalEvent(aE);
+        insertExternalEvent(bE);
 
-          // insert events
-          insertExternalEvent(aE);
-          insertExternalEvent(bE);
+        var results = getDerivedEvents("ORDER BY source_key");
 
-          var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "A_event",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "B_event",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:30:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A_event",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "B_event",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:30:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -694,104 +688,101 @@ public class ExternalEventTests {
        */
       @Test
       void testBackground() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T03:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent aE = new ExternalEvent(
+            a.key() + "_event",
+            st,
+            a.key(),
+            dg,
+            "2024-01-01T01:10:00Z",
+            duration,
+            mt
+        ); // just need 1 that shows up and source range will still show correctly
+        ExternalSource b = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalSource c = new ExternalSource(
+            "C",
+            st,
+            dg,
+            "2024-01-03T00:00:00Z",
+            "2024-01-01T01:30:00Z",
+            "2024-01-01T02:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration, mt);
 
-          // create our sources and their per-window events
-          ExternalSource a = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T03:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent aE = new ExternalEvent(
-              a.key() + "_event",
-              st,
-              a.key(),
-              dg,
-              "2024-01-01T01:10:00Z",
-              duration,
-              mt
-          ); // just need 1 that shows up and source range will still show correctly
-          ExternalSource b = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
-          ExternalSource c = new ExternalSource(
-              "C",
-              st,
-              dg,
-              "2024-01-03T00:00:00Z",
-              "2024-01-01T01:30:00Z",
-              "2024-01-01T02:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration, mt);
+        // verify the ranges are as expected
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // verify the ranges are as expected
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(a);
+        insertExternalSource(b);
+        insertExternalSource(c);
 
-          // insert sources
-          insertExternalSource(a);
-          insertExternalSource(b);
-          insertExternalSource(c);
+        // insert events
+        insertExternalEvent(aE);
+        insertExternalEvent(bE);
+        insertExternalEvent(cE);
 
-          // insert events
-          insertExternalEvent(aE);
-          insertExternalEvent(bE);
-          insertExternalEvent(cE);
+        var results = getDerivedEvents("ORDER BY source_key");
 
-          var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "A_event",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 01:10:00+00",
-                  "00:00:00.000001",
-                  "{}", "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "B_event",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "C_event",
-                  "Test",
-                  "C",
-                  "Test Default",
-                  "2024-01-01 01:30:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}",
-                  "2024-01-03 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A_event",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 01:10:00+00",
+                "00:00:00.000001",
+                "{}", "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "B_event",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "C_event",
+                "Test",
+                "C",
+                "Test Default",
+                "2024-01-01 01:30:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}",
+                "2024-01-03 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -808,203 +799,200 @@ public class ExternalEventTests {
        */
       @Test
       void testAmalgamation() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:03:00Z",
+            "2024-01-01T00:15:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent aE = new ExternalEvent(
+            a.key() + "_event",
+            st,
+            a.key(),
+            dg,
+            "2024-01-01T00:09:10Z",
+            duration,
+            mt
+        );
+        ExternalSource b = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:06:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalSource c = new ExternalSource(
+            "C",
+            st,
+            dg,
+            "2024-01-03T00:00:00Z",
+            "2024-01-01T00:17:00Z",
+            "2024-01-01T00:23:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent cE = new ExternalEvent(
+            c.key() + "_event",
+            st,
+            c.key(),
+            dg,
+            "2024-01-01T00:21:00Z",
+            duration,
+            mt
+        );
+        ExternalSource d = new ExternalSource(
+            "D",
+            st,
+            dg,
+            "2024-01-04T00:00:00Z",
+            "2024-01-01T00:02:00Z",
+            "2024-01-01T00:09:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent dE = new ExternalEvent(d.key() + "_event", st, d.key(), dg, d.start_time(), duration, mt);
+        ExternalSource e = new ExternalSource(
+            "E",
+            st,
+            dg,
+            "2024-01-05T00:00:00Z",
+            "2024-01-01T00:13:00Z",
+            "2024-01-01T00:20:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent eE = new ExternalEvent(e.key() + "_event", st, e.key(), dg, e.start_time(), duration, mt);
+        ExternalSource f = new ExternalSource(
+            "F",
+            st,
+            dg,
+            "2024-01-06T00:00:00Z",
+            "2024-01-01T00:04:00Z",
+            "2024-01-01T00:07:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent fE = new ExternalEvent(f.key() + "_event", st, f.key(), dg, f.start_time(), duration, mt);
+        ExternalSource g = new ExternalSource(
+            "G",
+            st,
+            dg,
+            "2024-01-07T00:00:00Z",
+            "2024-01-01T00:11:00Z",
+            "2024-01-01T00:12:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration, mt);
 
-          // create our sources and their per-window events
-          ExternalSource a = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:03:00Z",
-              "2024-01-01T00:15:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent aE = new ExternalEvent(
-              a.key() + "_event",
-              st,
-              a.key(),
-              dg,
-              "2024-01-01T00:09:10Z",
-              duration,
-              mt
-          );
-          ExternalSource b = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:06:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
-          ExternalSource c = new ExternalSource(
-              "C",
-              st,
-              dg,
-              "2024-01-03T00:00:00Z",
-              "2024-01-01T00:17:00Z",
-              "2024-01-01T00:23:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent cE = new ExternalEvent(
-              c.key() + "_event",
-              st,
-              c.key(),
-              dg,
-              "2024-01-01T00:21:00Z",
-              duration,
-              mt
-          );
-          ExternalSource d = new ExternalSource(
-              "D",
-              st,
-              dg,
-              "2024-01-04T00:00:00Z",
-              "2024-01-01T00:02:00Z",
-              "2024-01-01T00:09:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent dE = new ExternalEvent(d.key() + "_event", st, d.key(), dg, d.start_time(), duration, mt);
-          ExternalSource e = new ExternalSource(
-              "E",
-              st,
-              dg,
-              "2024-01-05T00:00:00Z",
-              "2024-01-01T00:13:00Z",
-              "2024-01-01T00:20:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent eE = new ExternalEvent(e.key() + "_event", st, e.key(), dg, e.start_time(), duration, mt);
-          ExternalSource f = new ExternalSource(
-              "F",
-              st,
-              dg,
-              "2024-01-06T00:00:00Z",
-              "2024-01-01T00:04:00Z",
-              "2024-01-01T00:07:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent fE = new ExternalEvent(f.key() + "_event", st, f.key(), dg, f.start_time(), duration, mt);
-          ExternalSource g = new ExternalSource(
-              "G",
-              st,
-              dg,
-              "2024-01-07T00:00:00Z",
-              "2024-01-01T00:11:00Z",
-              "2024-01-01T00:12:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration, mt);
+        // verify the ranges are as expected
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // verify the ranges are as expected
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(a);
+        insertExternalSource(b);
+        insertExternalSource(c);
+        insertExternalSource(d);
+        insertExternalSource(e);
+        insertExternalSource(f);
+        insertExternalSource(g);
 
-          // insert sources
-          insertExternalSource(a);
-          insertExternalSource(b);
-          insertExternalSource(c);
-          insertExternalSource(d);
-          insertExternalSource(e);
-          insertExternalSource(f);
-          insertExternalSource(g);
+        // insert events
+        insertExternalEvent(aE);
+        insertExternalEvent(bE);
+        insertExternalEvent(cE);
+        insertExternalEvent(dE);
+        insertExternalEvent(eE);
+        insertExternalEvent(fE);
+        insertExternalEvent(gE);
 
-          // insert events
-          insertExternalEvent(aE);
-          insertExternalEvent(bE);
-          insertExternalEvent(cE);
-          insertExternalEvent(dE);
-          insertExternalEvent(eE);
-          insertExternalEvent(fE);
-          insertExternalEvent(gE);
+        var results = getDerivedEvents("ORDER BY source_key");
 
-          var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "A_event",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 00:09:10+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "B_event",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "C_event",
-                  "Test",
-                  "C",
-                  "Test Default",
-                  "2024-01-01 00:21:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
-                  "2024-01-03 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "D_event",
-                  "Test",
-                  "D",
-                  "Test Default",
-                  "2024-01-01 00:02:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
-                  "2024-01-04 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "E_event",
-                  "Test", "E",
-                  "Test Default", "2024-01-01 00:13:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
-                  "2024-01-05 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "F_event",
-                  "Test", "F",
-                  "Test Default", "2024-01-01 00:04:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
-                  "2024-01-06 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "G_event",
-                  "Test", "G",
-                  "Test Default", "2024-01-01 00:11:00+00",
-                  "00:00:00.000001",
-                  "{}",
-                  "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}",
-                  "2024-01-07 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A_event",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 00:09:10+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "B_event",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "C_event",
+                "Test",
+                "C",
+                "Test Default",
+                "2024-01-01 00:21:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
+                "2024-01-03 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "D_event",
+                "Test",
+                "D",
+                "Test Default",
+                "2024-01-01 00:02:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
+                "2024-01-04 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "E_event",
+                "Test", "E",
+                "Test Default", "2024-01-01 00:13:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
+                "2024-01-05 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "F_event",
+                "Test", "F",
+                "Test Default", "2024-01-01 00:04:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
+                "2024-01-06 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "G_event",
+                "Test", "G",
+                "Test Default", "2024-01-01 00:11:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}",
+                "2024-01-07 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
     }
 
@@ -1033,51 +1021,48 @@ public class ExternalEventTests {
        */
       @Test
       void rule1_solitary() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource eS = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-          ExternalSource eS = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-
-          ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
+        ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
 
 
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // insert sources
-          insertExternalSource(eS);
+        // insert sources
+        insertExternalSource(eS);
 
-          // insert events
-          insertExternalEvent(e);
+        // insert events
+        insertExternalEvent(e);
 
-          // ensure the result has the right size and keys
-          final var results = getDerivedEvents("");
+        // ensure the result has the right size and keys
+        final var results = getDerivedEvents("");
 
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "A.1",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "01:00:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A.1",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "01:00:00",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -1090,99 +1075,96 @@ public class ExternalEventTests {
        */
       @Test
       void rule1_bookended() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource A = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T02:00:00Z",
+            ca,
+            mt
+        );
+        ExternalSource B = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalSource C = new ExternalSource(
+            "C",
+            st,
+            dg,
+            "2024-01-03T00:00:00Z",
+            "2024-01-01T01:30:00Z",
+            "2024-01-01T03:00:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-          ExternalSource A = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T02:00:00Z",
-              ca,
-              mt
-          );
-          ExternalSource B = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalSource C = new ExternalSource(
-              "C",
-              st,
-              dg,
-              "2024-01-03T00:00:00Z",
-              "2024-01-01T01:30:00Z",
-              "2024-01-01T03:00:00Z",
-              ca,
-              mt
-          );
-
-          ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
-          ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
-          ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
+        ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
+        ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
+        ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
 
 
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // insert sources
-          insertExternalSource(A);
-          insertExternalSource(B);
-          insertExternalSource(C);
+        // insert sources
+        insertExternalSource(A);
+        insertExternalSource(B);
+        insertExternalSource(C);
 
-          // insert events
-          insertExternalEvent(e);
-          insertExternalEvent(before);
-          insertExternalEvent(after);
+        // insert events
+        insertExternalEvent(e);
+        insertExternalEvent(before);
+        insertExternalEvent(after);
 
-          // verify the expected keys are included
-          final var results = getDerivedEvents("ORDER BY source_key");
+        // verify the expected keys are included
+        final var results = getDerivedEvents("ORDER BY source_key");
 
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "a",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 01:10:00+00",
-                  "00:10:00",
-                  "{}",
-                  "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "b",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:30:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "c",
-                  "Test",
-                  "C",
-                  "Test Default",
-                  "2024-01-01 01:30:00+00",
-                  "01:00:00",
-                  "{}",
-                  "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 03:00:00+00\")}",
-                  "2024-01-03 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "a",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 01:10:00+00",
+                "00:10:00",
+                "{}",
+                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "b",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
+                "00:30:00",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "c",
+                "Test",
+                "C",
+                "Test Default",
+                "2024-01-01 01:30:00+00",
+                "01:00:00",
+                "{}",
+                "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 03:00:00+00\")}",
+                "2024-01-03 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       ////////////////////////// RULE 2 //////////////////////////
@@ -1196,88 +1178,85 @@ public class ExternalEventTests {
        */
       @Test
       void rule2() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource A = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
+        ExternalSource B = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T01:30:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-          ExternalSource A = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-          ExternalSource B = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T01:30:00Z",
-              ca,
-              mt
-          );
-
-          ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
-          ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
-          ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
+        ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
+        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
+        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
 
 
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // insert sources
-          insertExternalSource(A);
-          insertExternalSource(B);
+        // insert sources
+        insertExternalSource(A);
+        insertExternalSource(B);
 
-          // insert events
-          insertExternalEvent(e);
-          insertExternalEvent(b1);
-          insertExternalEvent(b2);
+        // insert events
+        insertExternalEvent(e);
+        insertExternalEvent(b1);
+        insertExternalEvent(b2);
 
-          // verify the expected keys
-          final var results = getDerivedEvents("ORDER BY source_key");
+        // verify the expected keys
+        final var results = getDerivedEvents("ORDER BY source_key");
 
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "a",
-                  "Test",
-                  "A",
-                  "Test Default",
-                  "2024-01-01 00:25:00+00",
-                  "00:10:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
-                  "2024-01-01 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "b1",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:30:00+00",
-                  "00:10:00",
-                  "{}",
-                  "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "b2",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:45:00+00",
-                  "00:10:00",
-                  "{}",
-                  "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "a",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 00:25:00+00",
+                "00:10:00",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "b1",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:30:00+00",
+                "00:10:00",
+                "{}",
+                "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "b2",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:45:00+00",
+                "00:10:00",
+                "{}",
+                "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       ////////////////////////// RULE 3 //////////////////////////
@@ -1291,89 +1270,86 @@ public class ExternalEventTests {
        */
       @Test
       void rule3_basic() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource A = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T01:30:00Z",
+            ca,
+            mt
+        );
+        ExternalSource B = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-            ExternalSource A = new ExternalSource(
-                "A",
-                st,
-                dg,
-                "2024-01-01T00:00:00Z",
-                "2024-01-01T00:30:00Z",
-                "2024-01-01T01:30:00Z",
-                ca,
-                mt
-            );
-            ExternalSource B = new ExternalSource(
+        ExternalEvent e1 = createEvent(
+            "a1",
+            "2024-01-01T00:40:00Z",
+            "00:10:00",
+            A
+        ); // negated by B, very clearly
+        ExternalEvent e2 = createEvent(
+            "a2",
+            "2024-01-01T00:55:00Z",
+            "00:35:00",
+            A
+        ); // even empty space in B neg should negate
+        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
+        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
+
+
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
+
+        // insert sources
+        insertExternalSource(A);
+        insertExternalSource(B);
+
+        // insert events
+        insertExternalEvent(e1);
+        insertExternalEvent(e2);
+        insertExternalEvent(b1);
+        insertExternalEvent(b2);
+
+        // verify the expected keys
+        final var results = getDerivedEvents("ORDER BY source_key");
+
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "b1",
+                "Test",
                 "B",
-                st,
-                dg,
-                "2024-01-02T00:00:00Z",
-                "2024-01-01T00:00:00Z",
-                "2024-01-01T01:00:00Z",
-                ca,
-                mt
-            );
-
-            ExternalEvent e1 = createEvent(
-                "a1",
-                "2024-01-01T00:40:00Z",
+                "Test Default",
+                "2024-01-01 00:00:00+00",
                 "00:10:00",
-                A
-            ); // negated by B, very clearly
-            ExternalEvent e2 = createEvent(
-                "a2",
-                "2024-01-01T00:55:00Z",
-                "00:35:00",
-                A
-            ); // even empty space in B neg should negate
-            ExternalEvent b1 = createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
-            ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
-
-
-            // insert generic external event type, source type, and derivation group
-            insertStandardTypes();
-
-            // insert sources
-            insertExternalSource(A);
-            insertExternalSource(B);
-
-            // insert events
-            insertExternalEvent(e1);
-            insertExternalEvent(e2);
-            insertExternalEvent(b1);
-            insertExternalEvent(b2);
-
-          // verify the expected keys
-          final var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "b1",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:00:00+00",
-                  "00:10:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              ),
-              new DerivedEvent(
-                  "b2",
-                  "Test",
-                  "B",
-                  "Test Default",
-                  "2024-01-01 00:30:00+00",
-                  "00:20:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-02 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "b2",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 00:30:00+00",
+                "00:20:00",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -1386,62 +1362,59 @@ public class ExternalEventTests {
        */
       @Test
       void rule3_empty() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource A = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:30:00Z",
+            "2024-01-01T01:30:00Z",
+            ca,
+            mt
+        );
+        ExternalSource B = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-          ExternalSource A = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T00:30:00Z",
-              "2024-01-01T01:30:00Z",
-              ca,
-              mt
-          );
-          ExternalSource B = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
-
-          ExternalEvent e1 = createEvent(
-              "a1",
-              "2024-01-01T00:40:00Z",
-              "00:10:00",
-              A
-          ); // negated by empty space
-          ExternalEvent e2 = createEvent(
-              "a2",
-              "2024-01-01T00:55:00Z",
-              "00:35:00",
-              A
-          ); // negated by empty space
+        ExternalEvent e1 = createEvent(
+            "a1",
+            "2024-01-01T00:40:00Z",
+            "00:10:00",
+            A
+        ); // negated by empty space
+        ExternalEvent e2 = createEvent(
+            "a2",
+            "2024-01-01T00:55:00Z",
+            "00:35:00",
+            A
+        ); // negated by empty space
 
 
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // insert sources
-          insertExternalSource(A);
+        // insert sources
+        insertExternalSource(A);
 
-          // insert events
-          insertExternalEvent(e1);
-          insertExternalEvent(e2);
+        // insert events
+        insertExternalEvent(e1);
+        insertExternalEvent(e2);
 
-          // insert B as a source
-          insertExternalSource(B);
+        // insert B as a source
+        insertExternalSource(B);
 
         // verify expected keys (none)
-          final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents("ORDER BY source_key");
 
-          assertEquals(0, results.size());
-        }
+        assertEquals(0, results.size());
       }
 
       ////////////////////////// RULE 4 //////////////////////////
@@ -1457,91 +1430,88 @@ public class ExternalEventTests {
        */
       @Test
       void rule4() throws SQLException {
-        try (final var statement = connection.createStatement()) {
+        // insert the event(s) (and their source(s))
+        ExternalSource A = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:30:00Z",
+            "2024-01-01T02:30:00Z",
+            ca,
+            mt
+        );
+        ExternalSource B = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T03:00:00Z",
+            "2024-01-01T04:00:00Z",
+            ca,
+            mt
+        );
+        ExternalSource C = new ExternalSource(
+            "C",
+            st,
+            dg,
+            "2024-01-03T00:00:00Z",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            ca,
+            mt
+        );
 
-          // insert the event(s) (and their source(s))
-          ExternalSource A = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:30:00Z",
-              "2024-01-01T02:30:00Z",
-              ca,
-              mt
-          );
-          ExternalSource B = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T03:00:00Z",
-              "2024-01-01T04:00:00Z",
-              ca,
-              mt
-          );
-          ExternalSource C = new ExternalSource(
-              "C",
-              st,
-              dg,
-              "2024-01-03T00:00:00Z",
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              ca,
-              mt
-          );
+        ExternalEvent e1 = createEvent(
+            "a",
+            "2024-01-01T01:50:00Z",
+            "00:10:00",
+            A
+        ); // negated by empty space
+        ExternalEvent e2 = createEvent(
+            "a",
+            "2024-01-01T03:40:00Z",
+            "00:15:00",
+            B
+        ); // negated by empty space
+        ExternalEvent e3 = createEvent(
+            "a",
+            "2024-01-01T00:30:00Z",
+            "00:20:00",
+            C
+        ); // negated by empty space
 
-          ExternalEvent e1 = createEvent(
-              "a",
-              "2024-01-01T01:50:00Z",
-              "00:10:00",
-              A
-          ); // negated by empty space
-          ExternalEvent e2 = createEvent(
-              "a",
-              "2024-01-01T03:40:00Z",
-              "00:15:00",
-              B
-          ); // negated by empty space
-          ExternalEvent e3 = createEvent(
-              "a",
-              "2024-01-01T00:30:00Z",
-              "00:20:00",
-              C
-          ); // negated by empty space
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(A);
+        insertExternalSource(B);
+        insertExternalSource(C);
 
-          // insert sources
-          insertExternalSource(A);
-          insertExternalSource(B);
-          insertExternalSource(C);
+        // insert events
+        insertExternalEvent(e1);
+        insertExternalEvent(e2);
+        insertExternalEvent(e3);
 
-          // insert events
-          insertExternalEvent(e1);
-          insertExternalEvent(e2);
-          insertExternalEvent(e3);
+        // verify expected keys
+        final var results = getDerivedEvents("ORDER BY source_key");
 
-          // verify expected keys
-          final var results = getDerivedEvents("ORDER BY source_key");
-
-          // both ranges should only have a single element and be fully present
-          final List<DerivedEvent> expectedResults = List.of(
-              new DerivedEvent(
-                  "a",
-                  "Test",
-                  "C",
-                  "Test Default",
-                  "2024-01-01 00:30:00+00",
-                  "00:20:00",
-                  "{}",
-                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                  "2024-01-03 00:00:00+00"
-              )
-          );
-          assertTrue(results.containsAll(expectedResults));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "a",
+                "Test",
+                "C",
+                "Test Default",
+                "2024-01-01 00:30:00+00",
+                "00:20:00",
+                "{}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                "2024-01-03 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
     }
   }
@@ -1603,76 +1573,73 @@ public class ExternalEventTests {
      */
     @Test
     void nEventsAtSameTime() throws SQLException {
-      try(final var statement = connection.createStatement()) {
+      // construct the sources and events
+      ExternalSource A = new ExternalSource(
+          "A",
+          st,
+          dg,
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T01:30:00Z",
+          ca,
+          mt
+      );
 
-        // construct the sources and events
-        ExternalSource A = new ExternalSource(
-            "A",
-            st,
-            dg,
-            "2024-01-01T00:00:00Z",
-            "2024-01-01T00:00:00Z",
-            "2024-01-01T01:30:00Z",
-            ca,
-            mt
-        );
+      ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+      ExternalEvent e2 = createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
+      ExternalEvent e3 = createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
 
-        ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
-        ExternalEvent e2 = createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
-        ExternalEvent e3 = createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
+      // insert generic external event type, source type, and derivation group
+      insertStandardTypes();
 
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
+      // insert sources
+      insertExternalSource(A);
 
-        // insert sources
-        insertExternalSource(A);
+      // insert events
+      insertExternalEvent(e1);
+      insertExternalEvent(e2);
+      insertExternalEvent(e3);
 
-        // insert events
-        insertExternalEvent(e1);
-        insertExternalEvent(e2);
-        insertExternalEvent(e3);
+      // all 3 keys should be present!
+      var results = getDerivedEvents("ORDER BY start_time, event_key ASC");
 
-        // all 3 keys should be present!
-        var results = getDerivedEvents("ORDER BY start_time, event_key ASC");
-
-        // both ranges should only have a single element and be fully present
-        final List<DerivedEvent> expectedResults = List.of(
-            new DerivedEvent(
-                "a",
-                "Test",
-                "A",
-                "Test Default",
-                "2024-01-01 00:00:00+00",
-                "00:10:00",
-                "{}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
-                "2024-01-01 00:00:00+00"
-            ),
-            new DerivedEvent(
-                "b",
-                "Test",
-                "A",
-                "Test Default",
-                "2024-01-01 00:00:00+00",
-                "00:05:00",
-                "{}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
-                "2024-01-01 00:00:00+00"
-            ),
-            new DerivedEvent(
-                "c",
-                "Test",
-                "A",
-                "Test Default",
-                "2024-01-01 00:00:00+00",
-                "00:15:00",
-                "{}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
-                "2024-01-01 00:00:00+00"
-            )
-        );
-        assertTrue(results.containsAll(expectedResults));
-      }
+      // both ranges should only have a single element and be fully present
+      final List<DerivedEvent> expectedResults = List.of(
+          new DerivedEvent(
+              "a",
+              "Test",
+              "A",
+              "Test Default",
+              "2024-01-01 00:00:00+00",
+              "00:10:00",
+              "{}",
+              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+              "2024-01-01 00:00:00+00"
+          ),
+          new DerivedEvent(
+              "b",
+              "Test",
+              "A",
+              "Test Default",
+              "2024-01-01 00:00:00+00",
+              "00:05:00",
+              "{}",
+              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+              "2024-01-01 00:00:00+00"
+          ),
+          new DerivedEvent(
+              "c",
+              "Test",
+              "A",
+              "Test Default",
+              "2024-01-01 00:00:00+00",
+              "00:15:00",
+              "{}",
+              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+              "2024-01-01 00:00:00+00"
+          )
+      );
+      assertTrue(results.containsAll(expectedResults));
     }
 
     /**
@@ -2001,295 +1968,292 @@ public class ExternalEventTests {
    */
   @Test
   void superDerivedEvents() throws SQLException {
-    try(final var statement = connection.createStatement()) {
+    // upload all source data, but twice (using different dgs, to prove non overlap in derivation)
+    String dg2 = dg + "_2";
 
-      // upload all source data, but twice (using different dgs, to prove non overlap in derivation)
-      String dg2 = dg + "_2";
+    // upload the data once for the first derivation group
+    upload_source(dg);
 
-      // upload the data once for the first derivation group
-      upload_source(dg);
+    // repeat (explicitly, for ease of implementation) with the second derivation group
+    // insert derivation groups
+    insertDerivationGroup(dg2, st);
 
-      // repeat (explicitly, for ease of implementation) with the second derivation group
-      // insert derivation groups
-      insertDerivationGroup(dg2, st);
+    // insert external sources
+    ExternalSource Test_00 = new ExternalSource("Derivation_Test_00_1.json", st, dg2, "2024-01-18 00:00:00+00", "2024-01-05 00:00:00+00", "2024-01-11 00:00:00+00", "2024-08-21 22:36:12.858009+00", "{}");
+    ExternalSource Test_01 = new ExternalSource("Derivation_Test_01_1.json", st, dg2, "2024-01-19 00:00:00+00", "2024-01-01 00:00:00+00", "2024-01-07 00:00:00+00", "2024-08-21 22:36:19.381275+00", "{}");
+    ExternalSource Test_02 = new ExternalSource("Derivation_Test_02_1.json", st, dg2, "2024-01-20 00:00:00+00", "2024-01-03 00:00:00+00", "2024-01-10 00:00:00+00", "2024-08-21 22:36:23.340941+00", "{}");
+    ExternalSource Test_03 = new ExternalSource("Derivation_Test_03_1.json", st, dg2, "2024-01-21 00:00:00+00", "2024-01-01 12:00:00+00", "2024-01-02 12:00:00+00", "2024-08-21 22:36:28.365244+00", "{}");
+    insertExternalSource(Test_00);
+    insertExternalSource(Test_01);
+    insertExternalSource(Test_02);
+    insertExternalSource(Test_03);
 
-      // insert external sources
-      ExternalSource Test_00 = new ExternalSource("Derivation_Test_00_1.json", st, dg2, "2024-01-18 00:00:00+00", "2024-01-05 00:00:00+00", "2024-01-11 00:00:00+00", "2024-08-21 22:36:12.858009+00", "{}");
-      ExternalSource Test_01 = new ExternalSource("Derivation_Test_01_1.json", st, dg2, "2024-01-19 00:00:00+00", "2024-01-01 00:00:00+00", "2024-01-07 00:00:00+00", "2024-08-21 22:36:19.381275+00", "{}");
-      ExternalSource Test_02 = new ExternalSource("Derivation_Test_02_1.json", st, dg2, "2024-01-20 00:00:00+00", "2024-01-03 00:00:00+00", "2024-01-10 00:00:00+00", "2024-08-21 22:36:23.340941+00", "{}");
-      ExternalSource Test_03 = new ExternalSource("Derivation_Test_03_1.json", st, dg2, "2024-01-21 00:00:00+00", "2024-01-01 12:00:00+00", "2024-01-02 12:00:00+00", "2024-08-21 22:36:28.365244+00", "{}");
-      insertExternalSource(Test_00);
-      insertExternalSource(Test_01);
-      insertExternalSource(Test_02);
-      insertExternalSource(Test_03);
+    // insert external events
+    ExternalEvent e02 = new ExternalEvent("2", "DerivationD", "Derivation_Test_00_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
+    ExternalEvent e07 = new ExternalEvent("7", "DerivationC", "Derivation_Test_00_1.json", dg2, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
+    ExternalEvent e08 = new ExternalEvent("8", "DerivationB", "Derivation_Test_00_1.json", dg2, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent e01 = new ExternalEvent("1", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rule\": [1], \"should_present\": true}");
+    ExternalEvent e02_2 =  new ExternalEvent("2", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
+    ExternalEvent e03 = new ExternalEvent("3", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
+    ExternalEvent e04 = new ExternalEvent("4", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
+    ExternalEvent e05 = new ExternalEvent("5", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent e06 = new ExternalEvent("6", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent e02_3 = new ExternalEvent("2", "DerivationB", "Derivation_Test_02_1.json", dg2, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
+    ExternalEvent e09 = new ExternalEvent("9", "DerivationC", "Derivation_Test_03_1.json", dg2, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+    insertExternalEvent(e02);
+    insertExternalEvent(e07);
+    insertExternalEvent(e08);
+    insertExternalEvent(e01);
+    insertExternalEvent(e02_2);
+    insertExternalEvent(e03);
+    insertExternalEvent(e04);
+    insertExternalEvent(e05);
+    insertExternalEvent(e06);
+    insertExternalEvent(e02_3);
+    insertExternalEvent(e09);
 
-      // insert external events
-      ExternalEvent e02 = new ExternalEvent("2", "DerivationD", "Derivation_Test_00_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
-      ExternalEvent e07 = new ExternalEvent("7", "DerivationC", "Derivation_Test_00_1.json", dg2, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
-      ExternalEvent e08 = new ExternalEvent("8", "DerivationB", "Derivation_Test_00_1.json", dg2, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
-      ExternalEvent e01 = new ExternalEvent("1", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rule\": [1], \"should_present\": true}");
-      ExternalEvent e02_2 =  new ExternalEvent("2", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
-      ExternalEvent e03 = new ExternalEvent("3", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
-      ExternalEvent e04 = new ExternalEvent("4", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
-      ExternalEvent e05 = new ExternalEvent("5", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
-      ExternalEvent e06 = new ExternalEvent("6", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-      ExternalEvent e02_3 = new ExternalEvent("2", "DerivationB", "Derivation_Test_02_1.json", dg2, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
-      ExternalEvent e09 = new ExternalEvent("9", "DerivationC", "Derivation_Test_03_1.json", dg2, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-      insertExternalEvent(e02);
-      insertExternalEvent(e07);
-      insertExternalEvent(e08);
-      insertExternalEvent(e01);
-      insertExternalEvent(e02_2);
-      insertExternalEvent(e03);
-      insertExternalEvent(e04);
-      insertExternalEvent(e05);
-      insertExternalEvent(e06);
-      insertExternalEvent(e02_3);
-      insertExternalEvent(e09);
+    // check that derived events in our prewritten case has the correct keys
+    // verify everything is present
+    var results = getDerivedEvents("ORDER BY source_key");
 
-      // check that derived events in our prewritten case has the correct keys
-      // verify everything is present
-      var results = getDerivedEvents("ORDER BY source_key");
+    // both ranges should only have a single element and be fully present
+    List<DerivedEvent> expectedResults = List.of(
+        new DerivedEvent(
+            "8",
+            "DerivationB",
+            "Derivation_Test_00_1.json",
+            "Test Default_2",
+            "2024-01-10 11:00:00+00",
+            "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+            "2024-01-18 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "8",
+            "DerivationB",
+            "Derivation_Test_00.json",
+            "Test Default",
+            "2024-01-10 11:00:00+00",
+            "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+            "2024-01-18 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "3",
+            "DerivationB",
+            "Derivation_Test_01_1.json",
+            "Test Default_2",
+            "2024-01-02 23:00:00+00",
+            "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "1",
+            "DerivationA",
+            "Derivation_Test_01_1.json",
+            "Test Default_2",
+            "2024-01-01 00:00:00+00",
+            "02:10:00", "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "1",
+            "DerivationA",
+            "Derivation_Test_01.json",
+            "Test Default",
+            "2024-01-01 00:00:00+00", "02:10:00",
+            "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "3",
+            "DerivationB",
+            "Derivation_Test_01.json",
+            "Test Default",
+            "2024-01-02 23:00:00+00",
+            "03:00:00",
+            "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "5",
+            "DerivationC",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-05 23:00:00+00",
+            "01:10:00",
+            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "6",
+            "DerivationC",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-06 12:00:00+00",
+            "02:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "2",
+            "DerivationB",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-09 11:00:00+00",
+            "01:05:00",
+            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "5",
+            "DerivationC",
+            "Derivation_Test_02.json",
+            "Test Default",
+            "2024-01-05 23:00:00+00",
+            "01:10:00",
+            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "6",
+            "DerivationC",
+            "Derivation_Test_02.json",
+            "Test Default",
+            "2024-01-06 12:00:00+00",
+            "02:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "2",
+            "DerivationB",
+            "Derivation_Test_02.json",
+            "Test Default",
+            "2024-01-09 11:00:00+00",
+            "01:05:00",
+            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "9",
+            "DerivationC",
+            "Derivation_Test_03_1.json",
+            "Test Default_2",
+            "2024-01-02 00:00:00+00",
+            "01:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+            "2024-01-21 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "9",
+            "DerivationC",
+            "Derivation_Test_03.json",
+            "Test Default",
+            "2024-01-02 00:00:00+00",
+            "01:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+            "2024-01-21 00:00:00+00"
+        )
+    );
+    assertTrue(results.containsAll(expectedResults));
 
-      // both ranges should only have a single element and be fully present
-      List<DerivedEvent> expectedResults = List.of(
-          new DerivedEvent(
-              "8",
-              "DerivationB",
-              "Derivation_Test_00_1.json",
-              "Test Default_2",
-              "2024-01-10 11:00:00+00",
-              "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
-              "2024-01-18 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "8",
-              "DerivationB",
-              "Derivation_Test_00.json",
-              "Test Default",
-              "2024-01-10 11:00:00+00",
-              "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
-              "2024-01-18 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "3",
-              "DerivationB",
-              "Derivation_Test_01_1.json",
-              "Test Default_2",
-              "2024-01-02 23:00:00+00",
-              "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "1",
-              "DerivationA",
-              "Derivation_Test_01_1.json",
-              "Test Default_2",
-              "2024-01-01 00:00:00+00",
-              "02:10:00", "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "1",
-              "DerivationA",
-              "Derivation_Test_01.json",
-              "Test Default",
-              "2024-01-01 00:00:00+00", "02:10:00",
-              "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "3",
-              "DerivationB",
-              "Derivation_Test_01.json",
-              "Test Default",
-              "2024-01-02 23:00:00+00",
-              "03:00:00",
-              "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "5",
-              "DerivationC",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-05 23:00:00+00",
-              "01:10:00",
-              "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "6",
-              "DerivationC",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-06 12:00:00+00",
-              "02:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "2",
-              "DerivationB",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-09 11:00:00+00",
-              "01:05:00",
-              "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "5",
-              "DerivationC",
-              "Derivation_Test_02.json",
-              "Test Default",
-              "2024-01-05 23:00:00+00",
-              "01:10:00",
-              "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "6",
-              "DerivationC",
-              "Derivation_Test_02.json",
-              "Test Default",
-              "2024-01-06 12:00:00+00",
-              "02:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "2",
-              "DerivationB",
-              "Derivation_Test_02.json",
-              "Test Default",
-              "2024-01-09 11:00:00+00",
-              "01:05:00",
-              "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "9",
-              "DerivationC",
-              "Derivation_Test_03_1.json",
-              "Test Default_2",
-              "2024-01-02 00:00:00+00",
-              "01:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
-              "2024-01-21 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "9",
-              "DerivationC",
-              "Derivation_Test_03.json",
-              "Test Default",
-              "2024-01-02 00:00:00+00",
-              "01:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
-              "2024-01-21 00:00:00+00"
-          )
-      );
-      assertTrue(results.containsAll(expectedResults));
+    // verify for a given dg expected keys are correct, no overlap inside dg
+    results = getDerivedEvents("WHERE derivation_group_name = '%s' ORDER BY start_time;".formatted(dg2));
 
-      // verify for a given dg expected keys are correct, no overlap inside dg
-      results = getDerivedEvents("WHERE derivation_group_name = '%s' ORDER BY start_time;".formatted(dg2));
-
-      // both ranges should only have a single element and be fully present
-      expectedResults = List.of(
-          new DerivedEvent(
-              "1",
-              "DerivationA",
-              "Derivation_Test_01_1.json",
-              "Test Default_2",
-              "2024-01-01 00:00:00+00",
-              "02:10:00",
-              "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "9",
-              "DerivationC",
-              "Derivation_Test_03_1.json",
-              "Test Default_2",
-              "2024-01-02 00:00:00+00",
-              "01:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
-              "2024-01-21 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "3",
-              "DerivationB",
-              "Derivation_Test_01_1.json",
-              "Test Default_2",
-              "2024-01-02 23:00:00+00",
-              "03:00:00",
-              "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
-              "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
-              "2024-01-19 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "5",
-              "DerivationC",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-05 23:00:00+00",
-              "01:10:00",
-              "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "6",
-              "DerivationC",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-06 12:00:00+00",
-              "02:00:00",
-              "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "2",
-              "DerivationB",
-              "Derivation_Test_02_1.json",
-              "Test Default_2",
-              "2024-01-09 11:00:00+00",
-              "01:05:00",
-              "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
-              "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
-              "2024-01-20 00:00:00+00"
-          ),
-          new DerivedEvent(
-              "8",
-              "DerivationB",
-              "Derivation_Test_00_1.json",
-              "Test Default_2",
-              "2024-01-10 11:00:00+00",
-              "01:05:00",
-              "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
-              "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
-              "2024-01-18 00:00:00+00"
-          )
-      );
-      assertTrue(results.containsAll(expectedResults));
-    }
+    // both ranges should only have a single element and be fully present
+    expectedResults = List.of(
+        new DerivedEvent(
+            "1",
+            "DerivationA",
+            "Derivation_Test_01_1.json",
+            "Test Default_2",
+            "2024-01-01 00:00:00+00",
+            "02:10:00",
+            "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "9",
+            "DerivationC",
+            "Derivation_Test_03_1.json",
+            "Test Default_2",
+            "2024-01-02 00:00:00+00",
+            "01:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+            "2024-01-21 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "3",
+            "DerivationB",
+            "Derivation_Test_01_1.json",
+            "Test Default_2",
+            "2024-01-02 23:00:00+00",
+            "03:00:00",
+            "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+            "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+            "2024-01-19 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "5",
+            "DerivationC",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-05 23:00:00+00",
+            "01:10:00",
+            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "6",
+            "DerivationC",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-06 12:00:00+00",
+            "02:00:00",
+            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "2",
+            "DerivationB",
+            "Derivation_Test_02_1.json",
+            "Test Default_2",
+            "2024-01-09 11:00:00+00",
+            "01:05:00",
+            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+            "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+            "2024-01-20 00:00:00+00"
+        ),
+        new DerivedEvent(
+            "8",
+            "DerivationB",
+            "Derivation_Test_00_1.json",
+            "Test Default_2",
+            "2024-01-10 11:00:00+00",
+            "01:05:00",
+            "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+            "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+            "2024-01-18 00:00:00+00"
+        )
+    );
+    assertTrue(results.containsAll(expectedResults));
   }
 
   /**
