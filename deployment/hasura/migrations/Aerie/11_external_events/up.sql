@@ -36,6 +36,12 @@ create table merlin.derivation_group (
     constraint derivation_group_references_external_source_type
       foreign key (source_type_name)
       references merlin.external_source_type(name)
+      on update cascade
+      on delete restrict,
+    constraint derivation_group_owner_exists
+      foreign key (owner) references permissions.users
+      on update cascade
+      on delete set null
 );
 
 comment on table merlin.derivation_group is e''
@@ -66,10 +72,18 @@ create table merlin.external_source (
     CONSTRAINT dg_unique_valid_at UNIQUE (derivation_group_name, valid_at),
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
-      references merlin.external_source_type(name),
+      references merlin.external_source_type(name)
+      on update cascade
+      on delete restrict,
     constraint external_source_type_matches_derivation_group
       foreign key (derivation_group_name)
       references merlin.derivation_group (name)
+      on update cascade
+      on delete restrict,
+    constraint external_source_owner_exists
+      foreign key (owner) references permissions.users
+      on update cascade
+      on delete set null
 );
 
 comment on table merlin.external_source is e''
@@ -96,8 +110,7 @@ comment on column merlin.external_source.metadata is e''
   'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
   'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 comment on column merlin.external_source.owner is e''
-  'The user who uploaded the external source.\n'
-  'Set by Hasura.';
+  'The user who uploaded the external source.';
 
 -- if an external source is linked to a plan it cannot be deleted
 create function merlin.external_source_pdg_association_delete()
@@ -116,6 +129,21 @@ create trigger external_source_pdg_association_delete
 before delete on merlin.external_source
   for each row execute function merlin.external_source_pdg_association_delete();
 
+-- set acknowledged on merlin.plan_derivation_group false for this derivation group as there are new changes
+create function merlin.external_source_pdg_ack_update()
+  returns trigger
+  language plpgsql as $$
+begin
+  update merlin.plan_derivation_group set "acknowledged" = false
+  where plan_derivation_group.derivation_group_name = NEW.derivation_group_name;
+  return new;
+end;
+$$;
+
+create trigger external_source_pdg_ack_update
+after insert on merlin.external_source
+  for each row execute function merlin.external_source_pdg_ack_update();
+
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
@@ -130,10 +158,12 @@ create table merlin.external_event (
     constraint external_event_references_source_key_derivation_group
       foreign key (source_key, derivation_group_name)
       references merlin.external_source (key, derivation_group_name)
+      on update cascade
       on delete cascade,
     constraint external_event_references_event_type_name
       foreign key (event_type_name)
       references merlin.external_event_type(name)
+      on update cascade
       on delete restrict
 );
 
@@ -164,32 +194,6 @@ before insert or update on merlin.external_event
 for each row
 when (new.duration < '0')
 execute function util_functions.raise_duration_is_negative();
-
-create table merlin.plan_derivation_group (
-    plan_id integer not null,
-    derivation_group_name text not null,
-    last_acknowledged_at timestamp with time zone default now() not null,
-
-    constraint plan_derivation_group_pkey
-      primary key (plan_id, derivation_group_name),
-    constraint plan_derivation_group_references_plan_id
-      foreign key (plan_id)
-      references merlin.plan(id),
-    constraint plan_derivation_group_references_derivation_group_name
-      foreign key (derivation_group_name)
-      references merlin.derivation_group(name)
-);
-
-comment on table merlin.plan_derivation_group is e''
-  'Links externally imported event sources & plans.\n'
-  'Additionally, tracks the last time a plan owner/contributor(s) have acknowledged additions to the derivation group.\n';
-
-comment on column merlin.plan_derivation_group.plan_id is e''
-  'The plan with which the derivation group is associated.';
-comment on column merlin.plan_derivation_group.derivation_group_name is e''
-  'The derivation group being associated with the plan.';
-comment on column merlin.plan_derivation_group.last_acknowledged_at is e''
-  'The time at which changes to the derivation group were last acknowledged.';
 
 create function merlin.check_external_event_boundaries()
 returns trigger
@@ -224,6 +228,52 @@ before insert on merlin.external_event
 comment on trigger check_external_event_boundaries on merlin.external_event is e''
   'Fires any time a new external event is added that checks that the span of the event fits in its referenced source.';
 
+create table merlin.plan_derivation_group (
+    plan_id integer not null,
+    derivation_group_name text not null,
+    last_acknowledged_at timestamp with time zone default now() not null,
+    acknowledged boolean not null default true,
+
+    constraint plan_derivation_group_pkey
+      primary key (plan_id, derivation_group_name),
+    constraint pdg_plan_exists
+      foreign key (plan_id)
+      references merlin.plan(id)
+      on delete cascade,
+    constraint pdg_derivation_group_exists
+      foreign key (derivation_group_name)
+      references merlin.derivation_group(name)
+      on update cascade
+      on delete restrict
+);
+
+comment on table merlin.plan_derivation_group is e''
+  'Links externally imported event sources & plans.\n'
+  'Additionally, tracks the last time a plan owner/contributor(s) have acknowledged additions to the derivation group.\n';
+
+comment on column merlin.plan_derivation_group.plan_id is e''
+  'The plan with which the derivation group is associated.';
+comment on column merlin.plan_derivation_group.derivation_group_name is e''
+  'The derivation group being associated with the plan.';
+comment on column merlin.plan_derivation_group.last_acknowledged_at is e''
+  'The time at which changes to the derivation group were last acknowledged.';
+
+-- update last_acknowledged whenever acknowledged is set to true
+create function merlin.pdg_update_ack_at()
+  returns trigger
+  language plpgsql as $$
+begin
+  if new.acknowledged = true then
+    new.last_acknowledged_at = now();
+  end if;
+  return new;
+end;
+$$;
+
+create trigger pdg_update_ack_at
+before update on merlin.plan_derivation_group
+  for each row execute function merlin.pdg_update_ack_at();
+
 create function merlin.subtract_later_ranges(curr_date tstzmultirange, later_dates tstzmultirange[])
 returns tstzmultirange
 immutable
@@ -249,6 +299,7 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
 -- Rule 2. An External Event partially superceded by a later External Source, but whose start time occurs before the start of said External Source(s), will be present in the final, derived result.
 -- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
 -- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
+
 create view merlin.derived_events
 as
 select
@@ -326,13 +377,15 @@ create view ui.derivation_group_comp
 select
   name,
   source_type_name,
+  owner,
   array_agg(distinct concat(sources.source_key, ', ', sources.derivation_group_name, ', ', sources.contained_events)) as sources,
   array_remove(array_agg(distinct event_type_name), null) as event_types,
 	count(distinct counted.event_key) as derived_total
 from (
 	select derivation_group.name,
 		     derivation_group.source_type_name,
-		     types.event_type_name
+		     types.event_type_name,
+		     derivation_group.owner
   from merlin.derivation_group
 	left outer join ( select external_event.source_key,
 	                         external_event.derivation_group_name,
@@ -350,7 +403,7 @@ full outer join ( select external_event.source_key,
 full outer join ( select derived_events.event_key,
 				                 derived_events.derivation_group_name
 			            from merlin.derived_events) counted on counted.derivation_group_name = with_event_types.name
-group by with_event_types.name, with_event_types.source_type_name;
+group by with_event_types.name, with_event_types.source_type_name, with_event_types.owner;
 
 comment on view ui.derivation_group_comp is e''
   'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
