@@ -49,11 +49,11 @@ insert_permissions:
 update_permissions:
   - role: aerie_admin
     permission:
-      columns: [ last_acknowledged_at ]
+      columns: [ acknowledged ]
       filter: {}
   - role: user
     permission:
-      columns: [ last_acknowledged_at ]
+      columns: [ acknowledged ]
       filter: {
         "plan": {
           "_or": [
