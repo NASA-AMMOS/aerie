@@ -200,14 +200,14 @@ public class ExternalEventTests {
   /**
    * Get all derived events.
    */
-  protected List<DerivedEvent> getDerivedEvents() throws SQLException {
+  protected List<DerivedEvent> getDerivedEvents(String end) throws SQLException {
     List<DerivedEvent> results = new ArrayList<>();
     try(final var statement = connection.createStatement()) {
       var res = statement.executeQuery(
           // language=sql
           """
-          SELECT * FROM merlin.derived_events ORDER BY source_key
-          """
+          SELECT * FROM merlin.derived_events %s
+          """.formatted(end)
       );
       while (res.next()) {
         results.add(new DerivedEvent(
@@ -451,54 +451,70 @@ public class ExternalEventTests {
        */
       @Test
       void testSparseCoverage() throws SQLException {
-        try(final var statement = connection.createStatement()) {
+        // create our sources and their per-window events
+        ExternalSource a = new ExternalSource(
+            "A",
+            st,
+            dg,
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T03:00:00Z",
+            "2024-01-01T04:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, a.start_time(), duration, mt);
+        ExternalSource b = new ExternalSource(
+            "B",
+            st,
+            dg,
+            "2024-01-02T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            "2024-01-01T02:00:00Z",
+            ca,
+            mt
+        );
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
 
-          // create our sources and their per-window events
-          ExternalSource a = new ExternalSource(
-              "A",
-              st,
-              dg,
-              "2024-01-01T00:00:00Z",
-              "2024-01-01T03:00:00Z",
-              "2024-01-01T04:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, a.start_time(), duration, mt);
-          ExternalSource b = new ExternalSource(
-              "B",
-              st,
-              dg,
-              "2024-01-02T00:00:00Z",
-              "2024-01-01T01:00:00Z",
-              "2024-01-01T02:00:00Z",
-              ca,
-              mt
-          );
-          ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        // verify the ranges are as expected
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
 
-          // verify the ranges are as expected
-          // insert generic external event type, source type, and derivation group
-          insertStandardTypes();
+        // insert sources
+        insertExternalSource(a);
+        insertExternalSource(b);
 
-          // insert sources
-          insertExternalSource(a);
-          insertExternalSource(b);
+        // insert events
+        insertExternalEvent(aE);
+        insertExternalEvent(bE);
 
-          // insert events
-          insertExternalEvent(aE);
-          insertExternalEvent(bE);
+        var results = getDerivedEvents("ORDER BY source_key");
 
-          var results = getDerivedEvents();
-          var actualResults = results.stream().map(r -> r.source_range).toList();
-
-          // both ranges should only have a single element and be fully present
-          final String[] expectedResults = {
-              "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
-              "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}"
-          };
-          assertTrue(actualResults.containsAll(List.of(expectedResults)));
-        }
+        // both ranges should only have a single element and be fully present
+        final List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "A_event",
+                "Test",
+                "A",
+                "Test Default",
+                "2024-01-01 03:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
+                "2024-01-01 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "B_event",
+                "Test",
+                "B",
+                "Test Default",
+                "2024-01-01 01:00:00+00",
+                "00:00:00.000001",
+                "{}",
+                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
+                "2024-01-02 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       }
 
       /**
@@ -559,15 +575,34 @@ public class ExternalEventTests {
             insertExternalEvent(aE);
             insertExternalEvent(bE);
 
-            var results = getDerivedEvents();
-            var actualResults = results.stream().map(r -> r.source_range).toList();
+            var results = getDerivedEvents("ORDER BY source_key");
 
-            // verify the range for A is shorter than what is specified in the definition of "a" - it should start later.
-            final String[] expectedResults = {
-                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}"
-            };
-            assertTrue(actualResults.containsAll(List.of(expectedResults)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "A_event",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 01:10:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "B_event",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -630,15 +665,34 @@ public class ExternalEventTests {
             insertExternalEvent(aE);
             insertExternalEvent(bE);
 
-            var results = getDerivedEvents();
-            var actualResults = results.stream().map(r -> r.source_range).toList();
+            var results = getDerivedEvents("ORDER BY source_key");
 
-            // verify the range for A is shorter than what is specified in the definition of "a" - it should end sooner.
-            final String[] expectedResults = {
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
-                "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}"
-            };
-            assertTrue(actualResults.containsAll(List.of(expectedResults)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "A_event",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "B_event",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:30:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -715,16 +769,44 @@ public class ExternalEventTests {
             insertExternalEvent(bE);
             insertExternalEvent(cE);
 
-            var results = getDerivedEvents();
-            var actualResults = results.stream().map(r -> r.source_range).toList();
+            var results = getDerivedEvents("ORDER BY source_key");
 
-            // verify the range for the first source is split into intervals
-            final String[] expectedResults = {
-                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
-                "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}"
-            };
-            assertTrue(actualResults.containsAll(List.of(expectedResults)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "A_event",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 01:10:00+00",
+                    "00:00:00.000001",
+                    "{}", "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "B_event",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "C_event",
+                    "Test",
+                    "C",
+                    "Test Default",
+                    "2024-01-01 01:30:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}",
+                    "2024-01-03 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -863,20 +945,83 @@ public class ExternalEventTests {
             insertExternalEvent(fE);
             insertExternalEvent(gE);
 
-            var results = getDerivedEvents();
-            var actualResults = results.stream().map(r -> r.source_range).toList();
+            var results = getDerivedEvents("ORDER BY source_key");
 
-            // ranges should be shortened and broken just like the preceding comment suggests.
-            final String[] expectedResults = {
-                "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
-                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
-                "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
-                "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
-                "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
-                "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
-                "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}"
-            };
-            assertTrue(actualResults.containsAll(List.of(expectedResults)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "A_event",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 00:09:10+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "B_event",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "C_event",
+                    "Test",
+                    "C",
+                    "Test Default",
+                    "2024-01-01 00:21:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
+                    "2024-01-03 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "D_event",
+                    "Test",
+                    "D",
+                    "Test Default",
+                    "2024-01-01 00:02:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
+                    "2024-01-04 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "E_event",
+                    "Test", "E",
+                    "Test Default", "2024-01-01 00:13:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
+                    "2024-01-05 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "F_event",
+                    "Test", "F",
+                    "Test Default", "2024-01-01 00:04:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
+                    "2024-01-06 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "G_event",
+                    "Test", "G",
+                    "Test Default", "2024-01-01 00:11:00+00",
+                    "00:00:00.000001",
+                    "{}",
+                    "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}",
+                    "2024-01-07 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -937,17 +1082,23 @@ public class ExternalEventTests {
 
           // ensure the result has the right size and keys
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events;
-                """
-            );
+            final var results = getDerivedEvents("");
 
-            // only 1 result expected in set, it isn't superceded at all
-            assertTrue(res.next());
-            assertEquals("A.1", res.getString("event_key"));
-            assertFalse(res.next());
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "A.1",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "01:00:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -1018,10 +1169,45 @@ public class ExternalEventTests {
 
           // verify the expected keys are included
           assertDoesNotThrow(() -> {
-            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
+            final var results = getDerivedEvents("ORDER BY source_key");
 
-            final String[] expected_keys = {"b", "a", "c"};
-            assertTrue(actualResults.containsAll(List.of(expected_keys)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "a",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 01:10:00+00",
+                    "00:10:00",
+                    "{}",
+                    "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "b",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:30:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "c",
+                    "Test",
+                    "C",
+                    "Test Default",
+                    "2024-01-01 01:30:00+00",
+                    "01:00:00",
+                    "{}",
+                    "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 03:00:00+00\")}",
+                    "2024-01-03 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -1082,10 +1268,45 @@ public class ExternalEventTests {
 
           // verify the expected keys
           assertDoesNotThrow(() -> {
-            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
+            final var results = getDerivedEvents("ORDER BY source_key");
 
-            final String[] expected_keys = {"a", "b1", "b2"};
-            assertTrue(actualResults.containsAll(List.of(expected_keys)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "a",
+                    "Test",
+                    "A",
+                    "Test Default",
+                    "2024-01-01 00:25:00+00",
+                    "00:10:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
+                    "2024-01-01 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "b1",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:30:00+00",
+                    "00:10:00",
+                    "{}",
+                    "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "b2",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:45:00+00",
+                    "00:10:00",
+                    "{}",
+                    "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -1158,10 +1379,34 @@ public class ExternalEventTests {
 
           // verify the expected keys
           assertDoesNotThrow(() -> {
-            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
+            final var results = getDerivedEvents("ORDER BY source_key");
 
-            final String[] expected_keys = {"b1", "b2"};
-            assertTrue(actualResults.containsAll(List.of(expected_keys)));
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "b1",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:00:00+00",
+                    "00:10:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                ),
+                new DerivedEvent(
+                    "b2",
+                    "Test",
+                    "B",
+                    "Test Default",
+                    "2024-01-01 00:30:00+00",
+                    "00:20:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-02 00:00:00+00"
+                )
+            );
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -1231,7 +1476,7 @@ public class ExternalEventTests {
 
           // verify expected keys (none)
           assertDoesNotThrow(() -> {
-            final var results = getDerivedEvents();
+            final var results = getDerivedEvents("ORDER BY source_key");
 
             assertEquals(0, results.size());
           });
@@ -1321,15 +1566,25 @@ public class ExternalEventTests {
 
           // verify expected keys
           assertDoesNotThrow(() -> {
-            final var results = getDerivedEvents();
+            final var results = getDerivedEvents("ORDER BY source_key");
 
-            final String[] expected_keys = {"a"};
-            // only 1 expected result
-            assertEquals(1, results.size());
-            assertEquals(expected_keys[0], results.getFirst().key);
-            assertEquals("00:20:00", results.getFirst().duration);
-            assertEquals("C", results.getFirst().source_key);
-            assertEquals("{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}", results.getFirst().source_range);
+            // both ranges should only have a single element and be fully present
+            final List<DerivedEvent> expectedResults = List.of(
+                new DerivedEvent(
+                    "a",
+                    "Test",
+                    "C",
+                    "Test Default",
+                    "2024-01-01 00:30:00+00",
+                    "00:20:00",
+                    "{}",
+                    "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
+                    "2024-01-03 00:00:00+00"
+                )
+            );
+            System.out.println("RESULTS" + results.toString());
+            System.out.println("EXPECTED RESULTS" + expectedResults.toString());
+            assertTrue(results.containsAll(expectedResults));
           });
         }
       }
@@ -1428,20 +1683,45 @@ public class ExternalEventTests {
 
         // all 3 keys should be present!
         assertDoesNotThrow(() -> {
-          var res = statement.executeQuery(
-              // language=sql
-              """
-              SELECT * FROM merlin.derived_events ORDER BY start_time, event_key ASC
-              """
-          );
-          final String[] expected_keys = {"a", "b", "c"};
+          var results = getDerivedEvents("ORDER BY start_time, event_key ASC");
 
-          ArrayList<String> actual = new ArrayList<>();
-          while (res.next()) {
-            actual.add(res.getString("event_key"));
-          }
-          assertEquals(expected_keys.length, actual.size());
-          assertTrue(actual.containsAll(List.of(expected_keys)));
+          // both ranges should only have a single element and be fully present
+          final List<DerivedEvent> expectedResults = List.of(
+              new DerivedEvent(
+                  "a",
+                  "Test",
+                  "A",
+                  "Test Default",
+                  "2024-01-01 00:00:00+00",
+                  "00:10:00",
+                  "{}",
+                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+                  "2024-01-01 00:00:00+00"
+              ),
+              new DerivedEvent(
+                  "b",
+                  "Test",
+                  "A",
+                  "Test Default",
+                  "2024-01-01 00:00:00+00",
+                  "00:05:00",
+                  "{}",
+                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+                  "2024-01-01 00:00:00+00"
+              ),
+              new DerivedEvent(
+                  "c",
+                  "Test",
+                  "A",
+                  "Test Default",
+                  "2024-01-01 00:00:00+00",
+                  "00:15:00",
+                  "{}",
+                  "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
+                  "2024-01-01 00:00:00+00"
+              )
+          );
+          assertTrue(results.containsAll(expectedResults));
         });
       }
     }
@@ -1839,25 +2119,246 @@ public class ExternalEventTests {
       // check that derived events in our prewritten case has the correct keys
       assertDoesNotThrow(() -> {
         // verify everything is present
-        var results = getDerivedEvents().stream().map(r -> r.key).toList();
-        final String[] expected_keys = {"1", "1", "9", "9", "3", "3", "5", "5", "6", "6", "2", "2", "8", "8"};
-        assertTrue(results.containsAll(List.of(expected_keys)));
+        var results = getDerivedEvents("ORDER BY source_key");
+
+        // both ranges should only have a single element and be fully present
+        List<DerivedEvent> expectedResults = List.of(
+            new DerivedEvent(
+                "8",
+                "DerivationB",
+                "Derivation_Test_00_1.json",
+                "Test Default_2",
+                "2024-01-10 11:00:00+00",
+                "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+                "2024-01-18 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "8",
+                "DerivationB",
+                "Derivation_Test_00.json",
+                "Test Default",
+                "2024-01-10 11:00:00+00",
+                "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+                "2024-01-18 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "3",
+                "DerivationB",
+                "Derivation_Test_01_1.json",
+                "Test Default_2",
+                "2024-01-02 23:00:00+00",
+                "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "1",
+                "DerivationA",
+                "Derivation_Test_01_1.json",
+                "Test Default_2",
+                "2024-01-01 00:00:00+00",
+                "02:10:00", "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "1",
+                "DerivationA",
+                "Derivation_Test_01.json",
+                "Test Default",
+                "2024-01-01 00:00:00+00", "02:10:00",
+                "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "3",
+                "DerivationB",
+                "Derivation_Test_01.json",
+                "Test Default",
+                "2024-01-02 23:00:00+00",
+                "03:00:00",
+                "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "5",
+                "DerivationC",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-05 23:00:00+00",
+                "01:10:00",
+                "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "6",
+                "DerivationC",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-06 12:00:00+00",
+                "02:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "2",
+                "DerivationB",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-09 11:00:00+00",
+                "01:05:00",
+                "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "5",
+                "DerivationC",
+                "Derivation_Test_02.json",
+                "Test Default",
+                "2024-01-05 23:00:00+00",
+                "01:10:00",
+                "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "6",
+                "DerivationC",
+                "Derivation_Test_02.json",
+                "Test Default",
+                "2024-01-06 12:00:00+00",
+                "02:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "2",
+                "DerivationB",
+                "Derivation_Test_02.json",
+                "Test Default",
+                "2024-01-09 11:00:00+00",
+                "01:05:00",
+                "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "9",
+                "DerivationC",
+                "Derivation_Test_03_1.json",
+                "Test Default_2",
+                "2024-01-02 00:00:00+00",
+                "01:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+                "2024-01-21 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "9",
+                "DerivationC",
+                "Derivation_Test_03.json",
+                "Test Default",
+                "2024-01-02 00:00:00+00",
+                "01:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+                "2024-01-21 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
 
         // verify for a given dg expected keys are correct, no overlap inside dg
-        final var res = statement.executeQuery(
-            // language=sql
-            """
-            SELECT * FROM merlin.derived_events WHERE derivation_group_name = '%s' ORDER BY start_time;
-            """.formatted(dg2)
-        );
-        final String[] expected_keys_2 = {"1", "9", "3", "5", "6", "2", "8"};
+        results = getDerivedEvents("WHERE derivation_group_name = '%s' ORDER BY start_time;".formatted(dg2));
 
-        ArrayList<String> actual = new ArrayList<>();
-        while (res.next()) {
-          actual.add(res.getString("event_key"));
-        }
-        assertEquals(expected_keys_2.length, actual.size());
-        assertTrue(actual.containsAll(List.of(expected_keys_2)));
+        // both ranges should only have a single element and be fully present
+        expectedResults = List.of(
+            new DerivedEvent(
+                "1",
+                "DerivationA",
+                "Derivation_Test_01_1.json",
+                "Test Default_2",
+                "2024-01-01 00:00:00+00",
+                "02:10:00",
+                "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "9",
+                "DerivationC",
+                "Derivation_Test_03_1.json",
+                "Test Default_2",
+                "2024-01-02 00:00:00+00",
+                "01:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
+                "2024-01-21 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "3",
+                "DerivationB",
+                "Derivation_Test_01_1.json",
+                "Test Default_2",
+                "2024-01-02 23:00:00+00",
+                "03:00:00",
+                "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+                "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
+                "2024-01-19 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "5",
+                "DerivationC",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-05 23:00:00+00",
+                "01:10:00",
+                "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "6",
+                "DerivationC",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-06 12:00:00+00",
+                "02:00:00",
+                "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "2",
+                "DerivationB",
+                "Derivation_Test_02_1.json",
+                "Test Default_2",
+                "2024-01-09 11:00:00+00",
+                "01:05:00",
+                "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
+                "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
+                "2024-01-20 00:00:00+00"
+            ),
+            new DerivedEvent(
+                "8",
+                "DerivationB",
+                "Derivation_Test_00_1.json",
+                "Test Default_2",
+                "2024-01-10 11:00:00+00",
+                "01:05:00",
+                "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+                "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
+                "2024-01-18 00:00:00+00"
+            )
+        );
+        assertTrue(results.containsAll(expectedResults));
       });
     }
   }
