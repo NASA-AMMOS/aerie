@@ -12,10 +12,12 @@ create table merlin.external_event (
     constraint external_event_references_source_key_derivation_group
       foreign key (source_key, derivation_group_name)
       references merlin.external_source (key, derivation_group_name)
+      on update cascade
       on delete cascade,
     constraint external_event_references_event_type_name
       foreign key (event_type_name)
       references merlin.external_event_type(name)
+      on update cascade
       on delete restrict
 );
 

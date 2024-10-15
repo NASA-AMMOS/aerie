@@ -17,10 +17,12 @@ create table merlin.external_source (
     constraint external_source_references_external_source_type_name
       foreign key (source_type_name)
       references merlin.external_source_type(name)
+      on update cascade
       on delete restrict,
     constraint external_source_type_matches_derivation_group
       foreign key (derivation_group_name)
       references merlin.derivation_group (name)
+      on update cascade
       on delete restrict,
     constraint external_source_owner_exists
       foreign key (owner) references permissions.users
