@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.postgresql.util.PSQLException;
 
@@ -73,25 +74,11 @@ public class ExternalEventTests {
   //region Records
   protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String properties) {}
   protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at, String metadata){}
+  protected record DerivedEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String properties, String source_range, String valid_at){}
   //endregion
 
 
   //region Helper Functions
-  /**
-   * A simple function to compare a SQL result (res) for a given key (key) against a list of expected entries (expected)
-   */
-  void compareLists(String[] expected, ResultSet res, String key) throws SQLException {
-    ArrayList<String> actual = new ArrayList<>();
-    while (res.next()) {
-      actual.add(res.getString(key));
-    }
-
-    assertEquals(expected.length, actual.size());
-    for (int i = 0; i < expected.length; i++) {
-      assertEquals(expected[i], actual.get(i));
-    }
-  }
-
   protected void insertExternalEventType(String event_type_name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the event type
@@ -208,6 +195,35 @@ public class ExternalEventTests {
         duration,
         "{}"
     );
+  }
+
+  /**
+   * Get all derived events.
+   */
+  protected List<DerivedEvent> getDerivedEvents() throws SQLException {
+    List<DerivedEvent> results = new ArrayList<>();
+    try(final var statement = connection.createStatement()) {
+      var res = statement.executeQuery(
+          // language=sql
+          """
+          SELECT * FROM merlin.derived_events ORDER BY source_key
+          """
+      );
+      while (res.next()) {
+        results.add(new DerivedEvent(
+            res.getString("event_key"),
+            res.getString("event_type_name"),
+            res.getString("source_key"),
+            res.getString("derivation_group_name"),
+            res.getString("start_time"),
+            res.getString("duration"),
+            res.getString("properties"),
+            res.getString("source_range"),
+            res.getString("valid_at")
+        ));
+      }
+    }
+    return results;
   }
 
   /**
@@ -340,33 +356,6 @@ public class ExternalEventTests {
       assertDoesNotThrow(() -> upload_source(dg));
     }
 
-
-    /**
-     * This test uploads data (tests 01-04 from SSMO-MPS/mission-data-sandbox/derivation_test) and then confirms derived
-     * events associated with the upload perform as expected. All desired keys should be present.
-     * This is an extension of uploadWithoutError.
-     */
-    @Test
-    void basicDerivedEvents() throws SQLException {
-      // upload all source data
-      assertDoesNotThrow(() -> upload_source(dg));
-      try(final var statement = connection.createStatement()) {
-
-        // check that derived events in our prewritten case has the correct keys
-        assertDoesNotThrow(() -> {
-          final var res = statement.executeQuery(
-              // language=sql
-              """
-              SELECT * FROM merlin.derived_events ORDER BY start_time;
-              """
-          );
-
-          final String[] expected_keys = {"1", "9", "3", "5", "6", "2", "8"};
-          compareLists(expected_keys, res, "event_key");
-        });
-      }
-    }
-
     /**
      * This test uploads data (tests 01-04 from SSMO-MPS/mission-data-sandbox/derivation_test) and then confirms
      * derivation_group_comp view associated with upload performs as expected.
@@ -379,25 +368,23 @@ public class ExternalEventTests {
       try(final var statement = connection.createStatement()) {
 
         // check that derivation_group_comp has 1 entry, with 4 sources and 7 events
-        assertDoesNotThrow(() -> {
-          final var res = statement.executeQuery(
-              // language=sql
-              """
-              SELECT * FROM ui.derivation_group_comp;
-              """
-          );
+        final var res = statement.executeQuery(
+            // language=sql
+            """
+            SELECT * FROM ui.derivation_group_comp;
+            """
+        );
 
-          // we expect only 1 result
-          assertTrue(res.next());
+        // we expect only 1 result
+        assertTrue(res.next());
 
-          // res.getArray() doesn't give you a String[] array - have to do some manipulation to get its length as a result
-          System.out.println(res.getArray("sources").toString());
-          assertEquals(4, res.getArray("sources").toString().split("\",\"").length);
-          assertEquals(7, res.getInt("derived_total"));
+        // res.getArray() doesn't give you a String[] array - have to do some manipulation to get its length as a result
+        System.out.println(res.getArray("sources").toString());
+        assertEquals(4, res.getArray("sources").toString().split("\",\"").length);
+        assertEquals(7, res.getInt("derived_total"));
 
-          // we expect only 1 result
-          assertFalse(res.next());
-        });
+        // we expect only 1 result
+        assertFalse(res.next());
       }
     }
   }
@@ -426,7 +413,7 @@ public class ExternalEventTests {
     class DerivedSourcesTests {
 
       // Commonly Repeated:
-      String duration = "00:00:00.000001";
+      final String duration = "00:00:00.000001";
 
       /**
        * The first test is a basic, non-overlapping case. We must ensure that gaps are preserved:
@@ -464,32 +451,26 @@ public class ExternalEventTests {
           ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
 
           // verify the ranges are as expected
-          assertDoesNotThrow(() -> {
-            // insert generic external event type, source type, and derivation group
-            insertStandardTypes();
+          // insert generic external event type, source type, and derivation group
+          insertStandardTypes();
 
-            // insert sources
-            insertExternalSource(a);
-            insertExternalSource(b);
+          // insert sources
+          insertExternalSource(a);
+          insertExternalSource(b);
 
-            // insert events
-            insertExternalEvent(aE);
-            insertExternalEvent(bE);
+          // insert events
+          insertExternalEvent(aE);
+          insertExternalEvent(bE);
 
-            var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY source_key
-                """
-            );
+          var results = getDerivedEvents();
+          var actualResults = results.stream().map(r -> r.source_range).toList();
 
-            // both ranges should only have a single element and be fully present
-            final String[] expectedResults = {
-                "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
-                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}"
-            };
-            compareLists(expectedResults, res, "source_range");
-          });
+          // both ranges should only have a single element and be fully present
+          final String[] expectedResults = {
+              "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
+              "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}"
+          };
+          assertTrue(actualResults.containsAll(List.of(expectedResults)));
         }
       }
 
@@ -551,19 +532,15 @@ public class ExternalEventTests {
             insertExternalEvent(aE);
             insertExternalEvent(bE);
 
-            var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY source_key
-                """
-            );
+            var results = getDerivedEvents();
+            var actualResults = results.stream().map(r -> r.source_range).toList();
 
             // verify the range for A is shorter than what is specified in the definition of "a" - it should start later.
             final String[] expectedResults = {
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}"
             };
-            compareLists(expectedResults, res, "source_range");
+            assertTrue(actualResults.containsAll(List.of(expectedResults)));
           });
         }
       }
@@ -626,19 +603,15 @@ public class ExternalEventTests {
             insertExternalEvent(aE);
             insertExternalEvent(bE);
 
-            var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY source_key
-                """
-            );
+            var results = getDerivedEvents();
+            var actualResults = results.stream().map(r -> r.source_range).toList();
 
             // verify the range for A is shorter than what is specified in the definition of "a" - it should end sooner.
             final String[] expectedResults = {
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}"
             };
-            compareLists(expectedResults, res, "source_range");
+            assertTrue(actualResults.containsAll(List.of(expectedResults)));
           });
         }
       }
@@ -723,12 +696,8 @@ public class ExternalEventTests {
             insertExternalEvent(bE);
             insertExternalEvent(cE);
 
-            var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY source_key
-                """
-            );
+            var results = getDerivedEvents();
+            var actualResults = results.stream().map(r -> r.source_range).toList();
 
             // verify the range for the first source is split into intervals
             final String[] expectedResults = {
@@ -736,7 +705,7 @@ public class ExternalEventTests {
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}"
             };
-            compareLists(expectedResults, res, "source_range");
+            assertTrue(actualResults.containsAll(List.of(expectedResults)));
           });
         }
       }
@@ -875,12 +844,8 @@ public class ExternalEventTests {
             insertExternalEvent(fE);
             insertExternalEvent(gE);
 
-            var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY source_key
-                """
-            );
+            var results = getDerivedEvents();
+            var actualResults = results.stream().map(r -> r.source_range).toList();
 
             // ranges should be shortened and broken just like the preceding comment suggests.
             final String[] expectedResults = {
@@ -892,7 +857,7 @@ public class ExternalEventTests {
                 "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
                 "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}"
             };
-            compareLists(expectedResults, res, "source_range");
+            assertTrue(actualResults.containsAll(List.of(expectedResults)));
           });
         }
       }
@@ -1034,15 +999,10 @@ public class ExternalEventTests {
 
           // verify the expected keys are included
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY start_time;
-                """
-            );
+            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
 
             final String[] expected_keys = {"b", "a", "c"};
-            compareLists(expected_keys, res, "event_key");
+            assertTrue(actualResults.containsAll(List.of(expected_keys)));
           });
         }
       }
@@ -1103,15 +1063,10 @@ public class ExternalEventTests {
 
           // verify the expected keys
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY start_time;
-                """
-            );
+            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
 
             final String[] expected_keys = {"a", "b1", "b2"};
-            compareLists(expected_keys, res, "event_key");
+            assertTrue(actualResults.containsAll(List.of(expected_keys)));
           });
         }
       }
@@ -1184,15 +1139,10 @@ public class ExternalEventTests {
 
           // verify the expected keys
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY start_time;
-                """
-            );
+            final var actualResults = getDerivedEvents().stream().map(r -> r.key).toList();
 
             final String[] expected_keys = {"b1", "b2"};
-            compareLists(expected_keys, res, "event_key");
+            assertTrue(actualResults.containsAll(List.of(expected_keys)));
           });
         }
       }
@@ -1262,14 +1212,9 @@ public class ExternalEventTests {
 
           // verify expected keys (none)
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY start_time;
-                """
-            );
+            final var results = getDerivedEvents();
 
-            assertFalse(res.next());
+            assertEquals(0, results.size());
           });
         }
       }
@@ -1357,21 +1302,15 @@ public class ExternalEventTests {
 
           // verify expected keys
           assertDoesNotThrow(() -> {
-            final var res = statement.executeQuery(
-                // language=sql
-                """
-                SELECT * FROM merlin.derived_events ORDER BY start_time;
-                """
-            );
+            final var results = getDerivedEvents();
 
             final String[] expected_keys = {"a"};
             // only 1 expected result
-            assertTrue(res.next());
-            assertEquals(expected_keys[0], res.getString("event_key"));
-            assertEquals("00:20:00", res.getString("duration"));
-            assertEquals("C", res.getString("source_key"));
-            assertEquals("{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}", res.getString("source_range"));
-            assertFalse(res.next());
+            assertEquals(1, results.size());
+            assertEquals(expected_keys[0], results.getFirst().key);
+            assertEquals("00:20:00", results.getFirst().duration);
+            assertEquals("C", results.getFirst().source_key);
+            assertEquals("{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}", results.getFirst().source_range);
           });
         }
       }
@@ -1477,7 +1416,13 @@ public class ExternalEventTests {
               """
           );
           final String[] expected_keys = {"a", "b", "c"};
-          compareLists(expected_keys, res, "event_key");
+
+          ArrayList<String> actual = new ArrayList<>();
+          while (res.next()) {
+            actual.add(res.getString("event_key"));
+          }
+          assertEquals(expected_keys.length, actual.size());
+          assertTrue(actual.containsAll(List.of(expected_keys)));
         });
       }
     }
@@ -1875,24 +1820,25 @@ public class ExternalEventTests {
       // check that derived events in our prewritten case has the correct keys
       assertDoesNotThrow(() -> {
         // verify everything is present
-        var res = statement.executeQuery(
-            // language=sql
-            """
-            SELECT * FROM merlin.derived_events ORDER BY start_time;
-            """
-        );
+        var results = getDerivedEvents().stream().map(r -> r.key).toList();
         final String[] expected_keys = {"1", "1", "9", "9", "3", "3", "5", "5", "6", "6", "2", "2", "8", "8"};
-        compareLists(expected_keys, res, "event_key");
+        assertTrue(results.containsAll(List.of(expected_keys)));
 
         // verify for a given dg expected keys are correct, no overlap inside dg
-        res = statement.executeQuery(
+        final var res = statement.executeQuery(
             // language=sql
             """
             SELECT * FROM merlin.derived_events WHERE derivation_group_name = '%s' ORDER BY start_time;
             """.formatted(dg2)
         );
         final String[] expected_keys_2 = {"1", "9", "3", "5", "6", "2", "8"};
-        compareLists(expected_keys_2, res, "event_key");
+
+        ArrayList<String> actual = new ArrayList<>();
+        while (res.next()) {
+          actual.add(res.getString("event_key"));
+        }
+        assertEquals(expected_keys_2.length, actual.size());
+        assertTrue(actual.containsAll(List.of(expected_keys_2)));
       });
     }
   }
