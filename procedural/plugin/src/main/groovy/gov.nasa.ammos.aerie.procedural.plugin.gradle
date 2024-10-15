@@ -1,30 +1,16 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-plugins {
-  id 'java'
-  id 'com.gradleup.shadow' version '8.3.0'
-}
-
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
+// afterEvaluate ensures these dependencies are passed to projects applying this plugin, not this plugin itself
+project.afterEvaluate {
+  dependencies {
+    annotationProcessor findProject(':procedural:processor') ?: "gov.nasa.ammos.aerie.procedural:processor:${findProperty("aerieVersion")}"
+    implementation findProject(':procedural:constraints') ?: "gov.nasa.ammos.aerie.procedural:constraints:${findProperty("aerieVersion")}"
+    implementation findProject(':procedural:scheduling') ?: "gov.nasa.ammos.aerie.procedural:scheduling:${findProperty("aerieVersion")}"
+    implementation findProject(':procedural:timeline') ?: "gov.nasa.ammos.aerie.procedural:timeline:${findProperty("aerieVersion")}"
+    implementation findProject(':merlin-driver') ?: "gov.nasa.jpl.aerie:merlin-driver:${findProperty("aerieVersion")}"
+    implementation findProject(':type-utils') ?: "gov.nasa.jpl.aerie:type-utils:${findProperty("aerieVersion")}"
+    implementation findProject(':contrib') ?: "gov.nasa.jpl.aerie:contrib:${findProperty("aerieVersion")}"
   }
-}
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  annotationProcessor project(':procedural:processor')
-  implementation project(':procedural:constraints')
-  implementation project(':procedural:scheduling')
-  implementation project(':procedural:timeline')
-  implementation project(':merlin-driver')
-  implementation project(':type-utils')
-  implementation project(':contrib')
-
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
 
 tasks.register('buildAllSchedulingProcedureJars') {
@@ -42,7 +28,7 @@ tasks.create("generateSchedulingProcedureJarTasks") {
   final proceduresDir = findFirstMatchingBuildDir("generated/procedures")
 
   if (proceduresDir == null) {
-    println "No procedures folder found"
+    println "No generated procedures folder found"
     return
   }
   println "Generating jar tasks for the following procedures directory: ${proceduresDir}"
@@ -55,22 +41,21 @@ tasks.create("generateSchedulingProcedureJarTasks") {
 
   files.toList().each { file ->
     final nameWithoutExtension = file.name.replace(".java", "")
+    final jarPath = nameWithoutExtension + ".jar"
     final taskName = "buildSchedulingProcedureJar_${nameWithoutExtension}"
 
-    println "Generating ${taskName} task, which will build ${nameWithoutExtension}.jar"
+    println "Generating ${taskName} task, which will build ${jarPath}"
 
     tasks.create(taskName, ShadowJar) {
       group = 'SchedulingProcedureJars'
-      configurations = [project.configurations.compileClasspath]
+      configurations = [project.configurations.runtimeClasspath]
       from sourceSets.main.output
-      archiveBaseName = "" // clear
-      archiveClassifier.set(nameWithoutExtension) // set output jar name
+      archiveFileName = jarPath
       manifest {
         attributes 'Main-Class': getMainClassFromGeneratedFile(file)
       }
       minimize()
-    }
-  }
+    }  }
 }
 
 private String findFirstMatchingBuildDir(String pattern) {
@@ -87,8 +72,4 @@ private static String getMainClassFromGeneratedFile(File file) {
   final index = fileString.indexOf(prefix) + prefix.length()
   final trimmed = fileString.substring(index).replace(".java", "")
   return trimmed.replace("/", ".")
-}
-
-test {
-  useJUnitPlatform()
 }
