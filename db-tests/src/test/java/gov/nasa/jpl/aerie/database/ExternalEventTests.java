@@ -363,6 +363,9 @@ public class ExternalEventTests {
      */
     @Test
     void derivationGroupComp() throws SQLException {
+      // create a record type specific to the external source information included in a derivation_group_comp entry
+      record DGCompExternalSource(String key, String derivationGroup, String includedEvents){}
+
       // upload all source data
       assertDoesNotThrow(() -> upload_source(dg));
       try(final var statement = connection.createStatement()) {
@@ -379,8 +382,32 @@ public class ExternalEventTests {
         assertTrue(res.next());
 
         // res.getArray() doesn't give you a String[] array - have to do some manipulation to get its length as a result
-        System.out.println(res.getArray("sources").toString());
-        assertEquals(4, res.getArray("sources").toString().split("\",\"").length);
+        List<DGCompExternalSource> sources = new ArrayList<>();
+        // entries of sources, take the form of: {"Derivation_Test_00.json, Test Default, 3",...}
+        for (String entry : res.getArray("sources").toString().split("\",\"")) {
+          var datems = entry.replace("\"", "")
+                            .replace("{", "")
+                            .replace("}", "")
+                            .split(", ");
+          sources.add(new DGCompExternalSource(
+            datems[0],
+            datems[1],
+            datems[2]
+          ));
+        }
+        assertEquals(4, sources.size());
+        assertEquals(new DGCompExternalSource("Derivation_Test_00.json","Test Default","3"),
+                     sources.getFirst()
+        );
+        assertEquals(new DGCompExternalSource("Derivation_Test_01.json","Test Default","4"),
+                     sources.get(1)
+        );
+        assertEquals(new DGCompExternalSource("Derivation_Test_02.json","Test Default","3"),
+                     sources.get(2)
+        );
+        assertEquals(new DGCompExternalSource("Derivation_Test_03.json","Test Default","1"),
+                     sources.get(3)
+        );
         assertEquals(7, res.getInt("derived_total"));
 
         // we expect only 1 result
