@@ -617,9 +617,9 @@ public class ExternalEventTests {
       }
 
       /**
-       * This test is an overlapping case wherein there is a source preceding all sources in validity, that covers a
-       *    larger, more inclusive interval. This source should be ever present, even if chopped into several
-       *    subintervals:
+       * This test is an overlapping case with three sources. The least recent source (of least precedence, source A)
+       *    covers a larger, more inclusive interval. A is succeeded by other, smaller sources (B, C), such that the
+       *    range over which A applies is chopped into several subintervals:
        *
        *    A:      +++++++++++++++++++++
        *    B:  ++++++
