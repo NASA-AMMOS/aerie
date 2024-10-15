@@ -506,7 +506,7 @@ public class ExternalEventTests {
               "2024-01-01T1:10:00Z",
               duration,
               mt
-          ); // have to manually pick this
+          );
           ExternalSource b = new ExternalSource(
               "B",
               st,
