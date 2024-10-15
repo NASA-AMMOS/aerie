@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("SqlSourceToSinkFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ExternalEventTests {
 
