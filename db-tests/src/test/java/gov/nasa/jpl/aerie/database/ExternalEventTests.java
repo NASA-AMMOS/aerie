@@ -92,7 +92,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void insertExternalEventType(String event_type_name) throws SQLException {
+  protected void insertExternalEventType(String event_type_name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the event type
       statement.executeUpdate(
@@ -106,7 +106,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void insertExternalSourceType(String source_type_name) throws SQLException {
+  protected void insertExternalSourceType(String source_type_name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the source type
       statement.executeUpdate(
@@ -120,7 +120,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void insertDerivationGroup(String derivation_group_name, String source_type_name) throws SQLException {
+  protected void insertDerivationGroup(String derivation_group_name, String source_type_name) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the derivation group
       statement.executeUpdate(
@@ -134,7 +134,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void insertExternalSource(ExternalSource externalSource) throws SQLException {
+  protected void insertExternalSource(ExternalSource externalSource) throws SQLException {
     try(final var statement = connection.createStatement()) {
       System.out.println("STARTING " + externalSource);
       // create the source
@@ -159,7 +159,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void insertExternalEvent(ExternalEvent externalEvent) throws SQLException {
+  protected void insertExternalEvent(ExternalEvent externalEvent) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the event
       statement.executeUpdate(
@@ -181,7 +181,7 @@ public class ExternalEventTests {
     }
   }
 
-  public void associateDerivationGroupWithPlan(int planId, String derivationGroupName) throws SQLException {
+  protected void associateDerivationGroupWithPlan(int planId, String derivationGroupName) throws SQLException {
     try(final var statement = connection.createStatement()) {
       // create the event type
       statement.executeUpdate(
@@ -198,7 +198,7 @@ public class ExternalEventTests {
   /**
    * Quick external event creator, leveraging constants from a provided source object (source).
    */
-  public ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
+  protected ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
     return new ExternalEvent(
         key,
         et,
@@ -220,7 +220,7 @@ public class ExternalEventTests {
    *
    * Data here is based on the SSMO-MPS/mission-data-sandbox/derivation_test examples.
    */
-  public void upload_source(String dg) throws SQLException {
+  protected void upload_source(String dg) throws SQLException {
     // First, define the sources.
     ExternalSource sourceOne = new ExternalSource(
         "Derivation_Test_00.json",
@@ -307,7 +307,7 @@ public class ExternalEventTests {
     insertExternalEvent(nine);
   }
 
-  void insertStandardTypes() throws SQLException {
+  protected void insertStandardTypes() throws SQLException {
     // insert external event type
     insertExternalEventType(et);
 
