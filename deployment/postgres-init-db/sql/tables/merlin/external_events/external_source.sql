@@ -56,12 +56,34 @@ comment on column merlin.external_source.metadata is e''
 comment on column merlin.external_source.owner is e''
   'The user who uploaded the external source.';
 
+-- make sure new sources' source_type match that of their derivation group!
+create function merlin.external_source_type_matches_dg_on_add()
+  returns trigger
+  language plpgsql as $$
+declare
+  source_type text;
+begin
+  select into source_type derivation_group.source_type_name from merlin.derivation_group where name = new.derivation_group_name;
+  if source_type is distinct from new.source_type_name then
+    raise foreign_key_violation
+    using message='External source ' || new.key || ' is being added to a derivation group ' || new.derivation_group_name
+                    || ' where its type ' || new.source_type_name || ' does not match the derivation group type '
+                    || source_type || '.' ;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger external_source_type_matches_dg_on_add
+before insert or update on merlin.external_source
+  for each row execute function merlin.external_source_type_matches_dg_on_add();
+
 -- if an external source is linked to a plan it cannot be deleted
 create function merlin.external_source_pdg_association_delete()
   returns trigger
   language plpgsql as $$
 begin
-  if exists(select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
+  if exists (select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
     raise foreign_key_violation
     using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
   end if;

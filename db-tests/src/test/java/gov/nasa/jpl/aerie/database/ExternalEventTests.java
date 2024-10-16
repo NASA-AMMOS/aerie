@@ -1876,6 +1876,49 @@ public class ExternalEventTests {
     }
 
     /**
+     * An external source's type MUST match the derivation group's source type.
+     */
+    @Test
+    void externalSourceTypeMatchDerivationGroup() throws SQLException {
+      // create a source that matches the derivation group
+      ExternalSource src = new ExternalSource(
+          "A",
+          st,
+          dg,
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T00:30:00Z",
+          ca,
+          mt
+      );
+
+      // add types
+      // create a source type
+      insertExternalSourceType(st);
+
+      // create a Derivation Group
+      insertDerivationGroup(dg, st);
+
+      // insert the source
+      insertExternalSource(src);
+
+      // create a source that doesn't match the derivation group (the source type has "_B" appended to it)
+      ExternalSource src_2 = new ExternalSource(
+          "B",
+          st + "_B",
+          dg,
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T00:00:00Z",
+          "2024-01-01T00:30:00Z",
+          ca,
+          mt
+      );
+
+      // delete the source type (expect error)
+      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(src_2));
+    }
+
+    /**
      * It should not be possible to delete a source type with a source still associated.
      */
     @Test
