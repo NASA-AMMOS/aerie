@@ -3,15 +3,15 @@
 -- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
 -- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
 
-create view merlin.derived_events
+create materialized view merlin.derived_events
 as
 select
   -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)
+  event_key,
   source_key,
   derivation_group_name,
-  event_key,
-  duration,
   event_type_name,
+  duration,
   start_time,
   properties,
   source_range,
@@ -72,5 +72,33 @@ from ( -- select all relevant properties of those shortlisted in the from clause
 where rn = 1
 order by start_time;
 
-comment on view  merlin.derived_events is e''
+-- create a unique index, which allows concurrent refreshes
+create unique index on merlin.derived_events (
+  event_key,
+  source_key,
+  derivation_group_name,
+  event_type_name
+);
+
+-- refresh the materialized view after insertion/update/deletion to external_source and external_event and derivation_group
+create function merlin.refresh_derived_events_on_trigger()
+  returns trigger
+  language plpgsql as $$
+begin
+  refresh materialized view concurrently merlin.derived_events;
+  return new;
+end;
+$$;
+
+create trigger refresh_derived_events_on_external_event
+after insert or update or delete on merlin.external_event
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
+
+-- not triggering on events, as those can only ever be added at the same time as external_source
+
+create trigger refresh_derived_events_on_derivation_group
+after insert or update or delete on merlin.derivation_group
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
+
+comment on materialized view merlin.derived_events is e''
   'Details all derived events from all derivation groups.';
