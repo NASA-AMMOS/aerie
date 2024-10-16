@@ -16,6 +16,14 @@ array_relationships:
         table:
           name: external_source
           schema: merlin
+  - name: derived_events
+    using:
+      manual_configuration:
+        remote_table:
+          name: derived_events
+          schema: merlin
+        column_mapping:
+          name: derivation_group_name
 select_permissions:
   - role: aerie_admin
     permission:

@@ -173,7 +173,6 @@
 ############
 #### UI ####
 ############
-- "!include ui/derivation_group_comp.yaml"
 - "!include ui/extension_roles.yaml"
 - "!include ui/extensions.yaml"
 - "!include ui/view.yaml"

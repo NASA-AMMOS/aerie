@@ -30,9 +30,6 @@ begin;
   -- Merlin
   \ir init_merlin.sql
 
-  -- UI views that depend on Merlin schema
-  \ir views/ui/derivation_group_comp.sql
-
   -- Scheduling
   \ir init_scheduler.sql
 
