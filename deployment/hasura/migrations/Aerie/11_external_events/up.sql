@@ -63,7 +63,6 @@ create table merlin.external_source (
     end_time timestamp with time zone not null,
     CHECK (end_time > start_time),
     created_at timestamp with time zone default now() not null,
-    metadata jsonb,
     owner text,
 
     constraint external_source_pkey
@@ -106,18 +105,37 @@ comment on column merlin.external_source.end_time is e''
 comment on column merlin.external_source.created_at is e''
   'The time (in _planner_ time, NOT plan time) that this particular source was created.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
-comment on column merlin.external_source.metadata is e''
-  'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
-  'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 comment on column merlin.external_source.owner is e''
   'The user who uploaded the external source.';
+
+-- make sure new sources' source_type match that of their derivation group!
+create function merlin.external_source_type_matches_dg_on_add()
+  returns trigger
+  language plpgsql as $$
+declare
+  source_type text;
+begin
+  select into source_type derivation_group.source_type_name from merlin.derivation_group where name = new.derivation_group_name;
+  if source_type is distinct from new.source_type_name then
+    raise foreign_key_violation
+    using message='External source ' || new.key || ' is being added to a derivation group ' || new.derivation_group_name
+                    || ' where its type ' || new.source_type_name || ' does not match the derivation group type '
+                    || source_type || '.' ;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger external_source_type_matches_dg_on_add
+before insert or update on merlin.external_source
+  for each row execute function merlin.external_source_type_matches_dg_on_add();
 
 -- if an external source is linked to a plan it cannot be deleted
 create function merlin.external_source_pdg_association_delete()
   returns trigger
   language plpgsql as $$
 begin
-  if exists(select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
+  if exists (select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
     raise foreign_key_violation
     using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
   end if;
@@ -151,7 +169,6 @@ create table merlin.external_event (
     derivation_group_name text not null,
     start_time timestamp with time zone not null,
     duration interval not null,
-    properties jsonb,
 
     constraint external_event_pkey
       primary key (key, source_key, derivation_group_name, event_type_name),
@@ -185,9 +202,6 @@ comment on column merlin.external_event.start_time is e''
   'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
 comment on column merlin.external_event.duration is e''
   'The span of time of this external event.';
-comment on column merlin.external_event.properties is e''
-  'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
-  'This column is used primarily for documentation purposes, and has no associated functionality.';
 
 create trigger check_external_event_duration_is_nonnegative_trigger
 before insert or update on merlin.external_event
@@ -212,7 +226,7 @@ begin
   event_start := new.start_time;
   event_end := new.start_time + new.duration;
   if event_start < source_start or event_end > source_end then
-    raise exception 'Event % out of bounds of source %', new.key, new.source_key;
+    raise exception 'Event % out of bounds of source %.', new.key, new.source_key;
   end if;
   return new;
 end;
@@ -310,7 +324,6 @@ select
   duration,
   event_type_name,
   start_time,
-  properties,
   source_range,
   valid_at
 from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
@@ -319,7 +332,6 @@ from ( -- select all relevant properties of those shortlisted in the from clause
         rule1_3.event_type_name,
         rule1_3.duration,
         rule1_3.derivation_group_name,
-        rule1_3.properties,
         rule1_3.start_time,
         rule1_3.source_range,
         rule1_3.valid_at,
@@ -332,7 +344,6 @@ from ( -- select all relevant properties of those shortlisted in the from clause
                 external_event.duration,
                 sub.derivation_group_name,
                 external_event.start_time,
-                external_event.properties,
                 sub.source_range,
                 sub.valid_at
                 from merlin.external_event
@@ -371,41 +382,5 @@ order by start_time;
 
 comment on view  merlin.derived_events is e''
   'Details all derived events from all derivation groups.';
-
-create view ui.derivation_group_comp
-  as
-select
-  name,
-  source_type_name,
-  owner,
-  array_agg(distinct concat(sources.source_key, ', ', sources.derivation_group_name, ', ', sources.contained_events)) as sources,
-  array_remove(array_agg(distinct event_type_name), null) as event_types,
-	count(distinct counted.event_key) as derived_total
-from (
-	select derivation_group.name,
-		     derivation_group.source_type_name,
-		     types.event_type_name,
-		     derivation_group.owner
-  from merlin.derivation_group
-	left outer join ( select external_event.source_key,
-	                         external_event.derivation_group_name,
-	                         external_event.event_type_name
-			              from merlin.external_event
-			              order by external_event.source_key) types on types.derivation_group_name = derivation_group.name
-	group by derivation_group.name, derivation_group.source_type_name, types.event_type_name
-) with_event_types
-full outer join ( select external_event.source_key,
-                         external_event.derivation_group_name,
-                         count(external_event.key) as contained_events
-                  from merlin.external_event
-                  group by external_event.source_key, external_event.derivation_group_name
-                  order by external_event.source_key) sources on sources.derivation_group_name = with_event_types.name
-full outer join ( select derived_events.event_key,
-				                 derived_events.derivation_group_name
-			            from merlin.derived_events) counted on counted.derivation_group_name = with_event_types.name
-group by with_event_types.name, with_event_types.source_type_name, with_event_types.owner;
-
-comment on view ui.derivation_group_comp is e''
-  'Details all relevant information for derivation groups. This was created as we wanted all of this information, but had many heavyweight subscriptions and queries to get this desired result. as such, a new view was created to lighten the load.';
 
 call migrations.mark_migration_applied('11');

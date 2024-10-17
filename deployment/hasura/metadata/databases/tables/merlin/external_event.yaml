@@ -31,11 +31,11 @@ select_permissions:
 insert_permissions:
   - role: aerie_admin
     permission:
-      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration, properties]
+      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration]
       check: {}
   - role: user
     permission:
-      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration, properties]
+      columns: [key, event_type_name, source_key, derivation_group_name, start_time, duration]
       check: {}
 delete_permissions:
   - role: aerie_admin

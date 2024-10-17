@@ -5,7 +5,6 @@ create table merlin.external_event (
     derivation_group_name text not null,
     start_time timestamp with time zone not null,
     duration interval not null,
-    properties jsonb,
 
     constraint external_event_pkey
       primary key (key, source_key, derivation_group_name, event_type_name),
@@ -39,9 +38,6 @@ comment on column merlin.external_event.start_time is e''
   'The start time (in _plan_ time, NOT planner time), of the range that this source describes.';
 comment on column merlin.external_event.duration is e''
   'The span of time of this external event.';
-comment on column merlin.external_event.properties is e''
-  'Any properties or additional data associated with this version that a data originator may have wanted included.\n'
-  'This column is used primarily for documentation purposes, and has no associated functionality.';
 
 create trigger check_external_event_duration_is_nonnegative_trigger
 before insert or update on merlin.external_event

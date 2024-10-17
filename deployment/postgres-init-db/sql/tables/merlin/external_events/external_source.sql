@@ -7,7 +7,6 @@ create table merlin.external_source (
     end_time timestamp with time zone not null,
     CHECK (end_time > start_time),
     created_at timestamp with time zone default now() not null,
-    metadata jsonb,
     owner text,
 
     constraint external_source_pkey
@@ -50,9 +49,6 @@ comment on column merlin.external_source.end_time is e''
 comment on column merlin.external_source.created_at is e''
   'The time (in _planner_ time, NOT plan time) that this particular source was created.\n'
   'This column is used primarily for documentation purposes, and has no associated functionality.';
-comment on column merlin.external_source.metadata is e''
-  'Any metadata or additional data associated with this version that a data originator may have wanted included.\n'
-  'Like the ''created_at'' column, this column is used primarily for documentation purposes, and has no associated functionality.';
 comment on column merlin.external_source.owner is e''
   'The user who uploaded the external source.';
 

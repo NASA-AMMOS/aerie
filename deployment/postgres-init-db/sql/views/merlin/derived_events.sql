@@ -13,7 +13,6 @@ select
   event_type_name,
   duration,
   start_time,
-  properties,
   source_range,
   valid_at
 from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
@@ -22,7 +21,6 @@ from ( -- select all relevant properties of those shortlisted in the from clause
         rule1_3.event_type_name,
         rule1_3.duration,
         rule1_3.derivation_group_name,
-        rule1_3.properties,
         rule1_3.start_time,
         rule1_3.source_range,
         rule1_3.valid_at,
@@ -35,7 +33,6 @@ from ( -- select all relevant properties of those shortlisted in the from clause
                 external_event.duration,
                 sub.derivation_group_name,
                 external_event.start_time,
-                external_event.properties,
                 sub.source_range,
                 sub.valid_at
                 from merlin.external_event
