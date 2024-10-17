@@ -66,7 +66,7 @@ begin
   event_start := new.start_time;
   event_end := new.start_time + new.duration;
   if event_start < source_start or event_end > source_end then
-    raise exception 'Event %s out of bounds of source %s', new.key, new.source_key;
+    raise exception 'Event % out of bounds of source %.', new.key, new.source_key;
   end if;
   return new;
 end;

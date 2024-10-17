@@ -18,7 +18,7 @@ import org.postgresql.util.PSQLException;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
@@ -1492,7 +1492,11 @@ public class ExternalEventTests {
       insertExternalSource(a);
 
       // second source should fail
-      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(b));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalSource(b));
+      if (!ex.getSQLState().equals("23505")
+          && !ex.getMessage().contains("duplicate key value violates unique constraint \"dg_unique_valid_at\"")) {
+        throw ex;
+      }
     }
 
     /**
@@ -1601,7 +1605,11 @@ public class ExternalEventTests {
       insertExternalEvent(e1);
 
       // but fails on collision!
-      assertThrowsExactly(PSQLException.class, () -> insertExternalEvent(e2));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalEvent(e2));
+      if (!ex.getSQLState().equals("23505")
+          && !ex.getMessage().contains("duplicate key value violates unique constraint \"external_event_pkey\"")) {
+        throw ex;
+      }
     }
 
     /**
@@ -1649,10 +1657,20 @@ public class ExternalEventTests {
       insertDerivationGroup(failing.derivation_group_name(), failing.source_type_name());
 
       // if start time > end time, error
-      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(failing));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalSource(failing));
+      if (!ex.getSQLState().equals("23514")
+          && !ex.getMessage().contains("new row for relation \"external_source\" violates check constraint "
+                                       + "\"external_source_check\"")) {
+        throw ex;
+      }
 
       // if start time = end time, error
-      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(failing2));
+      final SQLException ex2 = assertThrows(PSQLException.class, () -> insertExternalSource(failing2));
+      if (!ex.getSQLState().equals("23514")
+          && !ex.getMessage().contains("new row for relation \"external_source\" violates check constraint "
+                                       + "\"external_source_check\"")) {
+        throw ex;
+      }
 
       // else, no error
       assertDoesNotThrow(() -> insertExternalSource(succeeding));
@@ -1699,13 +1717,25 @@ public class ExternalEventTests {
       insertExternalEvent(legal);
 
       // assert out of bounds failures
-      assertThrowsExactly(PSQLException.class, () -> insertExternalEvent(completelyBefore));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalEvent(completelyBefore));
+      if (!ex.getMessage().contains("Event " + completelyBefore.key + " out of bounds of source " + A.key + ".")) {
+        throw ex;
+      }
 
-      assertThrowsExactly(PSQLException.class, () -> insertExternalEvent(beforeIntersect));
+      final SQLException ex2 = assertThrows(PSQLException.class, () -> insertExternalEvent(beforeIntersect));
+      if (!ex2.getMessage().contains("Event " + beforeIntersect.key + " out of bounds of source " + A.key + ".")) {
+        throw ex2;
+      }
 
-      assertThrowsExactly(PSQLException.class, () -> insertExternalEvent(afterIntersect));
+      final SQLException ex3 = assertThrows(PSQLException.class, () -> insertExternalEvent(afterIntersect));
+      if (!ex3.getMessage().contains("Event " + afterIntersect.key + " out of bounds of source " + A.key + ".")) {
+        throw ex3;
+      }
 
-      assertThrowsExactly(PSQLException.class, () -> insertExternalEvent(completelyAfter));
+      final SQLException ex4 = assertThrows(PSQLException.class, () -> insertExternalEvent(completelyAfter));
+      if (!ex4.getMessage().contains("Event " + completelyAfter.key + " out of bounds of source " + A.key + ".")) {
+        throw ex4;
+      }
     }
 
     /**
@@ -1739,7 +1769,11 @@ public class ExternalEventTests {
       upload_source(dg);
 
       // upload a conflicting source (same name in a given dg)
-      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(failing));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalSource(failing));
+      if (!ex.getSQLState().equals("23505")
+          && !ex.getMessage().contains("duplicate key value violates unique constraint \"external_source_pkey\"")) {
+        throw ex;
+      }
 
       // upload a non-conflicting source (same name in a different dg)
       insertDerivationGroup(dg + "_2", st);
@@ -1755,11 +1789,13 @@ public class ExternalEventTests {
       upload_source(dg);
       insertExternalSourceType("New Name");
 
-      assertThrowsExactly(PSQLException.class, () -> {
-        // use the same name as before (Test Default) with a different source type (New Name) - fails
-        // (This is noteworthy as this is newer behavior.)
-        insertDerivationGroup(dg, "New Name");
-      });
+      // use the same name as before (Test Default) with a different source type (New Name) - fails
+      // (This is noteworthy as this is newer behavior.)
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertDerivationGroup(dg, "New Name"));
+      if (!ex.getSQLState().equals("23505")
+          && !ex.getMessage().contains("duplicate key value violates unique constraint \"derivation_group_pkey\"")) {
+        throw ex;
+      }
     }
 
     /**
@@ -1792,7 +1828,7 @@ public class ExternalEventTests {
         insertExternalSource(src);
 
         // delete the DG (expect error)
-        assertThrowsExactly(PSQLException.class,
+        final SQLException ex = assertThrows(PSQLException.class,
             () -> statement.executeUpdate(
               // language=sql
               """
@@ -1800,6 +1836,13 @@ public class ExternalEventTests {
               """.formatted(dg)
             )
         );
+        if (!ex.getSQLState().equals("23503") &&
+            !ex.getMessage().contains(
+                "update or delete on table \"derivation_group\" violates foreign key constraint "
+                + "\"external_source_type_matches_derivation_group\" on table \"external_source\"")
+        ) {
+          throw ex;
+        }
       }
     }
 
@@ -1842,8 +1885,19 @@ public class ExternalEventTests {
           mt
       );
 
-      // delete the source type (expect error)
-      assertThrowsExactly(PSQLException.class, () -> insertExternalSource(src_2));
+      // insert the erroneous source (expect error)
+      final SQLException ex = assertThrows(
+        SQLException.class,
+        () -> insertExternalSource(src_2)
+      );
+      if (!ex.getSQLState().equals("23503") &&
+          !ex.getMessage().contains(
+              "ERROR: External source " + src_2.key + " is being added to a derivation group " +
+              src_2.derivation_group_name + " where its type " + src_2.source_type_name +
+              " does not match the derivation group type " + src.source_type_name + ".")
+      ) {
+        throw ex;
+      }
     }
 
     /**
@@ -1876,13 +1930,20 @@ public class ExternalEventTests {
         insertExternalSource(src);
 
         // delete the source type (expect error)
-        assertThrowsExactly(PSQLException.class, () -> statement.executeUpdate(
+        final SQLException ex = assertThrows(PSQLException.class, () -> statement.executeUpdate(
             // language=sql
             """
             DELETE FROM merlin.external_source_type WHERE name='%s';
             """.formatted(st)
           )
         );
+        if (!ex.getSQLState().equals("23503")
+            && !ex.getMessage().contains(
+                "update or delete on table \"external_source_type\" violates foreign key constraint "
+                + "\"derivation_group_references_external_source_type\" on table \"derivation_group\"")
+        ) {
+          throw ex;
+        }
       }
     }
 
@@ -1917,7 +1978,7 @@ public class ExternalEventTests {
         insertExternalEvent(evt);
 
         // delete the event type (expect error)
-        assertThrowsExactly(PSQLException.class,
+        final SQLException ex = assertThrows(PSQLException.class,
           () -> statement.executeUpdate(
               // language=sql
               """
@@ -1925,6 +1986,13 @@ public class ExternalEventTests {
               """.formatted(et)
           )
         );
+        if (!ex.getSQLState().equals("23503")
+            && !ex.getMessage().contains(
+                "update or delete on table \"external_event_type\" violates foreign key constraint "
+                + "\"external_event_references_event_type_name\" on table \"external_event\"")
+        ) {
+          throw ex;
+        }
       }
     }
   }
