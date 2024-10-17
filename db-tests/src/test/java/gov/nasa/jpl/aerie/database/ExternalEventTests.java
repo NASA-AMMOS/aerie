@@ -1666,10 +1666,10 @@ public class ExternalEventTests {
 
       // if start time = end time, error
       final SQLException ex2 = assertThrows(PSQLException.class, () -> insertExternalSource(failing2));
-      if (!ex.getSQLState().equals("23514")
-          && !ex.getMessage().contains("new row for relation \"external_source\" violates check constraint "
+      if (!ex2.getSQLState().equals("23514")
+          && !ex2.getMessage().contains("new row for relation \"external_source\" violates check constraint "
                                        + "\"external_source_check\"")) {
-        throw ex;
+        throw ex2;
       }
 
       // else, no error
