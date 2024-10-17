@@ -295,8 +295,8 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
   'For example, if a source is valid at t=0, and covers span s=1 to s=5, and there is a source valid at t=1 with a span s=2 to s=3\n'
   'and another valid at t=2 with a span 3 to 4, then this source should have those spans subtracted and should only be valid over [1,2] and [4,5].';
 
--- Rule 1. An External Event superceded by nothing will be present in the final, derived result.
--- Rule 2. An External Event partially superceded by a later External Source, but whose start time occurs before the start of said External Source(s), will be present in the final, derived result.
+-- Rule 1. An External Event superseded by nothing will be present in the final, derived result.
+-- Rule 2. An External Event partially superseded by a later External Source, but whose start time occurs before the start of said External Source(s), will be present in the final, derived result.
 -- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
 -- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
 
