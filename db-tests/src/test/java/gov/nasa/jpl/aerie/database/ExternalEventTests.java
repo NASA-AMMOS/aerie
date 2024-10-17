@@ -17,7 +17,6 @@ import org.postgresql.util.PSQLException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,18 +61,15 @@ public class ExternalEventTests {
   // Event Type (et)
   final String et = "Test";
 
-  // Metadata/Properties (mt)
-  final String mt = "{}";
-
   // Created At (ca)
   final String ca = "2024-01-01T00:00:00Z";
   //endregion
 
 
   //region Records
-  protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String properties) {}
-  protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at, String metadata){}
-  protected record DerivedEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String properties, String source_range, String valid_at){}
+  protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration) {}
+  protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at){}
+  protected record DerivedEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String source_range, String valid_at){}
   //endregion
 
 
@@ -129,7 +125,7 @@ public class ExternalEventTests {
           """
           INSERT INTO
             merlin.external_source
-          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');
           """.formatted(
               externalSource.key,
               externalSource.source_type_name,
@@ -137,8 +133,7 @@ public class ExternalEventTests {
               externalSource.valid_at,
               externalSource.start_time,
               externalSource.end_time,
-              externalSource.created_at,
-              externalSource.metadata
+              externalSource.created_at
           )
       );
       System.out.println("FINISHED " + externalSource);
@@ -153,15 +148,14 @@ public class ExternalEventTests {
           """
           INSERT INTO
             merlin.external_event
-          VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');
+          VALUES ('%s', '%s', '%s', '%s', '%s', '%s');
           """.formatted(
               externalEvent.key,
               externalEvent.event_type_name,
               externalEvent.source_key,
               externalEvent.derivation_group_name,
               externalEvent.start_time,
-              externalEvent.duration,
-              externalEvent.properties
+              externalEvent.duration
           )
       );
     }
@@ -191,8 +185,7 @@ public class ExternalEventTests {
         source.key(),
         source.derivation_group_name(),
         start_time,
-        duration,
-        "{}"
+        duration
     );
   }
 
@@ -216,7 +209,6 @@ public class ExternalEventTests {
             res.getString("derivation_group_name"),
             res.getString("start_time"),
             res.getString("duration"),
-            res.getString("properties"),
             res.getString("source_range"),
             res.getString("valid_at")
         ));
@@ -244,8 +236,7 @@ public class ExternalEventTests {
         "2024-01-18 00:00:00+00",
         "2024-01-05 00:00:00+00",
         "2024-01-11 00:00:00+00",
-        "2024-08-21 22:36:12.858009+00",
-        "{}"
+        "2024-08-21 22:36:12.858009+00"
     );
     ExternalSource sourceTwo = new ExternalSource(
         "Derivation_Test_01.json",
@@ -254,8 +245,7 @@ public class ExternalEventTests {
         "2024-01-19 00:00:00+00",
         "2024-01-01 00:00:00+00",
         "2024-01-07 00:00:00+00",
-        "2024-08-21 22:36:19.381275+00",
-        "{}"
+        "2024-08-21 22:36:19.381275+00"
     );
     ExternalSource sourceThree = new ExternalSource(
         "Derivation_Test_02.json",
@@ -264,8 +254,7 @@ public class ExternalEventTests {
         "2024-01-20 00:00:00+00",
         "2024-01-03 00:00:00+00",
         "2024-01-10 00:00:00+00",
-        "2024-08-21 22:36:23.340941+00",
-        "{}"
+        "2024-08-21 22:36:23.340941+00"
     );
     ExternalSource sourceFour = new ExternalSource(
         "Derivation_Test_03.json",
@@ -274,25 +263,24 @@ public class ExternalEventTests {
         "2024-01-21 00:00:00+00",
         "2024-01-01 12:00:00+00",
         "2024-01-02 12:00:00+00",
-        "2024-08-21 22:36:28.365244+00",
-        "{}"
+        "2024-08-21 22:36:28.365244+00"
     );
 
     // Second, define the events, spaced by sources 1-4
-    ExternalEvent twoA = new ExternalEvent("2", "DerivationD", "Derivation_Test_00.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
-    ExternalEvent seven = new ExternalEvent("7", "DerivationC", "Derivation_Test_00.json", dg, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
-    ExternalEvent eight = new ExternalEvent("8", "DerivationB", "Derivation_Test_00.json", dg, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent twoA = new ExternalEvent("2", "DerivationD", "Derivation_Test_00.json", dg, "2024-01-05 23:00:00+00", "01:10:00");
+    ExternalEvent seven = new ExternalEvent("7", "DerivationC", "Derivation_Test_00.json", dg, "2024-01-09 23:00:00+00", "02:00:00");
+    ExternalEvent eight = new ExternalEvent("8", "DerivationB", "Derivation_Test_00.json", dg, "2024-01-10 11:00:00+00", "01:05:00");
 
-    ExternalEvent one = new ExternalEvent("1", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent twoB = new ExternalEvent("2", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
-    ExternalEvent three = new ExternalEvent("3", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
-    ExternalEvent four = new ExternalEvent("4", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
+    ExternalEvent one = new ExternalEvent("1", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 00:00:00+00", "02:10:00");
+    ExternalEvent twoB = new ExternalEvent("2", "DerivationA", "Derivation_Test_01.json", dg, "2024-01-01 12:00:00+00", "02:10:00");
+    ExternalEvent three = new ExternalEvent("3", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-02 23:00:00+00", "03:00:00");
+    ExternalEvent four = new ExternalEvent("4", "DerivationB", "Derivation_Test_01.json", dg, "2024-01-05 21:00:00+00", "03:00:00");
 
-    ExternalEvent five = new ExternalEvent("5", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent six = new ExternalEvent("6", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent twoC = new ExternalEvent("2", "DerivationB", "Derivation_Test_02.json", dg, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
+    ExternalEvent five = new ExternalEvent("5", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-05 23:00:00+00", "01:10:00");
+    ExternalEvent six = new ExternalEvent("6", "DerivationC", "Derivation_Test_02.json", dg, "2024-01-06 12:00:00+00", "02:00:00");
+    ExternalEvent twoC = new ExternalEvent("2", "DerivationB", "Derivation_Test_02.json", dg, "2024-01-09 11:00:00+00", "01:05:00");
 
-    ExternalEvent nine = new ExternalEvent("9", "DerivationC", "Derivation_Test_03.json", dg, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent nine = new ExternalEvent("9", "DerivationC", "Derivation_Test_03.json", dg, "2024-01-02 00:00:00+00", "01:00:00");
 
     // Third, insert types
     String[] externalEventTypes = {"DerivationA", "DerivationB", "DerivationC", "DerivationD"};
@@ -376,10 +364,9 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T03:00:00Z",
             "2024-01-01T04:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, a.start_time(), duration, mt);
+        ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, a.start_time(), duration);
         ExternalSource b = new ExternalSource(
             "B",
             st,
@@ -387,10 +374,9 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T01:00:00Z",
             "2024-01-01T02:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
         // insert generic external event type, source type, and derivation group
@@ -415,7 +401,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 03:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -426,7 +411,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             )
@@ -453,8 +437,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
@@ -462,8 +445,7 @@ public class ExternalEventTests {
             a.key(),
             dg,
             "2024-01-01T1:10:00Z",
-            duration,
-            mt
+            duration
         );
         ExternalSource b = new ExternalSource(
             "B",
@@ -472,10 +454,9 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
         // insert generic external event type, source type, and derivation group
@@ -500,7 +481,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:10:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -511,7 +491,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             )
@@ -538,8 +517,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
@@ -547,8 +525,7 @@ public class ExternalEventTests {
             a.key(),
             dg,
             "2024-01-01T00:00:00Z",
-            duration,
-            mt
+            duration
         ); // have to manually pick this
         ExternalSource b = new ExternalSource(
             "B",
@@ -557,10 +534,9 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
         // insert generic external event type, source type, and derivation group
@@ -585,7 +561,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -596,7 +571,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:30:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             )
@@ -624,8 +598,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T03:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
@@ -633,8 +606,7 @@ public class ExternalEventTests {
             a.key(),
             dg,
             "2024-01-01T01:10:00Z",
-            duration,
-            mt
+            duration
         ); // just need 1 that shows up and source range will still show correctly
         ExternalSource b = new ExternalSource(
             "B",
@@ -643,10 +615,9 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
         ExternalSource c = new ExternalSource(
             "C",
             st,
@@ -654,10 +625,9 @@ public class ExternalEventTests {
             "2024-01-03T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration, mt);
+        ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration);
 
         // verify the ranges are as expected
         // insert generic external event type, source type, and derivation group
@@ -684,7 +654,7 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:10:00+00",
                 "00:00:00.000001",
-                "{}", "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
+                "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
             new DerivedEvent(
@@ -694,7 +664,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             ),
@@ -705,7 +674,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:30:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}",
                 "2024-01-03 00:00:00+00"
             )
@@ -735,8 +703,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:03:00Z",
             "2024-01-01T00:15:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
@@ -744,8 +711,7 @@ public class ExternalEventTests {
             a.key(),
             dg,
             "2024-01-01T00:09:10Z",
-            duration,
-            mt
+            duration
         );
         ExternalSource b = new ExternalSource(
             "B",
@@ -754,10 +720,9 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:06:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration, mt);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
         ExternalSource c = new ExternalSource(
             "C",
             st,
@@ -765,8 +730,7 @@ public class ExternalEventTests {
             "2024-01-03T00:00:00Z",
             "2024-01-01T00:17:00Z",
             "2024-01-01T00:23:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent cE = new ExternalEvent(
             c.key() + "_event",
@@ -774,8 +738,7 @@ public class ExternalEventTests {
             c.key(),
             dg,
             "2024-01-01T00:21:00Z",
-            duration,
-            mt
+            duration
         );
         ExternalSource d = new ExternalSource(
             "D",
@@ -784,10 +747,9 @@ public class ExternalEventTests {
             "2024-01-04T00:00:00Z",
             "2024-01-01T00:02:00Z",
             "2024-01-01T00:09:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent dE = new ExternalEvent(d.key() + "_event", st, d.key(), dg, d.start_time(), duration, mt);
+        ExternalEvent dE = new ExternalEvent(d.key() + "_event", st, d.key(), dg, d.start_time(), duration);
         ExternalSource e = new ExternalSource(
             "E",
             st,
@@ -795,10 +757,9 @@ public class ExternalEventTests {
             "2024-01-05T00:00:00Z",
             "2024-01-01T00:13:00Z",
             "2024-01-01T00:20:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent eE = new ExternalEvent(e.key() + "_event", st, e.key(), dg, e.start_time(), duration, mt);
+        ExternalEvent eE = new ExternalEvent(e.key() + "_event", st, e.key(), dg, e.start_time(), duration);
         ExternalSource f = new ExternalSource(
             "F",
             st,
@@ -806,10 +767,9 @@ public class ExternalEventTests {
             "2024-01-06T00:00:00Z",
             "2024-01-01T00:04:00Z",
             "2024-01-01T00:07:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent fE = new ExternalEvent(f.key() + "_event", st, f.key(), dg, f.start_time(), duration, mt);
+        ExternalEvent fE = new ExternalEvent(f.key() + "_event", st, f.key(), dg, f.start_time(), duration);
         ExternalSource g = new ExternalSource(
             "G",
             st,
@@ -817,10 +777,9 @@ public class ExternalEventTests {
             "2024-01-07T00:00:00Z",
             "2024-01-01T00:11:00Z",
             "2024-01-01T00:12:00Z",
-            ca,
-            mt
+            ca
         );
-        ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration, mt);
+        ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration);
 
         // verify the ranges are as expected
         // insert generic external event type, source type, and derivation group
@@ -855,7 +814,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:09:10+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -866,7 +824,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
                 "2024-01-02 00:00:00+00"
             ),
@@ -877,7 +834,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:21:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
                 "2024-01-03 00:00:00+00"
             ),
@@ -888,7 +844,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:02:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
                 "2024-01-04 00:00:00+00"
             ),
@@ -897,7 +852,6 @@ public class ExternalEventTests {
                 "Test", "E",
                 "Test Default", "2024-01-01 00:13:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
                 "2024-01-05 00:00:00+00"
             ),
@@ -906,7 +860,6 @@ public class ExternalEventTests {
                 "Test", "F",
                 "Test Default", "2024-01-01 00:04:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
                 "2024-01-06 00:00:00+00"
             ),
@@ -915,7 +868,6 @@ public class ExternalEventTests {
                 "Test", "G",
                 "Test Default", "2024-01-01 00:11:00+00",
                 "00:00:00.000001",
-                "{}",
                 "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}",
                 "2024-01-07 00:00:00+00"
             )
@@ -957,8 +909,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
@@ -985,7 +936,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "01:00:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-01 00:00:00+00"
             )
@@ -1011,8 +961,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource B = new ExternalSource(
             "B",
@@ -1021,8 +970,7 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource C = new ExternalSource(
             "C",
@@ -1031,8 +979,7 @@ public class ExternalEventTests {
             "2024-01-03T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T03:00:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
@@ -1065,7 +1012,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:10:00+00",
                 "00:10:00",
-                "{}",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -1076,7 +1022,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:30:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             ),
@@ -1087,7 +1032,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 01:30:00+00",
                 "01:00:00",
-                "{}",
                 "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 03:00:00+00\")}",
                 "2024-01-03 00:00:00+00"
             )
@@ -1114,8 +1058,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource B = new ExternalSource(
             "B",
@@ -1124,8 +1067,7 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
@@ -1157,7 +1099,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:25:00+00",
                 "00:10:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
                 "2024-01-01 00:00:00+00"
             ),
@@ -1168,7 +1109,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:30:00+00",
                 "00:10:00",
-                "{}",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
                 "2024-01-02 00:00:00+00"
             ),
@@ -1179,7 +1119,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:45:00+00",
                 "00:10:00",
-                "{}",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
                 "2024-01-02 00:00:00+00"
             )
@@ -1206,8 +1145,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource B = new ExternalSource(
             "B",
@@ -1216,8 +1154,7 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e1 = createEvent(
@@ -1261,7 +1198,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:00:00+00",
                 "00:10:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             ),
@@ -1272,7 +1208,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:30:00+00",
                 "00:20:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-02 00:00:00+00"
             )
@@ -1298,8 +1233,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource B = new ExternalSource(
             "B",
@@ -1308,8 +1242,7 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e1 = createEvent(
@@ -1366,8 +1299,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T02:30:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource B = new ExternalSource(
             "B",
@@ -1376,8 +1308,7 @@ public class ExternalEventTests {
             "2024-01-02T00:00:00Z",
             "2024-01-01T03:00:00Z",
             "2024-01-01T04:00:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalSource C = new ExternalSource(
             "C",
@@ -1386,8 +1317,7 @@ public class ExternalEventTests {
             "2024-01-03T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca,
-            mt
+            ca
         );
 
         ExternalEvent e1 = createEvent(
@@ -1434,7 +1364,6 @@ public class ExternalEventTests {
                 "Test Default",
                 "2024-01-01 00:30:00+00",
                 "00:20:00",
-                "{}",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
                 "2024-01-03 00:00:00+00"
             )
@@ -1472,8 +1401,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T03:00:00Z",
           "2024-01-01T04:00:00Z",
-          ca,
-          mt);
+          ca);
       ExternalSource b = new ExternalSource(
           "B",
           st,
@@ -1481,8 +1409,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T02:00:00Z",
-          ca,
-          mt);
+          ca);
 
       // create types and first source
       insertExternalSourceType(st);
@@ -1513,8 +1440,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:30:00Z",
-          ca,
-          mt
+          ca
       );
 
       ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
@@ -1544,7 +1470,6 @@ public class ExternalEventTests {
               "Test Default",
               "2024-01-01 00:00:00+00",
               "00:10:00",
-              "{}",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
               "2024-01-01 00:00:00+00"
           ),
@@ -1555,7 +1480,6 @@ public class ExternalEventTests {
               "Test Default",
               "2024-01-01 00:00:00+00",
               "00:05:00",
-              "{}",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
               "2024-01-01 00:00:00+00"
           ),
@@ -1566,7 +1490,6 @@ public class ExternalEventTests {
               "Test Default",
               "2024-01-01 00:00:00+00",
               "00:15:00",
-              "{}",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
               "2024-01-01 00:00:00+00"
           )
@@ -1588,8 +1511,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:30:00Z",
-          ca,
-          mt);
+          ca);
 
       ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
       ExternalEvent e2 = createEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
@@ -1625,8 +1547,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca,
-          mt
+          ca
       );
       ExternalSource failing2 = new ExternalSource(
           "A",
@@ -1635,8 +1556,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T01:00:00Z",
-          ca,
-          mt
+          ca
       );
       ExternalSource succeeding = new ExternalSource(
           "A",
@@ -1645,8 +1565,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T01:00:00.000001Z",
-          ca,
-          mt
+          ca
       );
 
       // add source type and derivation group
@@ -1697,8 +1616,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T02:00:00Z",
-          ca,
-          mt);
+          ca);
 
       ExternalEvent legal = createEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
       ExternalEvent completelyBefore = createEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
@@ -1751,8 +1669,7 @@ public class ExternalEventTests {
           "2024-01-18 00:00:00+00",
           "2024-01-05 00:00:00+00",
           "2024-01-11 00:00:00+00",
-          ca,
-          mt
+          ca
       ); // same name and dg
       ExternalSource succeeding = new ExternalSource(
           "Derivation_Test_00.json",
@@ -1761,8 +1678,7 @@ public class ExternalEventTests {
           "2024-01-18 00:00:00+00",
           "2024-01-05 00:00:00+00",
           "2024-01-11 00:00:00+00",
-          ca,
-          mt
+          ca
       ); // same name, diff dg
 
       // upload general data
@@ -1813,8 +1729,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca,
-            mt
+            ca
         );
 
         // insert the source and all relevant groups and types
@@ -1859,8 +1774,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca,
-          mt
+          ca
       );
 
       // add types
@@ -1881,8 +1795,7 @@ public class ExternalEventTests {
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca,
-          mt
+          ca
       );
 
       // insert the erroneous source (expect error)
@@ -1915,8 +1828,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca,
-            mt
+            ca
         );
 
         // add types
@@ -1962,8 +1874,7 @@ public class ExternalEventTests {
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca,
-            mt
+            ca
         );
         ExternalEvent evt = createEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
 
@@ -2018,27 +1929,27 @@ public class ExternalEventTests {
     insertDerivationGroup(dg2, st);
 
     // insert external sources
-    ExternalSource Test_00 = new ExternalSource("Derivation_Test_00_1.json", st, dg2, "2024-01-18 00:00:00+00", "2024-01-05 00:00:00+00", "2024-01-11 00:00:00+00", "2024-08-21 22:36:12.858009+00", "{}");
-    ExternalSource Test_01 = new ExternalSource("Derivation_Test_01_1.json", st, dg2, "2024-01-19 00:00:00+00", "2024-01-01 00:00:00+00", "2024-01-07 00:00:00+00", "2024-08-21 22:36:19.381275+00", "{}");
-    ExternalSource Test_02 = new ExternalSource("Derivation_Test_02_1.json", st, dg2, "2024-01-20 00:00:00+00", "2024-01-03 00:00:00+00", "2024-01-10 00:00:00+00", "2024-08-21 22:36:23.340941+00", "{}");
-    ExternalSource Test_03 = new ExternalSource("Derivation_Test_03_1.json", st, dg2, "2024-01-21 00:00:00+00", "2024-01-01 12:00:00+00", "2024-01-02 12:00:00+00", "2024-08-21 22:36:28.365244+00", "{}");
+    ExternalSource Test_00 = new ExternalSource("Derivation_Test_00_1.json", st, dg2, "2024-01-18 00:00:00+00", "2024-01-05 00:00:00+00", "2024-01-11 00:00:00+00", "2024-08-21 22:36:12.858009+00");
+    ExternalSource Test_01 = new ExternalSource("Derivation_Test_01_1.json", st, dg2, "2024-01-19 00:00:00+00", "2024-01-01 00:00:00+00", "2024-01-07 00:00:00+00", "2024-08-21 22:36:19.381275+00");
+    ExternalSource Test_02 = new ExternalSource("Derivation_Test_02_1.json", st, dg2, "2024-01-20 00:00:00+00", "2024-01-03 00:00:00+00", "2024-01-10 00:00:00+00", "2024-08-21 22:36:23.340941+00");
+    ExternalSource Test_03 = new ExternalSource("Derivation_Test_03_1.json", st, dg2, "2024-01-21 00:00:00+00", "2024-01-01 12:00:00+00", "2024-01-02 12:00:00+00", "2024-08-21 22:36:28.365244+00");
     insertExternalSource(Test_00);
     insertExternalSource(Test_01);
     insertExternalSource(Test_02);
     insertExternalSource(Test_03);
 
     // insert external events
-    ExternalEvent e02 = new ExternalEvent("2", "DerivationD", "Derivation_Test_00_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"subsumed by test 01, even though end lies outside of 01, also replaced by test 01 by key\", \"rules\": [3, 4], \"should_present\": false}");
-    ExternalEvent e07 = new ExternalEvent("7", "DerivationC", "Derivation_Test_00_1.json", dg2, "2024-01-09 23:00:00+00", "02:00:00", "{\"notes\": \"subsumed by test 02, even though end lies outside of 02, because start time during 01\", \"rules\": [3], \"should_present\": false}");
-    ExternalEvent e08 = new ExternalEvent("8", "DerivationB", "Derivation_Test_00_1.json", dg2, "2024-01-10 11:00:00+00", "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent e01 = new ExternalEvent("1", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 00:00:00+00", "02:10:00", "{\"notes\": \"before everything, subsumed by nothing\", \"rule\": [1], \"should_present\": true}");
-    ExternalEvent e02_2 =  new ExternalEvent("2", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 12:00:00+00", "02:10:00", "{\"notes\": \"overwritten by key in later file, even with type change\", \"rules\": [4], \"should_present\": false}");
-    ExternalEvent e03 = new ExternalEvent("3", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-02 23:00:00+00", "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}");
-    ExternalEvent e04 = new ExternalEvent("4", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-05 21:00:00+00", "03:00:00", "{\"notes\": \"start subsumed by 02, not included in final result\", \"rules\": [3], \"should_present\": false}");
-    ExternalEvent e05 = new ExternalEvent("5", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00", "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent e06 = new ExternalEvent("6", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-06 12:00:00+00", "02:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
-    ExternalEvent e02_3 = new ExternalEvent("2", "DerivationB", "Derivation_Test_02_1.json", dg2, "2024-01-09 11:00:00+00", "01:05:00", "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}");
-    ExternalEvent e09 = new ExternalEvent("9", "DerivationC", "Derivation_Test_03_1.json", dg2, "2024-01-02 00:00:00+00", "01:00:00", "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}");
+    ExternalEvent e02 = new ExternalEvent("2", "DerivationD", "Derivation_Test_00_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00");
+    ExternalEvent e07 = new ExternalEvent("7", "DerivationC", "Derivation_Test_00_1.json", dg2, "2024-01-09 23:00:00+00", "02:00:00");
+    ExternalEvent e08 = new ExternalEvent("8", "DerivationB", "Derivation_Test_00_1.json", dg2, "2024-01-10 11:00:00+00", "01:05:00");
+    ExternalEvent e01 = new ExternalEvent("1", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 00:00:00+00", "02:10:00");
+    ExternalEvent e02_2 =  new ExternalEvent("2", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 12:00:00+00", "02:10:00");
+    ExternalEvent e03 = new ExternalEvent("3", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-02 23:00:00+00", "03:00:00");
+    ExternalEvent e04 = new ExternalEvent("4", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-05 21:00:00+00", "03:00:00");
+    ExternalEvent e05 = new ExternalEvent("5", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00");
+    ExternalEvent e06 = new ExternalEvent("6", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-06 12:00:00+00", "02:00:00");
+    ExternalEvent e02_3 = new ExternalEvent("2", "DerivationB", "Derivation_Test_02_1.json", dg2, "2024-01-09 11:00:00+00", "01:05:00");
+    ExternalEvent e09 = new ExternalEvent("9", "DerivationC", "Derivation_Test_03_1.json", dg2, "2024-01-02 00:00:00+00", "01:00:00");
     insertExternalEvent(e02);
     insertExternalEvent(e07);
     insertExternalEvent(e08);
@@ -2063,7 +1974,7 @@ public class ExternalEventTests {
             "Derivation_Test_00_1.json",
             "Test Default_2",
             "2024-01-10 11:00:00+00",
-            "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+            "01:05:00",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
             "2024-01-18 00:00:00+00"
         ),
@@ -2073,7 +1984,7 @@ public class ExternalEventTests {
             "Derivation_Test_00.json",
             "Test Default",
             "2024-01-10 11:00:00+00",
-            "01:05:00", "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
+            "01:05:00",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
             "2024-01-18 00:00:00+00"
         ),
@@ -2083,7 +1994,7 @@ public class ExternalEventTests {
             "Derivation_Test_01_1.json",
             "Test Default_2",
             "2024-01-02 23:00:00+00",
-            "03:00:00", "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
+            "03:00:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2093,7 +2004,7 @@ public class ExternalEventTests {
             "Derivation_Test_01_1.json",
             "Test Default_2",
             "2024-01-01 00:00:00+00",
-            "02:10:00", "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
+            "02:10:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2102,8 +2013,8 @@ public class ExternalEventTests {
             "DerivationA",
             "Derivation_Test_01.json",
             "Test Default",
-            "2024-01-01 00:00:00+00", "02:10:00",
-            "{\"notes\": \"before everything, subsumed by nothing\", \"rules\": [1], \"should_present\": true}",
+            "2024-01-01 00:00:00+00",
+            "02:10:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2114,7 +2025,6 @@ public class ExternalEventTests {
             "Test Default",
             "2024-01-02 23:00:00+00",
             "03:00:00",
-            "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2125,7 +2035,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
-            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2136,7 +2045,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2147,7 +2055,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
-            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2158,7 +2065,6 @@ public class ExternalEventTests {
             "Test Default",
             "2024-01-05 23:00:00+00",
             "01:10:00",
-            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2169,7 +2075,6 @@ public class ExternalEventTests {
             "Test Default",
             "2024-01-06 12:00:00+00",
             "02:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2180,7 +2085,6 @@ public class ExternalEventTests {
             "Test Default",
             "2024-01-09 11:00:00+00",
             "01:05:00",
-            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2191,7 +2095,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
             "2024-01-21 00:00:00+00"
         ),
@@ -2202,7 +2105,6 @@ public class ExternalEventTests {
             "Test Default",
             "2024-01-02 00:00:00+00",
             "01:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
             "2024-01-21 00:00:00+00"
         )
@@ -2221,7 +2123,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-01 00:00:00+00",
             "02:10:00",
-            "{\"rule\": [1], \"notes\": \"before everything, subsumed by nothing\", \"should_present\": true}",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2232,7 +2133,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
             "2024-01-21 00:00:00+00"
         ),
@@ -2243,7 +2143,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-02 23:00:00+00",
             "03:00:00",
-            "{\"notes\": \"starts before next file though occurs during next file, still included\", \"rules\": [2], \"should_present\": true}",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
@@ -2254,7 +2153,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
-            "{\"notes\": \"not subsumed, optionally change this event to have key 6 and ensure this test fails\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2265,7 +2163,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
-            "{\"notes\": \"not subsumed\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2276,7 +2173,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
-            "{\"notes\": \"replaces 2 in test 01, despite different event type\", \"rules\": [4], \"should_present\": true}",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
@@ -2287,7 +2183,6 @@ public class ExternalEventTests {
             "Test Default_2",
             "2024-01-10 11:00:00+00",
             "01:05:00",
-            "{\"notes\": \"after everything, subsumed by nothing despite being from oldest file\", \"rules\": [1], \"should_present\": true}",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
             "2024-01-18 00:00:00+00"
         )
