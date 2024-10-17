@@ -90,11 +90,16 @@ begin
 end;
 $$;
 
+-- events are the most basic source of information, so we have to trigger on their insertion
 create trigger refresh_derived_events_on_external_event
 after insert or update or delete on merlin.external_event
   for each statement execute function merlin.refresh_derived_events_on_trigger();
 
--- not triggering on events, as those can only ever be added at the same time as external_source
+-- also trigger on external sources, especially in the case of an empty source, which could still overlap and erase some
+--    events in time (see "rule3_empty" test in ExternalEventTests.java).
+create trigger refresh_derived_events_on_external_source
+after insert or update or delete on merlin.external_source
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
 
 create trigger refresh_derived_events_on_derivation_group
 after insert or update or delete on merlin.derivation_group
