@@ -130,38 +130,6 @@ create trigger external_source_type_matches_dg_on_add
 before insert or update on merlin.external_source
   for each row execute function merlin.external_source_type_matches_dg_on_add();
 
--- if an external source is linked to a plan it cannot be deleted
-create function merlin.external_source_pdg_association_delete()
-  returns trigger
-  language plpgsql as $$
-begin
-  if exists (select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
-    raise foreign_key_violation
-    using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
-  end if;
-  return old;
-end;
-$$;
-
-create trigger external_source_pdg_association_delete
-before delete on merlin.external_source
-  for each row execute function merlin.external_source_pdg_association_delete();
-
--- set acknowledged on merlin.plan_derivation_group false for this derivation group as there are new changes
-create function merlin.external_source_pdg_ack_update()
-  returns trigger
-  language plpgsql as $$
-begin
-  update merlin.plan_derivation_group set "acknowledged" = false
-  where plan_derivation_group.derivation_group_name = NEW.derivation_group_name;
-  return new;
-end;
-$$;
-
-create trigger external_source_pdg_ack_update
-after insert on merlin.external_source
-  for each row execute function merlin.external_source_pdg_ack_update();
-
 create table merlin.external_event (
     key text not null,
     event_type_name text not null,
@@ -272,6 +240,38 @@ comment on column merlin.plan_derivation_group.derivation_group_name is e''
 comment on column merlin.plan_derivation_group.last_acknowledged_at is e''
   'The time at which changes to the derivation group were last acknowledged.';
 
+-- if an external source is linked to a plan it cannot be deleted
+create function merlin.external_source_pdg_association_delete()
+  returns trigger
+  language plpgsql as $$
+begin
+  if exists (select * from merlin.plan_derivation_group pdg where pdg.derivation_group_name = old.derivation_group_name) then
+    raise foreign_key_violation
+    using message='External source ' || old.key || ' is part of a derivation group that is associated to a plan.';
+  end if;
+  return old;
+end;
+$$;
+
+create trigger external_source_pdg_association_delete
+before delete on merlin.external_source
+  for each row execute function merlin.external_source_pdg_association_delete();
+
+-- set acknowledged on merlin.plan_derivation_group false for this derivation group as there are new changes
+create function merlin.external_source_pdg_ack_update()
+  returns trigger
+  language plpgsql as $$
+begin
+  update merlin.plan_derivation_group set "acknowledged" = false
+  where plan_derivation_group.derivation_group_name = NEW.derivation_group_name;
+  return new;
+end;
+$$;
+
+create trigger external_source_pdg_ack_update
+after insert on merlin.external_source
+  for each row execute function merlin.external_source_pdg_ack_update();
+
 -- update last_acknowledged whenever acknowledged is set to true
 create function merlin.pdg_update_ack_at()
   returns trigger
@@ -314,73 +314,106 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
 -- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
 -- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
 
-create view merlin.derived_events
-as
-select
-  -- from the events adhering to rules 1-3, filter by overlapping names such that only the most recent and valid event is included (row_number = 1; fitting rule 4)
+create materialized view merlin.derived_events_better as
+-- "distinct on (event_key, derivation_group_name)" and "order by valid_at" satisfies rule 4
+-- (only the most recently valid version of an event is included)
+select distinct on (event_key, derivation_group_name)
+    output.event_key,
+    output.source_key,
+    output.derivation_group_name,
+    output.event_type_name,
+    output.duration,
+    output.start_time,
+    output.source_range,
+    output.valid_at
+from (
+  -- select the events from the sources and include them as they fit into the ranges determined by sub
+  select
+    s.key as source_key,
+    ee.key as event_key,
+    ee.event_type_name,
+    ee.duration,
+    s.derivation_group_name,
+    ee.start_time,
+    s.source_range,
+    s.valid_at
+  from merlin.external_event ee
+  join (
+    with base_ranges as (
+      -- base_ranges orders sources by their valid time
+      -- and extracts the multirange that they are stated to be valid over
+      select
+        external_source.key,
+        external_source.derivation_group_name,
+        tstzmultirange(tstzrange(external_source.start_time, external_source.end_time)) as range,
+        external_source.valid_at
+      from merlin.external_source
+      order by external_source.valid_at
+    ), base_and_sub_ranges as (
+      -- base_and_sub_ranges takes each of the sources above and compiles a list of all the sources that follow it
+      -- and their multiranges that they are stated to be valid over
+      select
+        base.key,
+        base.derivation_group_name,
+        base.range                                                      as original_range,
+        array_remove(array_agg(subsequent.range order by subsequent.valid_at), NULL) as subsequent_ranges,
+        base.valid_at
+      from base_ranges base
+      left join base_ranges subsequent
+        on base.derivation_group_name = subsequent.derivation_group_name
+        and base.valid_at < subsequent.valid_at
+      group by base.key, base.derivation_group_name, base.valid_at, base.range
+    )
+    -- this final selection (s) utilizes the first, as well as merlin.subtract_later_ranges,
+    -- to produce a sparse multirange that a given source is valid over.
+    -- See merlin.subtract_later_ranges for further details on subtracted ranges.
+    select
+      r.key,
+      r.derivation_group_name,
+      merlin.subtract_later_ranges(r.original_range, r.subsequent_ranges) as source_range,
+      r.valid_at
+    from base_and_sub_ranges r
+    order by r.derivation_group_name desc, r.valid_at) s
+  on s.key = ee.source_key
+  and s.derivation_group_name = ee.derivation_group_name
+  where s.source_range @> ee.start_time
+  order by valid_at desc
+) output;
+
+-- create a unique index, which allows concurrent refreshes
+create unique index on merlin.derived_events (
+  event_key,
   source_key,
   derivation_group_name,
-  event_key,
-  duration,
-  event_type_name,
-  start_time,
-  source_range,
-  valid_at
-from ( -- select all relevant properties of those shortlisted in the from clause (rule1_3), and create an ordering based on overlapping names and valid_at (row_number) to adhere to rule 4
-        select rule1_3.source_key,
-        rule1_3.event_key,
-        rule1_3.event_type_name,
-        rule1_3.duration,
-        rule1_3.derivation_group_name,
-        rule1_3.start_time,
-        rule1_3.source_range,
-        rule1_3.valid_at,
-        row_number() over (partition by rule1_3.event_key, rule1_3.derivation_group_name order by rule1_3.valid_at desc) as rn
-        from (
-                -- select the events from the sources and include them as they fit into the ranges determined by sub
-                select sub.key as source_key,
-                external_event.key as event_key,
-                external_event.event_type_name,
-                external_event.duration,
-                sub.derivation_group_name,
-                external_event.start_time,
-                sub.source_range,
-                sub.valid_at
-                from merlin.external_event
-                join ( with derivation_tb_range as (
-                        -- this inner selection (derivation_tb_range) orders sources by their valid time and extracts the multirange that they are stated to be valid over
-                        select external_source.key,
-                                external_source.derivation_group_name,
-                                tstzmultirange(tstzrange(external_source.start_time, external_source.end_time)) AS dr,
-                                external_source.valid_at
-                                from merlin.external_source
-                                order by external_source.valid_at
-                        ), ranges_with_subs as (
-                        -- this inner selection (ranges_with_subs) takes each of the sources above and compiles a list of all the sources that follow it and their multiranges that they are stated to be valid over
-                        select tr1.key,
-                              tr1.derivation_group_name,
-                              tr1.dr as original_range,
-                              coalesce(array_remove(array_agg(tr2.dr order by tr2.valid_at) FILTER (where tr1.derivation_group_name = tr2.derivation_group_name), null::tstzmultirange), '{}'::tstzmultirange[]) as subsequent_ranges,
-                              tr1.valid_at
-                              from derivation_tb_range tr1
-                                  left join derivation_tb_range tr2 on tr1.valid_at < tr2.valid_at
-                              group by tr1.key, tr1.derivation_group_name, tr1.valid_at, tr1.dr
-                        )
-                        -- this final selection (sub) utilizes the first, as well as merlin.subtract_later_ranges, to produce a sparse multirange that a given source is valid over. See merlin.subtract_later_ranges for further details on subtracted ranges.
-                        select ranges_with_subs.key,
-                              ranges_with_subs.derivation_group_name,
-                              ranges_with_subs.original_range,
-                              ranges_with_subs.subsequent_ranges,
-                              merlin.subtract_later_ranges(ranges_with_subs.original_range, ranges_with_subs.subsequent_ranges) AS source_range,
-                              ranges_with_subs.valid_at
-                        from ranges_with_subs
-                        order by ranges_with_subs.derivation_group_name desc, ranges_with_subs.valid_at) sub on sub.key = external_event.source_key and sub.derivation_group_name = external_event.derivation_group_name
-                where sub.source_range @> external_event.start_time
-        order by sub.derivation_group_name, external_event.start_time) rule1_3) t
-where rn = 1
-order by start_time;
+  event_type_name
+);
 
-comment on view  merlin.derived_events is e''
+-- refresh the materialized view after insertion/update/deletion to external_source and external_event and derivation_group
+create function merlin.refresh_derived_events_on_trigger()
+  returns trigger
+  language plpgsql as $$
+begin
+  refresh materialized view concurrently merlin.derived_events;
+  return new;
+end;
+$$;
+
+-- events are the most basic source of information, so we have to trigger on their insertion
+create trigger refresh_derived_events_on_external_event
+after insert or update or delete on merlin.external_event
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
+
+-- also trigger on external sources, especially in the case of an empty source, which could still overlap and erase some
+--    events in time (see "rule3_empty" test in ExternalEventTests.java).
+create trigger refresh_derived_events_on_external_source
+after insert or update or delete on merlin.external_source
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
+
+create trigger refresh_derived_events_on_derivation_group
+after insert or update or delete on merlin.derivation_group
+  for each statement execute function merlin.refresh_derived_events_on_trigger();
+
+comment on materialized view merlin.derived_events is e''
   'Details all derived events from all derivation groups.';
 
 call migrations.mark_migration_applied('11');
