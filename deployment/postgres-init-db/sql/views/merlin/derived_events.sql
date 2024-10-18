@@ -103,4 +103,4 @@ after insert or update or delete on merlin.derivation_group
   for each statement execute function merlin.refresh_derived_events_on_trigger();
 
 comment on materialized view merlin.derived_events is e''
-  'Details all derived events from all derivation groups.';
+  'Derives the final event set for each derivation group.';
