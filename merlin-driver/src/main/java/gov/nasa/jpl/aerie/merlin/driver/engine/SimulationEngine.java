@@ -535,19 +535,43 @@ public final class SimulationEngine implements AutoCloseable {
         }
       }
     }
+
     boolean doJobs = invalidatedTopics.isEmpty();
+    boolean hasStaleReads = false;
+    boolean hasStaleConditionReads = false;
     if (oldEngine != null &&staleReadTime != null && staleReadTime.isEqualTo(nextTime) && !staleReadTime.isEqualTo(lastStaleReadTime)) {
       if (debug) System.out.println("earliestStaleReads at " + nextTime + " = " + earliestStaleReads);
       lastStaleReadTime = staleReadTime;
-      rescheduleStaleTasks(earliestStaleReads);
+      hasStaleReads = true;
       doJobs = false;
     }
     if (oldEngine != null && staleConditionReadTime != null && staleConditionReadTime.isEqualTo(nextTime) &&
         !staleConditionReadTime.isEqualTo(lastStaleConditionReadTime)) {
       if (debug) System.out.println("earliestStaleConditionReads at " + nextTime + " = " + earliestStaleConditionReads);
       lastStaleConditionReadTime = staleConditionReadTime;
-      rescheduleStaleTasks(earliestStaleConditionReads.getKey(), earliestStaleConditionReads.getRight());
+      hasStaleConditionReads = true;
       doJobs = false;
+    }
+
+    // Determine children to remove before setting tasks stale. We don't want to reschedule a child when the parent is
+    // already being rescheduled since the child will be rerun by the parent.
+    // We first run rescheduleStaleTasks without actually running reschedule just to gather the tasks with stale reads.
+    // Then we run again passing in a list of tasks to ignore; that list contains the child tasks and tasks already
+    // rescheduled.
+    Set<TaskId> staleTasks = !hasStaleReads ? new HashSet<>() : rescheduleStaleTasks(earliestStaleReads, Collections.EMPTY_SET, true);
+    if (hasStaleConditionReads) {
+      staleTasks.addAll(rescheduleStaleTasks(earliestStaleConditionReads.getKey(), earliestStaleConditionReads.getRight(), staleTasks, true));
+    }
+    Set<TaskId> childrenToRemove = areChildren(staleTasks);
+    if (hasStaleReads) {
+      staleTasks = rescheduleStaleTasks(earliestStaleReads, childrenToRemove, false);
+      staleTasks.addAll(childrenToRemove);
+    } else {
+      staleTasks = childrenToRemove;
+    }
+    if (hasStaleConditionReads) {
+      rescheduleStaleTasks(earliestStaleConditionReads.getKey(), earliestStaleConditionReads.getRight(),
+                           staleTasks, false);
     }
 
     if (doJobs && timeOfNextJobs.isEqualTo(nextTime)) {
@@ -723,7 +747,9 @@ public final class SimulationEngine implements AutoCloseable {
       // Now cache the results
       //_oldCleanedHistory.put(topic, oldCleanedHistory);
     //}
-
+    final var oi = oldInner;
+    final var och = oldCleanedHistory;
+    oi.keySet().stream().filter(d -> !removedCellReadHistory.containsKey(d)).forEach(k -> och.put(k, oi.get(k)));
     // Now merge local history with old cleaned history
     TreeMap<SubInstantDuration, HashMap<TaskId, Set<Event>>> combinedTopicHistory = oldCleanedHistory;
     if (oldCleanedHistory.isEmpty()) {
@@ -844,9 +870,11 @@ public final class SimulationEngine implements AutoCloseable {
       }
       for (var entry : topicReadsAfter.entrySet()) {
         var d = entry.getKey();
+        final HashMap<TaskId, Set<Event>> taskEvents = entry.getValue();
+        if (taskEvents == null || taskEvents.isEmpty()) continue;
         HashMap<TaskId, Set<Event>> taskIds = new HashMap<>();
         // Don't include tasks which are being re-executed
-        for (var e : entry.getValue().entrySet()) {
+        for (var e : taskEvents.entrySet()) {
           if (!staleTasks.containsKey(e.getKey())) {
             taskIds.put(e.getKey(), e.getValue());
           }
@@ -1088,34 +1116,40 @@ public final class SimulationEngine implements AutoCloseable {
     // find parent task to execute and mark parents stale
     TaskId childId = null;
     TaskId parentId = taskId;
+    TaskId lastTaskWithFactory = null;
     TaskId taskWithFactory = taskId;
     while (parentId != null) {
+      var nextParentId = oldEngine.getTaskParent(parentId);
       // Don't set the parent stale unless it is calling the child (instead of spawning)
       boolean parentStale = childId == null || isTaskCalled(childId);
       if (parentStale) {
-        if (trace) System.out.println("setTaskStale(" + taskId + "): adding staleness entry for " + parentId);
+        if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): adding staleness entry for " + parentId);
         staleTasks.put(parentId, time);
         staleEvents.put(parentId, afterEvent); // TODO -- more efficient to have one map with a pair of (time, afterEvent)
+        taskWithFactory = null;
       }
       // Need task factory for the highest stale parent, or for its lowest parent if it has no task factory
-      if (parentStale || taskWithFactory == null) {
+      if (taskWithFactory == null) {
         // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
         if (oldEngine.getFactoryForTaskId(parentId) != null) {
-          if (trace) System.out.println("setTaskStale(" + taskId + "): found factory for " + parentId);
+          if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): found factory for " + parentId +" : " + getNameForTask(parentId));
           taskWithFactory = parentId;
         } else
         if (oldEngine.isActivity(parentId)) {
-          if (trace) System.out.println("setTaskStale(" + taskId + "): isActivity(" + parentId + ") = true");
+          if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): isActivity(" + parentId + " : " + getNameForTask(parentId) + ") = true");
           taskWithFactory = parentId;
         } else
         if (oldEngine.isDaemonTask(parentId)) {
-          if (trace) System.out.println("setTaskStale(" + taskId + "): isDaemonTask(" + parentId + ") = true");
+          if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): isDaemonTask(" + parentId + " : " + getNameForTask(parentId) + ") = true");
           taskWithFactory = parentId;
         }
       }
-      var nextParentId = oldEngine.getTaskParent(parentId);
-      if (trace) System.out.println("setTaskStale(" + taskId + "): parent of " + parentId + " is " + nextParentId);
-      if (nextParentId == null) break;
+      if (taskWithFactory != null) lastTaskWithFactory = taskWithFactory;
+      if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): parent of " + parentId + " (" + getNameForTask(parentId) + ") is " + nextParentId + " : " + getNameForTask(nextParentId));
+      if (nextParentId == null) {  // TODO -- make the conditions for this more explicit so that it's not brittle to changes in task generation.  The top-level task (which has no parent) is the sole parent of the activity for the directive, and it calls the activity instead of spawning it
+        if (taskWithFactory == null) taskWithFactory = lastTaskWithFactory;
+        break;
+      }
       childId = parentId;
       parentId = nextParentId;
     }
@@ -1133,7 +1167,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (execState != null) taskStart = execState.startOffset(); // WARNING: assumes offset is from same plan start
       else {
         //taskStart = Duration.ZERO;
-        throw new RuntimeException("Can't find task start!");
+        throw new RuntimeException("Can't find task start!  task id = " + taskWithFactory + " : " + getNameForTask(taskWithFactory));
       }
     }
     rescheduleTask(taskWithFactory, taskStart, afterEvent);
@@ -1169,19 +1203,45 @@ public final class SimulationEngine implements AutoCloseable {
     return s == null ? Collections.EMPTY_SET : s;
   }
 
-  private void rescheduleStaleTasks(SubInstantDuration time, Map<Topic<?>, Set<ConditionId>> staleConditionReads) {
+
+  private Set<TaskId> areChildren(Set<TaskId> staleTasks) {
+    // TODO -- would this be better if done functional programming style, maybe by computing a closure with getTaskParent()?
+    Set<TaskId> children = new HashSet<>();
+    for (var taskId : new ArrayList<>(staleTasks)) {
+      TaskId parentId = getTaskParent(taskId);
+      while (parentId != null) {
+        if (staleTasks.contains(parentId)) {
+          children.add(taskId);
+          break;
+        }
+        parentId = getTaskParent(parentId);
+      }
+    }
+    return children;
+  }
+
+  private Set<TaskId> rescheduleStaleTasks(SubInstantDuration time, Map<Topic<?>, Set<ConditionId>> staleConditionReads,
+                                           Set<TaskId> tasksToIgnore, boolean justGetTasks) {
     //Map<TaskId, HashSet<Pair<Topic<?>, Event>>> staleReads = new HashMap<>();
+    Set<TaskId> staleTasks = new HashSet<>();
     Set<TaskId> processedTasks = new HashSet<>();
     removedCellReadHistory.values().forEach(processedTasks::addAll); // check if just rescheduled for stale read
     for (var e : staleConditionReads.entrySet()) {
       for (ConditionId c : e.getValue()) {
         TaskId taskId = getTaskIdForConditionId(c);
-        if (!processedTasks.contains(taskId)) {
-          setTaskStale(taskId, time, null);
+        if (!processedTasks.contains(taskId) && !tasksToIgnore.contains(taskId)) {
+          staleTasks.add(taskId);
           processedTasks.add(taskId);
         }
       }
     }
+    // Now set remaining tasks stale and reschedule them
+    if (!justGetTasks) {
+      for (var taskId : staleTasks) {
+        setTaskStale(taskId, time, null);
+      }
+    }
+    return staleTasks;
   }
 
 
@@ -1194,13 +1254,19 @@ public final class SimulationEngine implements AutoCloseable {
    * same time, it is assumed to also have the noop events.
    *
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
+   * @param justGetTasks don't actually set the tasks stale and reschedule; just get the tasks that would have been
+   * @return the tasks that were or would be set stale and rescheduled
    */
-  public void rescheduleStaleTasks(Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>> earliestStaleReads) {
+  public Set<TaskId> rescheduleStaleTasks(
+      Pair<SubInstantDuration, Map<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>>> earliestStaleReads,
+      Set<TaskId> tasksToIgnore, boolean justGetTasks) {
     if (debug) System.out.println("rescheduleStaleTasks(" + earliestStaleReads + ")");
+    Set<TaskId> tasksSetStale = new HashSet<>();
     // Test to see if read value has changed.  If so, reschedule the affected task
     var timeOfStaleReads = earliestStaleReads.getLeft();
     for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Set<Event>>>> entry : earliestStaleReads.getRight().entrySet()) {
       final var taskId = entry.getKey();
+      if (tasksToIgnore.contains(taskId)) continue;
       for (Pair<Topic<?>, Set<Event>> pair : entry.getValue()) {
         final var topic = pair.getLeft();
         final var events = pair.getRight();
@@ -1230,8 +1296,11 @@ public final class SimulationEngine implements AutoCloseable {
 
           if (!tempCell.getState().equals(tempOldCell.getState())) {
             if (debug) System.out.println("rescheduleStaleTasks(): Stale read: new cell state (" + tempCell + ") != old cell state (" + tempOldCell + ")");
+            tasksSetStale.add(taskId);
             // Mark stale and reschedule task
-            setTaskStale(taskId, timeOfStaleReads, noop);
+            if (!justGetTasks) {
+              setTaskStale(taskId, timeOfStaleReads, noop);
+            }
             didSetTaskStale = true;
             break;  // rescheduled task, so can move on to the next task
           }
@@ -1239,6 +1308,7 @@ public final class SimulationEngine implements AutoCloseable {
         if (didSetTaskStale) break;
       }  // for Pair<Topic<?>, Event>
     }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
+    return tasksSetStale;
   }
 
 
@@ -1510,7 +1580,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.tasks.put(task, new ExecutionState<>(span, Optional.empty(), state.create(this.executor), startTime));
     putSpanId(task, span);
 
-    if (trace) System.out.println("scheduleTask(" + startTime + "): TaskId = " + task + ", SpanId = " + span);
+    if (trace) System.out.println("scheduleTask(" + startTime + "): TaskId = " + task + " (" + getNameForTask(task) + "), SpanId = " + span);
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
 
     this.unstartedTasks.put(task, startTime);
@@ -1740,7 +1810,7 @@ public final class SimulationEngine implements AutoCloseable {
   ) throws SpanException {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, task, progress.span(), progress.caller(), frame, queryTopic);
-    if (trace) System.out.println("Stepping task at " + currentTime + ": TaskId = " + task + ", progress.span() = " + progress.span() + ", progress.caller() = " + progress.caller());
+    if (trace) System.out.println("Stepping task at " + currentTime + ": TaskId = " + task + " (" + getNameForTask(task) + "), progress.span() = " + progress.span() + ", progress.caller() = " + progress.caller());
     final TaskStatus<Output> status;
     try {
       status = progress.state().step(scheduler);
@@ -1772,8 +1842,7 @@ public final class SimulationEngine implements AutoCloseable {
         progress.caller().ifPresent($ -> {
           if (this.blockedTasks.get($).decrementAndGet() == 0) {
             this.blockedTasks.remove($);
-            if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(blocked caller TaskId = " + $ + ", " + currentTime.duration() + ")");
-            wireTasksAndSpans(task, $, null, null, true);
+            if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + " : " + getNameForTask(task) + "): scheduledJobs.schedule(blocked caller TaskId = " + $ + " : " + getNameForTask($) + ", " + currentTime.duration() + ")");
 
             this.scheduledJobs.schedule(JobId.forTask($), SubInstant.Tasks.at(currentTime.duration()));
           }
@@ -1783,7 +1852,7 @@ public final class SimulationEngine implements AutoCloseable {
       case TaskStatus.Delayed<Output> s -> {
         if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
         this.tasks.put(task, progress.continueWith(s.continuation()));
-        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(delayed TaskId = " + task + ", " + currentTime.duration().plus(s.delay()) + ")");
+        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): scheduledJobs.schedule(delayed TaskId = " + task + " : " + getNameForTask(task) + ", " + currentTime.duration().plus(s.delay()) + ")");
           this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.duration().plus(s.delay())));
       }
 
@@ -1833,7 +1902,7 @@ public final class SimulationEngine implements AutoCloseable {
         // Arrange for the parent task to resume.... later.
         SimulationEngine.this.blockedTasks.put(task, new MutableInt(1));
         wireTasksAndSpans(childTask, task, childSpan, scheduler.span, true);  // considering not wiring span parent to span child
-        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + "): calling TaskId = " + childTask);
+        if (trace) System.out.println("stepEffectModel(" + currentTime + ", TaskId = " + task + " : " + getNameForTask(task) + "): calling TaskId = " + childTask + " : " + getNameForTask(childTask));
         this.tasks.put(task, progress.continueWith(s.continuation()));
       }
 
@@ -1842,7 +1911,7 @@ public final class SimulationEngine implements AutoCloseable {
         this.conditions.put(condition, s.condition());
         final var jid = JobId.forCondition(condition);
         final var t = SubInstant.Conditions.at(currentTime.duration());
-        if (trace) System.out.println("stepEffectModel(TaskId=" + task + "): scheduling Condition job with conditionId = " + condition + ", AwaitingCondition s = " + s + ", condition = " + s.condition() + ", ConditionJobId = " + jid + ", at time " + t);
+        if (trace) System.out.println("stepEffectModel(TaskId=" + task + " : " + getNameForTask(task) + "): scheduling Condition job with conditionId = " + condition + ", AwaitingCondition s = " + s + ", condition = " + s.condition() + ", ConditionJobId = " + jid + ", at time " + t);
         this.scheduledJobs.schedule(jid, t);
 
         this.tasks.put(task, progress.continueWith(s.continuation()));
@@ -2844,8 +2913,9 @@ public final class SimulationEngine implements AutoCloseable {
       if (debug) System.out.println("emit(" + event + ", " + topic + ")");
       checkForTimeAlignment(activeTask, topic);
       this.currentTime = curTime();
-      if (debug) System.out.println("emit(): isTaskStale() --> " + isTaskStale(this.activeTask, this.currentTime));
-      if (isTaskStale(this.activeTask, this.currentTime)) {
+      boolean taskIsStale = isTaskStale(this.activeTask, this.currentTime);
+      if (debug) System.out.println("emit(): isTaskStale(" + activeTask + " : " + getNameForTask(activeTask) + ", " + currentTime + ") --> " + taskIsStale);
+      if (taskIsStale) {
         // Append this event to the timeline.
         this.frame.emit(Event.create(topic, event, this.activeTask));
         if (debug) System.out.println("emit(): isTopicStale(" + topic + ") --> " + timeline.isTopicStale(topic, this.currentTime));
@@ -2928,7 +2998,7 @@ public final class SimulationEngine implements AutoCloseable {
         }
 
         // Record task information
-        if (trace) System.out.println("spawn TaskId = " + task + " from " + activeTask);
+        if (trace) System.out.println("spawn TaskId = " + task + " (" + getNameForTask(task) + ") from " + activeTask + " (" + getNameForTask(activeTask) + ")");
         SimulationEngine.this.spanContributorCount.get(this.span).increment();
         SimulationEngine.this.tasks.put( task, new ExecutionState<>(
             childSpan, this.caller,
@@ -3168,7 +3238,7 @@ public final class SimulationEngine implements AutoCloseable {
   public void rescheduleTask(TaskId taskId, Duration startOffset, final Event afterEvent) {  // TODO -- don't we need the startOffset to be a SubInstantDuration?
     if (debug) System.out.println("rescheduleTask(" + taskId + " (" + getNameForTask(taskId) + "), " + startOffset + ")");
     if (oldEngine.isDaemonTask(taskId)) {
-      if (trace) System.out.println("rescheduleTask(" + taskId + "): is daemon task");
+      if (trace) System.out.println("rescheduleTask(" + taskId + " : " + getNameForTask(taskId) + "): is daemon task");
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
         scheduleTask(startOffset, factory, taskId);
@@ -3178,7 +3248,7 @@ public final class SimulationEngine implements AutoCloseable {
                                    (factory == null ? " because there is no TaskFactory." : "."));
       }
     } else if (oldEngine.isActivity(taskId)) {
-      if (trace) System.out.println("rescheduleTask(" + taskId + "): is activity");
+      if (trace) System.out.println("rescheduleTask(" + taskId + " : " + getNameForTask(taskId) + "): is activity");
       // Get the SerializedActivity for the taskId.
       // If an activity is found, see if it is associated with a directive and, if so, use the directive instead.
       var spanId = getSpanId(taskId);
@@ -3222,7 +3292,7 @@ public final class SimulationEngine implements AutoCloseable {
       // TODO: No need to emit(), right?  So, what about below instead?
       // scheduleTask(startOffset, task, taskId);
     } else {
-      if (trace) System.out.println("rescheduleTask(" + taskId + "): WARNING!  unknown whether task is daemon or activity spawned!");
+      if (trace) System.out.println("rescheduleTask(" + taskId + " : " + getNameForTask(taskId) + "): WARNING!  unknown whether task is daemon or activity spawned!");
       // We have a TaskFactory even though it's not an activity or daemon -- maybe a cached TaskFactory to avoid rerunning parents
       TaskFactory<?> factory = oldEngine.getFactoryForTaskId(taskId);
       if (factory != null && startOffset != null && startOffset != Duration.MAX_VALUE) {
@@ -3230,7 +3300,7 @@ public final class SimulationEngine implements AutoCloseable {
         // TODO: Should that be       scheduler1.startActivity(activityId, activityTopic);
         //       Maybe just throw an exception for this else case that probably shouldn't happen.
       } else {
-        throw new RuntimeException("Can't reschedule task " + taskId + " at time offset " + startOffset +
+        throw new RuntimeException("Can't reschedule task " + taskId + " (" + getNameForTask(taskId) + ") at time offset " + startOffset +
                                    (factory == null ? " because there is no TaskFactory." : "."));
       }
     }
