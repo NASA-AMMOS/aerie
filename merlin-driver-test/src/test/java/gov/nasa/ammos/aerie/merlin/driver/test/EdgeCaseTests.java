@@ -387,7 +387,7 @@ public class EdgeCaseTests {
     schedule.add(50, "caller_activity").thenDelete();
 
     Consumer<Model> assertions = $ -> {
-      $.assertNoRerun("other_activity");
+      //$.assertNoRerun("other_activity");  // other_activity waits until x > 56, and that is done by caller_activity, so it needs to rerun
       $.assertNoRerun("activity");
       $.assertNoRerun("caller_activity");
     };
@@ -429,14 +429,14 @@ public class EdgeCaseTests {
     final var schedule = new DualSchedule();
     schedule.add(1, "emit_event", "x,1");
     schedule.add(5, "read_emit_three_times", "x,history,5");
-    schedule.add(11, "emit_event", "x,2");
     schedule.add(7, "read_emit_three_times", "x,history,5");
+    schedule.add(11, "emit_event", "x,2");
     schedule.thenAdd(10, "emit_event", "x,1");
     schedule.thenAdd(15, "read_topic", "x");
     schedule.thenAdd(16, "read_topic", "x");
 
     Consumer<Model> assertions = $ -> {
-      $.assertNoRerun("emit_event");
+      $.assertNoRerun("emit_event", "x,2");
     };
 
     runTest(schedule, assertions);
@@ -644,7 +644,7 @@ public class EdgeCaseTests {
     schedule.thenAdd(1, "emit_event", "x,72");
 
     Consumer<Model> assertions = $ -> {
-      $.assertNoRerun("spawns_anonymous_task");
+      //$.assertNoRerun("spawns_anonymous_task");  // spawns_anonymous_task reads x after emit_event, so it needs to rerun
     };
 
     runTest(schedule, assertions);
@@ -681,29 +681,32 @@ public class EdgeCaseTests {
       System.out.println("Reference simulation 1");
       final var expectedProfiles = referenceSimulator.simulate(schedule1).discreteProfiles();
 
-      System.out.println("Test simulation 1");
-      final var actualProfiles = simulatorUnderTest.simulate(schedule1).discreteProfiles();
-      assertLastSegmentsEqual(expectedProfiles, actualProfiles);
       final var expected = new LinkedHashMap<String, String>();
       for (final var entry : expectedProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
       System.out.println("Expected last segment: " + expected);
+
+      System.out.println("Test simulation 1");
+      final var actualProfiles = simulatorUnderTest.simulate(schedule1).discreteProfiles();
+      assertLastSegmentsEqual(expectedProfiles, actualProfiles);
+
     }
 
     {
       System.out.println("Reference simulation 2");
       final var expectedProfiles = referenceSimulator.simulate(schedule2).discreteProfiles();
 
-      assertions.accept(model);
-      System.out.println("Test simulation 2");
-      final var retracingProfiles = simulatorUnderTest.simulate(schedule2).discreteProfiles();
-      assertLastSegmentsEqual(expectedProfiles, retracingProfiles);
       final var expected = new LinkedHashMap<String, String>();
       for (final var entry : expectedProfiles.entrySet()) {
         expected.put(entry.getKey(), entry.getValue().segments().getLast().dynamics().asString().get());
       }
       System.out.println("Expected last segment: " + expected);
+
+      assertions.accept(model);
+      System.out.println("Test simulation 2");
+      final var retracingProfiles = simulatorUnderTest.simulate(schedule2).discreteProfiles();
+      assertLastSegmentsEqual(expectedProfiles, retracingProfiles);
       assertEquals(List.of(), model.violations);
     }
   }
