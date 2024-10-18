@@ -226,8 +226,12 @@ public class ExternalEventTests {
    *    + superDerivedEvents
    *
    * Data here is based on the SSMO-MPS/mission-data-sandbox/derivation_test examples.
+   *
+   * @param dg The derivation group name to use in entries.
+   * @param skip_types A boolean that should be set to true to skip uploading event and source types, if this is being
+   *                    called twice in a given test.
    */
-  protected void upload_source(String dg) throws SQLException {
+  protected void upload_source(String dg, boolean skip_types) throws SQLException {
     // First, define the sources.
     ExternalSource sourceOne = new ExternalSource(
         "Derivation_Test_00.json",
@@ -282,12 +286,16 @@ public class ExternalEventTests {
 
     ExternalEvent nine = new ExternalEvent("9", "DerivationC", "Derivation_Test_03.json", dg, "2024-01-02 00:00:00+00", "01:00:00");
 
-    // Third, insert types
-    String[] externalEventTypes = {"DerivationA", "DerivationB", "DerivationC", "DerivationD"};
-    for (String eventType : externalEventTypes) {
-      insertExternalEventType(eventType);
+    // Third, insert types; this can be skipped in the case of multiple calls to upload_source in a given test
+    if (!skip_types) {
+      String[] externalEventTypes = {"DerivationA", "DerivationB", "DerivationC", "DerivationD"};
+      for (String eventType : externalEventTypes) {
+        insertExternalEventType(eventType);
+      }
+      insertExternalSourceType(st);
     }
-    insertExternalSourceType(st);
+
+    // Fourth, insert derivation group
     insertDerivationGroup(dg, st);
 
     // Then, insert sources
@@ -1682,7 +1690,7 @@ public class ExternalEventTests {
       ); // same name, diff dg
 
       // upload general data
-      upload_source(dg);
+      upload_source(dg, false);
 
       // upload a conflicting source (same name in a given dg)
       final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalSource(failing));
@@ -1702,7 +1710,7 @@ public class ExternalEventTests {
     @Test
     void duplicatedDG() throws SQLException {
       // create a derivation group of the Test type
-      upload_source(dg);
+      upload_source(dg, false);
       insertExternalSourceType("New Name");
 
       // use the same name as before (Test Default) with a different source type (New Name) - fails
@@ -1922,45 +1930,10 @@ public class ExternalEventTests {
     String dg2 = dg + "_2";
 
     // upload the data once for the first derivation group
-    upload_source(dg);
+    upload_source(dg, false);
 
-    // repeat (explicitly, for ease of implementation) with the second derivation group
-    // insert derivation groups
-    insertDerivationGroup(dg2, st);
-
-    // insert external sources
-    ExternalSource Test_00 = new ExternalSource("Derivation_Test_00_1.json", st, dg2, "2024-01-18 00:00:00+00", "2024-01-05 00:00:00+00", "2024-01-11 00:00:00+00", "2024-08-21 22:36:12.858009+00");
-    ExternalSource Test_01 = new ExternalSource("Derivation_Test_01_1.json", st, dg2, "2024-01-19 00:00:00+00", "2024-01-01 00:00:00+00", "2024-01-07 00:00:00+00", "2024-08-21 22:36:19.381275+00");
-    ExternalSource Test_02 = new ExternalSource("Derivation_Test_02_1.json", st, dg2, "2024-01-20 00:00:00+00", "2024-01-03 00:00:00+00", "2024-01-10 00:00:00+00", "2024-08-21 22:36:23.340941+00");
-    ExternalSource Test_03 = new ExternalSource("Derivation_Test_03_1.json", st, dg2, "2024-01-21 00:00:00+00", "2024-01-01 12:00:00+00", "2024-01-02 12:00:00+00", "2024-08-21 22:36:28.365244+00");
-    insertExternalSource(Test_00);
-    insertExternalSource(Test_01);
-    insertExternalSource(Test_02);
-    insertExternalSource(Test_03);
-
-    // insert external events
-    ExternalEvent e02 = new ExternalEvent("2", "DerivationD", "Derivation_Test_00_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00");
-    ExternalEvent e07 = new ExternalEvent("7", "DerivationC", "Derivation_Test_00_1.json", dg2, "2024-01-09 23:00:00+00", "02:00:00");
-    ExternalEvent e08 = new ExternalEvent("8", "DerivationB", "Derivation_Test_00_1.json", dg2, "2024-01-10 11:00:00+00", "01:05:00");
-    ExternalEvent e01 = new ExternalEvent("1", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 00:00:00+00", "02:10:00");
-    ExternalEvent e02_2 =  new ExternalEvent("2", "DerivationA", "Derivation_Test_01_1.json", dg2, "2024-01-01 12:00:00+00", "02:10:00");
-    ExternalEvent e03 = new ExternalEvent("3", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-02 23:00:00+00", "03:00:00");
-    ExternalEvent e04 = new ExternalEvent("4", "DerivationB", "Derivation_Test_01_1.json", dg2, "2024-01-05 21:00:00+00", "03:00:00");
-    ExternalEvent e05 = new ExternalEvent("5", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-05 23:00:00+00", "01:10:00");
-    ExternalEvent e06 = new ExternalEvent("6", "DerivationC", "Derivation_Test_02_1.json", dg2, "2024-01-06 12:00:00+00", "02:00:00");
-    ExternalEvent e02_3 = new ExternalEvent("2", "DerivationB", "Derivation_Test_02_1.json", dg2, "2024-01-09 11:00:00+00", "01:05:00");
-    ExternalEvent e09 = new ExternalEvent("9", "DerivationC", "Derivation_Test_03_1.json", dg2, "2024-01-02 00:00:00+00", "01:00:00");
-    insertExternalEvent(e02);
-    insertExternalEvent(e07);
-    insertExternalEvent(e08);
-    insertExternalEvent(e01);
-    insertExternalEvent(e02_2);
-    insertExternalEvent(e03);
-    insertExternalEvent(e04);
-    insertExternalEvent(e05);
-    insertExternalEvent(e06);
-    insertExternalEvent(e02_3);
-    insertExternalEvent(e09);
+    // repeat with the second derivation group
+    upload_source(dg2, true);
 
     // check that derived events in our prewritten case has the correct keys
     // verify everything is present
@@ -1971,7 +1944,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "8",
             "DerivationB",
-            "Derivation_Test_00_1.json",
+            "Derivation_Test_00.json", // note - the same source name can be used across different derivation groups
             dg + "_2",
             "2024-01-10 11:00:00+00",
             "01:05:00",
@@ -1991,7 +1964,7 @@ public class ExternalEventTests {
         new DerivedEvent(//
             "3",
             "DerivationB",
-            "Derivation_Test_01_1.json",
+            "Derivation_Test_01.json",
             dg + "_2",
             "2024-01-02 23:00:00+00",
             "03:00:00",
@@ -2001,7 +1974,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "1",
             "DerivationA",
-            "Derivation_Test_01_1.json",
+            "Derivation_Test_01.json",
             dg + "_2",
             "2024-01-01 00:00:00+00",
             "02:10:00",
@@ -2031,7 +2004,7 @@ public class ExternalEventTests {
         new DerivedEvent(//
             "5",
             "DerivationC",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
@@ -2041,7 +2014,7 @@ public class ExternalEventTests {
         new DerivedEvent(//
             "6",
             "DerivationC",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
@@ -2051,7 +2024,7 @@ public class ExternalEventTests {
         new DerivedEvent(//
             "2",
             "DerivationB",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
@@ -2091,7 +2064,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "9",
             "DerivationC",
-            "Derivation_Test_03_1.json",
+            "Derivation_Test_03.json",
             dg + "_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
@@ -2121,7 +2094,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "1",
             "DerivationA",
-            "Derivation_Test_01_1.json",
+            "Derivation_Test_01.json",
             dg + "_2",
             "2024-01-01 00:00:00+00",
             "02:10:00",
@@ -2131,7 +2104,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "9",
             "DerivationC",
-            "Derivation_Test_03_1.json",
+            "Derivation_Test_03.json",
             dg + "_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
@@ -2141,7 +2114,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "3",
             "DerivationB",
-            "Derivation_Test_01_1.json",
+            "Derivation_Test_01.json",
             dg + "_2",
             "2024-01-02 23:00:00+00",
             "03:00:00",
@@ -2151,7 +2124,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "5",
             "DerivationC",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
@@ -2161,7 +2134,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "6",
             "DerivationC",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
@@ -2171,7 +2144,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "2",
             "DerivationB",
-            "Derivation_Test_02_1.json",
+            "Derivation_Test_02.json",
             dg + "_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
@@ -2181,7 +2154,7 @@ public class ExternalEventTests {
         new DerivedEvent(
             "8",
             "DerivationB",
-            "Derivation_Test_00_1.json",
+            "Derivation_Test_00.json",
             dg + "_2",
             "2024-01-10 11:00:00+00",
             "01:05:00",
@@ -2205,7 +2178,7 @@ public class ExternalEventTests {
 
     // upload derivation group A
     String derivationGroupName = "A";
-    upload_source(derivationGroupName);
+    upload_source(derivationGroupName, false);
 
     // create plan "base"
     final int parentPlanId = merlinHelper.insertPlan(missionModelId, merlinHelper.user.name(), "base");
