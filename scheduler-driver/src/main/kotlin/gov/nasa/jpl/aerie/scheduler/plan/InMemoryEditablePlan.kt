@@ -122,7 +122,8 @@ data class InMemoryEditablePlan(
         is DirectiveStart.Absolute -> true
         is DirectiveStart.Anchor -> s.anchorPoint == DirectiveStart.Anchor.AnchorPoint.Start
       },
-      isNew
+      isNew,
+      name
     )
   }
 }
