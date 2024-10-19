@@ -6,6 +6,7 @@ import gov.nasa.ammos.aerie.simulation.protocol.DualSchedule;
 import gov.nasa.ammos.aerie.simulation.protocol.Simulator;
 import gov.nasa.jpl.aerie.merlin.driver.IncrementalSimAdapter;
 import gov.nasa.jpl.aerie.merlin.driver.develop.MerlinDriverAdapter;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.retracing.RetracingDriverAdapter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -191,7 +192,7 @@ public class EdgeCaseTests {
 
     void spawns_reading_child(String arg) {
       cells.y.emit("1");
-      call(() -> reading_child(""));
+      spawn(() -> reading_child(""));
       cells.y.emit("2");
     }
 
@@ -480,7 +481,7 @@ public class EdgeCaseTests {
 
     Consumer<Model> assertions = $ -> {
       $.assertNoRerun("emit_event", "z,1");
-      $.assertNoRerun("parent_of_reading_child");
+      // $.assertNoRerun("parent_of_reading_child");  // because parent_of_reading_child calls reading_child() (instead of spawns), the timing of events may be affected by the stale reading child, so it must be re-run
     };
 
     runTest(schedule, assertions);
@@ -495,7 +496,7 @@ public class EdgeCaseTests {
 
     Consumer<Model> assertions = $ -> {
       $.assertNoRerun("emit_event", "z,1");
-      $.assertNoRerun("spawns_reading_child");
+      if (!SimulationEngine.alwaysRerunParentTasks) $.assertNoRerun("spawns_reading_child");
       childShouldError.setFalse(); // Child should rerun
     };
 
@@ -543,7 +544,7 @@ public class EdgeCaseTests {
 
     Consumer<Model> assertions = $ -> {
       $.assertNoRerun("emit_event", "x,1");
-      $.assertNoRerun("parent_of_read_emit_three_times");
+      if (!SimulationEngine.alwaysRerunParentTasks) $.assertNoRerun("parent_of_read_emit_three_times");
     };
 
     runTest(schedule, assertions);

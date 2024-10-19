@@ -192,6 +192,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** switch for whether an engine can be the oldEngine of more than one engines; this is used to determine whether
    *  to clear an oldEngine's caches to save memory */
   private boolean allowMultipleParentEngines = false;
+  public static boolean alwaysRerunParentTasks = true;
 
   public SimulationEngine(
       Instant startTime,
@@ -1113,6 +1114,20 @@ public final class SimulationEngine implements AutoCloseable {
       }
       return;
     }
+
+    // TODO -- When a spawned child, C1, has a stale read and reruns, it can cause a stale read in the parent, P,
+    //         and P needs to rerun, but in this case, it shouldn't re-spawn the already rerunning child.  Should
+    //         it rerun another non-respawned child, C2?  Yes, but since C2 might also have a stale read because of
+    //         C1, it should go stale at the same time as C1.
+    //         _
+    //         So, it looks like we need to be able to rerun a task independent of its children or parent.
+    //         _
+    //         If we were to cache the task factories of children when the parent is rerun, that would make it easier.
+    //         -
+    //         So, the new algorithm is to rerun each task independently.  If a parent and child are to be re-run, the
+    //         parent is first and saves off (caches) its childrens' taskFactories without re-running them so that if
+    //         it is necessary to rerun a child, the parent does not need to be rerun again.
+
     // find parent task to execute and mark parents stale
     TaskId childId = null;
     TaskId parentId = taskId;
@@ -1121,15 +1136,15 @@ public final class SimulationEngine implements AutoCloseable {
     while (parentId != null) {
       var nextParentId = oldEngine.getTaskParent(parentId);
       // Don't set the parent stale unless it is calling the child (instead of spawning)
-      boolean parentStale = childId == null || isTaskCalled(childId);
+      boolean parentStale = childId == null || isTaskCalled(childId) || alwaysRerunParentTasks;
       if (parentStale) {
         if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): adding staleness entry for " + parentId);
         staleTasks.put(parentId, time);
         staleEvents.put(parentId, afterEvent); // TODO -- more efficient to have one map with a pair of (time, afterEvent)
-        taskWithFactory = null;
+        if (!alwaysRerunParentTasks) taskWithFactory = null;
       }
       // Need task factory for the highest stale parent, or for its lowest parent if it has no task factory
-      if (taskWithFactory == null) {
+      if (taskWithFactory == null ||alwaysRerunParentTasks) {
         // if we cache task lambdas/TaskFactorys, we want to stop at the first existing lambda/TakFactory
         if (oldEngine.getFactoryForTaskId(parentId) != null) {
           if (trace) System.out.println("setTaskStale(" + taskId + " : " + getNameForTask(taskId) + "): found factory for " + parentId +" : " + getNameForTask(parentId));
@@ -1516,7 +1531,8 @@ public final class SimulationEngine implements AutoCloseable {
         s.forEach(topic -> timeline.setTopicStale(topic, staleTime));
         // replace the old graph with one without the task's events, updating data structures
         var pair = g.filter(e -> !taskId.equals(e.provenance()),
-                            step == firstStep && time.isEqualTo(startingAfterTime.duration()) ? afterEvent : null,
+                            // we don't determine staleness within a graph when rerunning a task, so we just wipe out and rerun everything
+                            null,  // step == firstStep && time.isEqualTo(startingAfterTime.duration()) ? afterEvent : null,
                             true);
         var newG = pair.getLeft();
         if (newG != g) {
