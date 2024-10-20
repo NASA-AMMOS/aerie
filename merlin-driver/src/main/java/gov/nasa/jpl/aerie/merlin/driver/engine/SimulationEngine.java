@@ -2560,6 +2560,7 @@ public final class SimulationEngine implements AutoCloseable {
         final var inputAttributes = spanInfo.input().get(span);
         final var outputAttributes = spanInfo.output().get(span);
 
+
         simulatedActivities.put(activityId, new ActivityInstance(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
@@ -2593,11 +2594,12 @@ public final class SimulationEngine implements AutoCloseable {
     var extract = new SimulationActivityExtract(startTime, getElapsedTime(), simulatedActivities, unfinishedActivities);
     if (oldEngine != null && combined) {
       var oldExtract = oldEngine.computeActivitySimulationResults(startTime, true);
-      final var newSimulatedActivities = new LinkedHashMap<>(simulatedActivities);
-      newSimulatedActivities.putAll(oldExtract.simulatedActivities);
+      final var newSimulatedActivities = new LinkedHashMap<>(oldExtract.simulatedActivities);
       removedActivities.forEach(act -> newSimulatedActivities.remove(act));
-      final var newUnfinishedActivities = new LinkedHashMap<>(unfinishedActivities);
-      newUnfinishedActivities.putAll(oldExtract.unfinishedActivities);
+      newSimulatedActivities.putAll(simulatedActivities);
+      final var newUnfinishedActivities = new LinkedHashMap<>(oldExtract.unfinishedActivities);
+      removedActivities.forEach(act -> newUnfinishedActivities.remove(act));
+      newUnfinishedActivities.putAll(unfinishedActivities);
       var combinedExtract = new SimulationActivityExtract(startTime, Duration.max(getElapsedTime(), oldExtract.duration),
                                                           newSimulatedActivities, newUnfinishedActivities);
       return combinedExtract;
