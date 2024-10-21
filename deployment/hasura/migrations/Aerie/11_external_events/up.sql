@@ -314,7 +314,7 @@ comment on function merlin.subtract_later_ranges(curr_date tstzmultirange, later
 -- Rule 3. An External Event whose start is superseded by another External Source, even if its end occurs after the end of said External Source, will be replaced by the contents of that External Source (whether they are blank spaces, or other events).
 -- Rule 4. An External Event who shares an ID with an External Event in a later External Source will always be replaced.
 
-create materialized view merlin.derived_events_better as
+create materialized view merlin.derived_events as
 -- "distinct on (event_key, derivation_group_name)" and "order by valid_at" satisfies rule 4
 -- (only the most recently valid version of an event is included)
 select distinct on (event_key, derivation_group_name)
@@ -355,7 +355,7 @@ from (
       select
         base.key,
         base.derivation_group_name,
-        base.range                                                      as original_range,
+        base.range as original_range,
         array_remove(array_agg(subsequent.range order by subsequent.valid_at), NULL) as subsequent_ranges,
         base.valid_at
       from base_ranges base
@@ -398,7 +398,7 @@ begin
 end;
 $$;
 
--- events are the most basic source of information, so we have to trigger on their insertion
+-- events are the most basic source of information, so update when the set of events changes.
 create trigger refresh_derived_events_on_external_event
 after insert or update or delete on merlin.external_event
   for each statement execute function merlin.refresh_derived_events_on_trigger();
