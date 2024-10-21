@@ -44,7 +44,7 @@ from (
       select
         base.key,
         base.derivation_group_name,
-        base.range                                                      as original_range,
+        base.range as original_range,
         array_remove(array_agg(subsequent.range order by subsequent.valid_at), NULL) as subsequent_ranges,
         base.valid_at
       from base_ranges base
