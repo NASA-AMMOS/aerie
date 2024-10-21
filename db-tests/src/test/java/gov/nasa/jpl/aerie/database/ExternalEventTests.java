@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.database;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -354,6 +355,12 @@ public class ExternalEventTests {
       // Commonly Repeated:
       final String duration = "00:00:00.000001";
 
+      @BeforeEach
+      void beforeEach() throws SQLException {
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
+      }
+
       /**
        * The first test is a basic, non-overlapping case. We must ensure that gaps are preserved:
        *
@@ -386,9 +393,6 @@ public class ExternalEventTests {
         ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(a);
         insertExternalSource(b);
@@ -466,9 +470,6 @@ public class ExternalEventTests {
         ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(a);
         insertExternalSource(b);
@@ -546,9 +547,6 @@ public class ExternalEventTests {
         ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
 
         // verify the ranges are as expected
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(a);
         insertExternalSource(b);
@@ -637,9 +635,6 @@ public class ExternalEventTests {
         ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration);
 
         // verify the ranges are as expected
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(a);
         insertExternalSource(b);
@@ -789,9 +784,6 @@ public class ExternalEventTests {
         ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration);
 
         // verify the ranges are as expected
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(a);
         insertExternalSource(b);
@@ -900,6 +892,13 @@ public class ExternalEventTests {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class DerivedEventRuleTests {
 
+      // Commonly Repeated
+      @BeforeEach
+      void beforeEach() throws SQLException {
+        // insert generic external event type, source type, and derivation group
+        insertStandardTypes();
+      }
+
       ////////////////////////// RULE 1 //////////////////////////
       /**
        * This test examines the lack of supercession by testing a solitary event. It vacuously shouldn't get superceded.
@@ -921,9 +920,6 @@ public class ExternalEventTests {
 
         ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
 
-
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
 
         // insert sources
         insertExternalSource(eS);
@@ -993,9 +989,6 @@ public class ExternalEventTests {
         ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
         ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
 
-
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
 
         // insert sources
         insertExternalSource(A);
@@ -1081,9 +1074,6 @@ public class ExternalEventTests {
         ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
         ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
 
-
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
 
         // insert sources
         insertExternalSource(A);
@@ -1180,9 +1170,6 @@ public class ExternalEventTests {
         ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
 
 
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(A);
         insertExternalSource(B);
@@ -1266,9 +1253,6 @@ public class ExternalEventTests {
         ); // negated by empty space
 
 
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
-
         // insert sources
         insertExternalSource(A);
 
@@ -1345,9 +1329,6 @@ public class ExternalEventTests {
             "00:20:00",
             C
         ); // negated by empty space
-
-        // insert generic external event type, source type, and derivation group
-        insertStandardTypes();
 
         // insert sources
         insertExternalSource(A);
