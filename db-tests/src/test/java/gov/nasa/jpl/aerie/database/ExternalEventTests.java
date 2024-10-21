@@ -221,7 +221,6 @@ public class ExternalEventTests {
    * Repeated function that uploads a source and various events, as well as related types.
    * Used in:
    *  - ExternalEventTests.java:
-   *    + BASIC TESTS (derivationGroupComp)
    *    + final duplication tests (duplicateSource, duplicatedDG)
    *    + superDerivedEvents
    *
