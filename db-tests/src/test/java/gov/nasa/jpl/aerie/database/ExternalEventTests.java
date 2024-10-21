@@ -53,24 +53,24 @@ public class ExternalEventTests {
 
 
   //region Commonly Repeated Variables
-  // Source Type (st)
-  final static String st = "Test";
+  // Source Type (SOURCE_TYPE)
+  final static String SOURCE_TYPE = "Test";
 
-  // Derivation Group (dg)
-  final static String dg = "Test Default";
+  // Derivation Group (DERIVATION_GROUP)
+  final static String DERIVATION_GROUP = "Test Default";
 
-  // Event Type (et)
-  final static String et = "Test";
+  // Event Type (EVENT_TYPE)
+  final static String EVENT_TYPE = "Test";
 
-  // Created At (ca)
-  final static String ca = "2024-01-01T00:00:00Z";
+  // Created At (CREATED_AT)
+  final static String CREATED_AT = "2024-01-01T00:00:00Z";
   //endregion
 
 
   //region Records
   protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration) {
     ExternalEvent(String key, String start_time, String duration, ExternalSource source) {
-      this(key, et, source.key(), source.derivation_group_name(), start_time, duration);
+      this(key, EVENT_TYPE, source.key(), source.derivation_group_name(), start_time, duration);
     }
   }
   protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at){}
@@ -199,7 +199,7 @@ public class ExternalEventTests {
             res.getString("source_key"),
             res.getString("derivation_group_name"),
             res.getString("start_time"),
-            res.getString("duration"),
+            res.getString("DURATION"),
             res.getString("source_range"),
             res.getString("valid_at")
         ));
@@ -225,7 +225,7 @@ public class ExternalEventTests {
     // First, define the sources.
     ExternalSource sourceOne = new ExternalSource(
         "Derivation_Test_00.json",
-        st,
+        SOURCE_TYPE,
         dg,
         "2024-01-18 00:00:00+00",
         "2024-01-05 00:00:00+00",
@@ -234,7 +234,7 @@ public class ExternalEventTests {
     );
     ExternalSource sourceTwo = new ExternalSource(
         "Derivation_Test_01.json",
-        st,
+        SOURCE_TYPE,
         dg,
         "2024-01-19 00:00:00+00",
         "2024-01-01 00:00:00+00",
@@ -243,7 +243,7 @@ public class ExternalEventTests {
     );
     ExternalSource sourceThree = new ExternalSource(
         "Derivation_Test_02.json",
-        st,
+        SOURCE_TYPE,
         dg,
         "2024-01-20 00:00:00+00",
         "2024-01-03 00:00:00+00",
@@ -252,7 +252,7 @@ public class ExternalEventTests {
     );
     ExternalSource sourceFour = new ExternalSource(
         "Derivation_Test_03.json",
-        st,
+        SOURCE_TYPE,
         dg,
         "2024-01-21 00:00:00+00",
         "2024-01-01 12:00:00+00",
@@ -282,11 +282,11 @@ public class ExternalEventTests {
       for (String eventType : externalEventTypes) {
         insertExternalEventType(eventType);
       }
-      insertExternalSourceType(st);
+      insertExternalSourceType(SOURCE_TYPE);
     }
 
     // Fourth, insert derivation group
-    insertDerivationGroup(dg, st);
+    insertDerivationGroup(dg, SOURCE_TYPE);
 
     // Then, insert sources
     insertExternalSource(sourceOne);
@@ -310,13 +310,13 @@ public class ExternalEventTests {
 
   protected void insertStandardTypes() throws SQLException {
     // insert external event type
-    insertExternalEventType(et);
+    insertExternalEventType(EVENT_TYPE);
 
     // insert external source type
-    insertExternalSourceType(st);
+    insertExternalSourceType(SOURCE_TYPE);
 
     // insert derivation group
-    insertDerivationGroup(dg, st);
+    insertDerivationGroup(DERIVATION_GROUP, SOURCE_TYPE);
   }
   //endregion
 
@@ -335,7 +335,7 @@ public class ExternalEventTests {
      * This class focuses on testing sources' windows to verify that derivation will work as expected. These are
      *    separate, extracted tests that don't really evaluate events and instead just that sources play together
      *    correctly. As such we test "empty" sources to make sure their overlapped windows work correctly.
-     * We add events that span a very short duration simply so that the sources show up in derived_events, but we aren't
+     * We add events that span a very short DURATION simply so that the sources show up in derived_events, but we aren't
      *    testing any properties of said events.
      */
     @Nested
@@ -343,7 +343,7 @@ public class ExternalEventTests {
     class DerivedSourcesTests {
 
       // Commonly Repeated:
-      final static String duration = "00:00:00.000001";
+      final static String DURATION = "00:00:00.000001";
 
       @BeforeEach
       void beforeEach() throws SQLException {
@@ -363,24 +363,26 @@ public class ExternalEventTests {
         // create our sources and their per-window events
         ExternalSource a = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T03:00:00Z",
             "2024-01-01T04:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent aE = new ExternalEvent(a.key() + "_event", st, a.key(), dg, a.start_time(), duration);
+        ExternalEvent aE = new ExternalEvent(a.key() + "_event", SOURCE_TYPE, a.key(),
+                                             DERIVATION_GROUP, a.start_time(), DURATION);
         ExternalSource b = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T01:00:00Z",
             "2024-01-01T02:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", SOURCE_TYPE, b.key(),
+                                             DERIVATION_GROUP, b.start_time(), DURATION);
 
         // verify the ranges are as expected
         // insert sources
@@ -397,9 +399,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A_event",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 03:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 03:00:00+00\",\"2024-01-01 04:00:00+00\")}",
@@ -407,9 +409,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "B_event",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
@@ -433,31 +435,32 @@ public class ExternalEventTests {
         // create our sources and their per-window events
         ExternalSource a = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
-            st,
+            SOURCE_TYPE,
             a.key(),
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01T1:10:00Z",
-            duration
+            DURATION
         );
         ExternalSource b = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", SOURCE_TYPE, b.key(),
+                                             DERIVATION_GROUP, b.start_time(), DURATION);
 
         // verify the ranges are as expected
         // insert sources
@@ -474,9 +477,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A_event",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:10:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 02:00:00+00\")}",
@@ -484,9 +487,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "B_event",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -510,31 +513,32 @@ public class ExternalEventTests {
         // create our sources and their per-window events
         ExternalSource a = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
-            st,
+            SOURCE_TYPE,
             a.key(),
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
-            duration
+            DURATION
         ); // have to manually pick this
         ExternalSource b = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", SOURCE_TYPE, b.key(),
+                                             DERIVATION_GROUP, b.start_time(), DURATION);
 
         // verify the ranges are as expected
         // insert sources
@@ -551,9 +555,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A_event",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
@@ -561,9 +565,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "B_event",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:30:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -588,41 +592,43 @@ public class ExternalEventTests {
         // create our sources and their per-window events
         ExternalSource a = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T03:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
-            st,
+            SOURCE_TYPE,
             a.key(),
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01T01:10:00Z",
-            duration
+            DURATION
         ); // just need 1 that shows up and source range will still show correctly
         ExternalSource b = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", SOURCE_TYPE, b.key(),
+                                             DERIVATION_GROUP, b.start_time(), DURATION);
         ExternalSource c = new ExternalSource(
             "C",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-03T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent cE = new ExternalEvent(c.key() + "_event", st, c.key(), dg, c.start_time(), duration);
+        ExternalEvent cE = new ExternalEvent(c.key() + "_event", SOURCE_TYPE, c.key(),
+                                             DERIVATION_GROUP, c.start_time(), DURATION);
 
         // verify the ranges are as expected
         // insert sources
@@ -641,9 +647,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A_event",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:10:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\"),[\"2024-01-01 02:00:00+00\",\"2024-01-01 03:00:00+00\")}",
@@ -651,9 +657,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "B_event",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -661,9 +667,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "C_event",
-                st,
+                SOURCE_TYPE,
                 "C",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:30:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 02:00:00+00\")}",
@@ -690,88 +696,93 @@ public class ExternalEventTests {
         // create our sources and their per-window events
         ExternalSource a = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:03:00Z",
             "2024-01-01T00:15:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent aE = new ExternalEvent(
             a.key() + "_event",
-            st,
+            SOURCE_TYPE,
             a.key(),
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01T00:09:10Z",
-            duration
+            DURATION
         );
         ExternalSource b = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:06:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent bE = new ExternalEvent(b.key() + "_event", st, b.key(), dg, b.start_time(), duration);
+        ExternalEvent bE = new ExternalEvent(b.key() + "_event", SOURCE_TYPE, b.key(),
+                                             DERIVATION_GROUP, b.start_time(), DURATION);
         ExternalSource c = new ExternalSource(
             "C",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-03T00:00:00Z",
             "2024-01-01T00:17:00Z",
             "2024-01-01T00:23:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent cE = new ExternalEvent(
             c.key() + "_event",
-            st,
+            SOURCE_TYPE,
             c.key(),
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01T00:21:00Z",
-            duration
+            DURATION
         );
         ExternalSource d = new ExternalSource(
             "D",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-04T00:00:00Z",
             "2024-01-01T00:02:00Z",
             "2024-01-01T00:09:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent dE = new ExternalEvent(d.key() + "_event", st, d.key(), dg, d.start_time(), duration);
+        ExternalEvent dE = new ExternalEvent(d.key() + "_event", SOURCE_TYPE, d.key(),
+                                             DERIVATION_GROUP, d.start_time(), DURATION);
         ExternalSource e = new ExternalSource(
             "E",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-05T00:00:00Z",
             "2024-01-01T00:13:00Z",
             "2024-01-01T00:20:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent eE = new ExternalEvent(e.key() + "_event", st, e.key(), dg, e.start_time(), duration);
+        ExternalEvent eE = new ExternalEvent(e.key() + "_event", SOURCE_TYPE, e.key(),
+                                             DERIVATION_GROUP, e.start_time(), DURATION);
         ExternalSource f = new ExternalSource(
             "F",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-06T00:00:00Z",
             "2024-01-01T00:04:00Z",
             "2024-01-01T00:07:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent fE = new ExternalEvent(f.key() + "_event", st, f.key(), dg, f.start_time(), duration);
+        ExternalEvent fE = new ExternalEvent(f.key() + "_event", SOURCE_TYPE, f.key(),
+                                             DERIVATION_GROUP, f.start_time(), DURATION);
         ExternalSource g = new ExternalSource(
             "G",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-07T00:00:00Z",
             "2024-01-01T00:11:00Z",
             "2024-01-01T00:12:00Z",
-            ca
+            CREATED_AT
         );
-        ExternalEvent gE = new ExternalEvent(g.key() + "_event", st, g.key(), dg, g.start_time(), duration);
+        ExternalEvent gE = new ExternalEvent(g.key() + "_event", SOURCE_TYPE, g.key(),
+                                             DERIVATION_GROUP, g.start_time(), DURATION);
 
         // verify the ranges are as expected
         // insert sources
@@ -798,9 +809,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A_event",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:09:10+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:09:00+00\",\"2024-01-01 00:11:00+00\"),[\"2024-01-01 00:12:00+00\",\"2024-01-01 00:13:00+00\")}",
@@ -808,9 +819,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "B_event",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:02:00+00\")}",
@@ -818,9 +829,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "C_event",
-                st,
+                SOURCE_TYPE,
                 "C",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:21:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:20:00+00\",\"2024-01-01 00:23:00+00\")}",
@@ -828,9 +839,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "D_event",
-                st,
+                SOURCE_TYPE,
                 "D",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:02:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:02:00+00\",\"2024-01-01 00:04:00+00\"),[\"2024-01-01 00:07:00+00\",\"2024-01-01 00:09:00+00\")}",
@@ -838,24 +849,24 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "E_event",
-                st, "E",
-                dg, "2024-01-01 00:13:00+00",
+                SOURCE_TYPE, "E",
+                DERIVATION_GROUP, "2024-01-01 00:13:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:13:00+00\",\"2024-01-01 00:20:00+00\")}",
                 "2024-01-05 00:00:00+00"
             ),
             new DerivedEvent(
                 "F_event",
-                st, "F",
-                dg, "2024-01-01 00:04:00+00",
+                SOURCE_TYPE, "F",
+                DERIVATION_GROUP, "2024-01-01 00:04:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:04:00+00\",\"2024-01-01 00:07:00+00\")}",
                 "2024-01-06 00:00:00+00"
             ),
             new DerivedEvent(
                 "G_event",
-                st, "G",
-                dg, "2024-01-01 00:11:00+00",
+                SOURCE_TYPE, "G",
+                DERIVATION_GROUP, "2024-01-01 00:11:00+00",
                 "00:00:00.000001",
                 "{[\"2024-01-01 00:11:00+00\",\"2024-01-01 00:12:00+00\")}",
                 "2024-01-07 00:00:00+00"
@@ -900,12 +911,12 @@ public class ExternalEventTests {
         // insert the event(s) (and their source(s))
         ExternalSource eS = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e = new ExternalEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
@@ -924,9 +935,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "A.1",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "01:00:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -949,30 +960,30 @@ public class ExternalEventTests {
         // insert the event(s) (and their source(s))
         ExternalSource A = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T02:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource B = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource C = new ExternalSource(
             "C",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-03T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T03:00:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e = new ExternalEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
@@ -997,9 +1008,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "a",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:10:00+00",
                 "00:10:00",
                 "{[\"2024-01-01 01:00:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1007,9 +1018,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "b",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:30:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -1017,9 +1028,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "c",
-                st,
+                SOURCE_TYPE,
                 "C",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 01:30:00+00",
                 "01:00:00",
                 "{[\"2024-01-01 01:30:00+00\",\"2024-01-01 03:00:00+00\")}",
@@ -1043,21 +1054,21 @@ public class ExternalEventTests {
         // insert the event(s) (and their source(s))
         ExternalSource A = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource B = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e = new ExternalEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
@@ -1081,9 +1092,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "a",
-                st,
+                SOURCE_TYPE,
                 "A",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:25:00+00",
                 "00:10:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 00:30:00+00\")}",
@@ -1091,9 +1102,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "b1",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:30:00+00",
                 "00:10:00",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1101,9 +1112,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "b2",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:45:00+00",
                 "00:10:00",
                 "{[\"2024-01-01 00:30:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1127,21 +1138,21 @@ public class ExternalEventTests {
         // insert the event(s) (and their source(s))
         ExternalSource A = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource B = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e1 = new ExternalEvent(
@@ -1177,9 +1188,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "b1",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:00:00+00",
                 "00:10:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -1187,9 +1198,9 @@ public class ExternalEventTests {
             ),
             new DerivedEvent(
                 "b2",
-                st,
+                SOURCE_TYPE,
                 "B",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:30:00+00",
                 "00:20:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -1212,21 +1223,21 @@ public class ExternalEventTests {
         // insert the event(s) (and their source(s))
         ExternalSource A = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
             "2024-01-01T01:30:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource B = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e1 = new ExternalEvent(
@@ -1268,37 +1279,37 @@ public class ExternalEventTests {
        *    A:                   ++++aaa+++++
        *    B:                                  +++++aaaaa+
        *    C:   +++++aaaa+++++
-       *    (one A, of specific duration)
+       *    (one A, of specific DURATION)
        */
       @Test
       void rule4() throws SQLException {
         // insert the event(s) (and their source(s))
         ExternalSource A = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:30:00Z",
             "2024-01-01T02:30:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource B = new ExternalSource(
             "B",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-02T00:00:00Z",
             "2024-01-01T03:00:00Z",
             "2024-01-01T04:00:00Z",
-            ca
+            CREATED_AT
         );
         ExternalSource C = new ExternalSource(
             "C",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-03T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T01:00:00Z",
-            ca
+            CREATED_AT
         );
 
         ExternalEvent e1 = new ExternalEvent(
@@ -1337,9 +1348,9 @@ public class ExternalEventTests {
         final List<DerivedEvent> expectedResults = List.of(
             new DerivedEvent(
                 "a",
-                st,
+                SOURCE_TYPE,
                 "C",
-                dg,
+                DERIVATION_GROUP,
                 "2024-01-01 00:30:00+00",
                 "00:20:00",
                 "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:00:00+00\")}",
@@ -1374,25 +1385,25 @@ public class ExternalEventTests {
       // construct the sources
       ExternalSource a = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T03:00:00Z",
           "2024-01-01T04:00:00Z",
-          ca);
+          CREATED_AT);
       ExternalSource b = new ExternalSource(
           "B",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T02:00:00Z",
-          ca);
+          CREATED_AT);
 
       // create types and first source
-      insertExternalSourceType(st);
+      insertExternalSourceType(SOURCE_TYPE);
 
-      insertDerivationGroup(dg, st);
+      insertDerivationGroup(DERIVATION_GROUP, SOURCE_TYPE);
 
       insertExternalSource(a);
 
@@ -1413,12 +1424,12 @@ public class ExternalEventTests {
       // construct the sources and events
       ExternalSource A = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:30:00Z",
-          ca
+          CREATED_AT
       );
 
       ExternalEvent e1 = new ExternalEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
@@ -1443,9 +1454,9 @@ public class ExternalEventTests {
       final List<DerivedEvent> expectedResults = List.of(
           new DerivedEvent(
               "a",
-              st,
+              SOURCE_TYPE,
               "A",
-              dg,
+              DERIVATION_GROUP,
               "2024-01-01 00:00:00+00",
               "00:10:00",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1453,9 +1464,9 @@ public class ExternalEventTests {
           ),
           new DerivedEvent(
               "b",
-              st,
+              SOURCE_TYPE,
               "A",
-              dg,
+              DERIVATION_GROUP,
               "2024-01-01 00:00:00+00",
               "00:05:00",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1463,9 +1474,9 @@ public class ExternalEventTests {
           ),
           new DerivedEvent(
               "c",
-              st,
+              SOURCE_TYPE,
               "A",
-              dg,
+              DERIVATION_GROUP,
               "2024-01-01 00:00:00+00",
               "00:15:00",
               "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 01:30:00+00\")}",
@@ -1484,12 +1495,12 @@ public class ExternalEventTests {
       // construct the sources and events
       ExternalSource A = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:30:00Z",
-          ca);
+          CREATED_AT);
 
       ExternalEvent e1 = new ExternalEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
       ExternalEvent e2 = new ExternalEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
@@ -1520,30 +1531,30 @@ public class ExternalEventTests {
       // construct the sources
       ExternalSource failing = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca
+          CREATED_AT
       );
       ExternalSource failing2 = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T01:00:00Z",
-          ca
+          CREATED_AT
       );
       ExternalSource succeeding = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T01:00:00.000001Z",
-          ca
+          CREATED_AT
       );
 
       // add source type and derivation group
@@ -1589,12 +1600,12 @@ public class ExternalEventTests {
       // create sources and events
       ExternalSource A = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T01:00:00Z",
           "2024-01-01T02:00:00Z",
-          ca);
+          CREATED_AT);
 
       ExternalEvent legal = new ExternalEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
       ExternalEvent completelyBefore = new ExternalEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
@@ -1642,35 +1653,35 @@ public class ExternalEventTests {
     void duplicateSource() throws SQLException {
       ExternalSource failing = new ExternalSource(
           "Derivation_Test_00.json",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-18 00:00:00+00",
           "2024-01-05 00:00:00+00",
           "2024-01-11 00:00:00+00",
-          ca
-      ); // same name and dg
+          CREATED_AT
+      ); // same name and DERIVATION_GROUP
       ExternalSource succeeding = new ExternalSource(
           "Derivation_Test_00.json",
-          st,
-          dg + "_2",
+          SOURCE_TYPE,
+          DERIVATION_GROUP + "_2",
           "2024-01-18 00:00:00+00",
           "2024-01-05 00:00:00+00",
           "2024-01-11 00:00:00+00",
-          ca
-      ); // same name, diff dg
+          CREATED_AT
+      ); // same name, diff DERIVATION_GROUP
 
       // upload general data
-      upload_source(dg, false);
+      upload_source(DERIVATION_GROUP, false);
 
-      // upload a conflicting source (same name in a given dg)
+      // upload a conflicting source (same name in a given DERIVATION_GROUP)
       final SQLException ex = assertThrows(PSQLException.class, () -> insertExternalSource(failing));
       if (!ex.getSQLState().equals("23505")
           && !ex.getMessage().contains("duplicate key value violates unique constraint \"external_source_pkey\"")) {
         throw ex;
       }
 
-      // upload a non-conflicting source (same name in a different dg)
-      insertDerivationGroup(dg + "_2", st);
+      // upload a non-conflicting source (same name in a different DERIVATION_GROUP)
+      insertDerivationGroup(DERIVATION_GROUP + "_2", SOURCE_TYPE);
       insertExternalSource(succeeding);
     }
 
@@ -1680,12 +1691,12 @@ public class ExternalEventTests {
     @Test
     void duplicatedDG() throws SQLException {
       // create a derivation group of the Test type
-      upload_source(dg, false);
+      upload_source(DERIVATION_GROUP, false);
       insertExternalSourceType("New Name");
 
       // use the same name as before (Test Default) with a different source type (New Name) - fails
       // (This is noteworthy as this is newer behavior.)
-      final SQLException ex = assertThrows(PSQLException.class, () -> insertDerivationGroup(dg, "New Name"));
+      final SQLException ex = assertThrows(PSQLException.class, () -> insertDerivationGroup(DERIVATION_GROUP, "New Name"));
       if (!ex.getSQLState().equals("23505")
           && !ex.getMessage().contains("duplicate key value violates unique constraint \"derivation_group_pkey\"")) {
         throw ex;
@@ -1702,20 +1713,20 @@ public class ExternalEventTests {
         // create the source
         ExternalSource src = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca
+            CREATED_AT
         );
 
         // insert the source and all relevant groups and types
         // create a source type
-        insertExternalSourceType(st);
+        insertExternalSourceType(SOURCE_TYPE);
 
         // create a Derivation Group
-        insertDerivationGroup(dg, st);
+        insertDerivationGroup(DERIVATION_GROUP, SOURCE_TYPE);
 
         // create a source
         insertExternalSource(src);
@@ -1726,7 +1737,7 @@ public class ExternalEventTests {
               // language=sql
               """
               DELETE FROM merlin.derivation_group WHERE name='%s';
-              """.formatted(dg)
+              """.formatted(DERIVATION_GROUP)
             )
         );
         if (!ex.getSQLState().equals("23503") &&
@@ -1747,20 +1758,20 @@ public class ExternalEventTests {
       // create a source that matches the derivation group
       ExternalSource src = new ExternalSource(
           "A",
-          st,
-          dg,
+          SOURCE_TYPE,
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca
+          CREATED_AT
       );
 
       // add types
       // create a source type
-      insertExternalSourceType(st);
+      insertExternalSourceType(SOURCE_TYPE);
 
       // create a Derivation Group
-      insertDerivationGroup(dg, st);
+      insertDerivationGroup(DERIVATION_GROUP, SOURCE_TYPE);
 
       // insert the source
       insertExternalSource(src);
@@ -1768,12 +1779,12 @@ public class ExternalEventTests {
       // create a source that doesn't match the derivation group (the source type has "_B" appended to it)
       ExternalSource src_2 = new ExternalSource(
           "B",
-          st + "_B",
-          dg,
+          SOURCE_TYPE + "_B",
+          DERIVATION_GROUP,
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:00:00Z",
           "2024-01-01T00:30:00Z",
-          ca
+          CREATED_AT
       );
 
       // insert the erroneous source (expect error)
@@ -1801,20 +1812,20 @@ public class ExternalEventTests {
         // create source
         ExternalSource src = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca
+            CREATED_AT
         );
 
         // add types
         // create a source type
-        insertExternalSourceType(st);
+        insertExternalSourceType(SOURCE_TYPE);
 
         // create a Derivation Group
-        insertDerivationGroup(dg, st);
+        insertDerivationGroup(DERIVATION_GROUP, SOURCE_TYPE);
 
         // create a source
         insertExternalSource(src);
@@ -1824,7 +1835,7 @@ public class ExternalEventTests {
             // language=sql
             """
             DELETE FROM merlin.external_source_type WHERE name='%s';
-            """.formatted(st)
+            """.formatted(SOURCE_TYPE)
           )
         );
         if (!ex.getSQLState().equals("23503")
@@ -1847,12 +1858,12 @@ public class ExternalEventTests {
         // create source and event
         ExternalSource src = new ExternalSource(
             "A",
-            st,
-            dg,
+            SOURCE_TYPE,
+            DERIVATION_GROUP,
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:00:00Z",
             "2024-01-01T00:30:00Z",
-            ca
+            CREATED_AT
         );
         ExternalEvent evt = new ExternalEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
 
@@ -1872,7 +1883,7 @@ public class ExternalEventTests {
               // language=sql
               """
               DELETE FROM merlin.external_event_type WHERE name='%s';
-              """.formatted(et)
+              """.formatted(EVENT_TYPE)
           )
         );
         if (!ex.getSQLState().equals("23503")
@@ -1897,10 +1908,10 @@ public class ExternalEventTests {
   @Test
   void superDerivedEvents() throws SQLException {
     // upload all source data, but twice (using different dgs, to prove non overlap in derivation)
-    String dg2 = dg + "_2";
+    String dg2 = DERIVATION_GROUP + "_2";
 
     // upload the data once for the first derivation group
-    upload_source(dg, false);
+    upload_source(DERIVATION_GROUP, false);
 
     // repeat with the second derivation group
     upload_source(dg2, true);
@@ -1915,7 +1926,7 @@ public class ExternalEventTests {
             "8",
             "DerivationB",
             "Derivation_Test_00.json", // note - the same source name can be used across different derivation groups
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-10 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
@@ -1925,7 +1936,7 @@ public class ExternalEventTests {
             "8",
             "DerivationB",
             "Derivation_Test_00.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-10 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
@@ -1935,7 +1946,7 @@ public class ExternalEventTests {
             "3",
             "DerivationB",
             "Derivation_Test_01.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-02 23:00:00+00",
             "03:00:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -1945,7 +1956,7 @@ public class ExternalEventTests {
             "1",
             "DerivationA",
             "Derivation_Test_01.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-01 00:00:00+00",
             "02:10:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -1955,7 +1966,7 @@ public class ExternalEventTests {
             "1",
             "DerivationA",
             "Derivation_Test_01.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-01 00:00:00+00",
             "02:10:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -1965,7 +1976,7 @@ public class ExternalEventTests {
             "3",
             "DerivationB",
             "Derivation_Test_01.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-02 23:00:00+00",
             "03:00:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -1975,7 +1986,7 @@ public class ExternalEventTests {
             "5",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -1985,7 +1996,7 @@ public class ExternalEventTests {
             "6",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -1995,7 +2006,7 @@ public class ExternalEventTests {
             "2",
             "DerivationB",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2005,7 +2016,7 @@ public class ExternalEventTests {
             "5",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-05 23:00:00+00",
             "01:10:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2015,7 +2026,7 @@ public class ExternalEventTests {
             "6",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-06 12:00:00+00",
             "02:00:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2025,7 +2036,7 @@ public class ExternalEventTests {
             "2",
             "DerivationB",
             "Derivation_Test_02.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-09 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2035,7 +2046,7 @@ public class ExternalEventTests {
             "9",
             "DerivationC",
             "Derivation_Test_03.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
@@ -2045,7 +2056,7 @@ public class ExternalEventTests {
             "9",
             "DerivationC",
             "Derivation_Test_03.json",
-            dg,
+            DERIVATION_GROUP,
             "2024-01-02 00:00:00+00",
             "01:00:00",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
@@ -2054,7 +2065,7 @@ public class ExternalEventTests {
     );
     assertTrue(results.containsAll(expectedResults));
 
-    // verify for a given dg expected keys are correct, no overlap inside dg
+    // verify for a given DERIVATION_GROUP expected keys are correct, no overlap inside DERIVATION_GROUP
     results = getDerivedEvents("WHERE derivation_group_name = '%s' ORDER BY start_time;".formatted(dg2));
 
     // both ranges should only have a single element and be fully present
@@ -2063,7 +2074,7 @@ public class ExternalEventTests {
             "1",
             "DerivationA",
             "Derivation_Test_01.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-01 00:00:00+00",
             "02:10:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -2073,7 +2084,7 @@ public class ExternalEventTests {
             "9",
             "DerivationC",
             "Derivation_Test_03.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-02 00:00:00+00",
             "01:00:00",
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
@@ -2083,7 +2094,7 @@ public class ExternalEventTests {
             "3",
             "DerivationB",
             "Derivation_Test_01.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-02 23:00:00+00",
             "03:00:00",
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
@@ -2093,7 +2104,7 @@ public class ExternalEventTests {
             "5",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-05 23:00:00+00",
             "01:10:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2103,7 +2114,7 @@ public class ExternalEventTests {
             "6",
             "DerivationC",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-06 12:00:00+00",
             "02:00:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2113,7 +2124,7 @@ public class ExternalEventTests {
             "2",
             "DerivationB",
             "Derivation_Test_02.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-09 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
@@ -2123,7 +2134,7 @@ public class ExternalEventTests {
             "8",
             "DerivationB",
             "Derivation_Test_00.json",
-            dg + "_2",
+            DERIVATION_GROUP + "_2",
             "2024-01-10 11:00:00+00",
             "01:05:00",
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
