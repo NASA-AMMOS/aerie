@@ -53,16 +53,9 @@ public class ExternalEventTests {
 
 
   //region Commonly Repeated Variables
-  // Source Type (SOURCE_TYPE)
   final static String SOURCE_TYPE = "Test";
-
-  // Derivation Group (DERIVATION_GROUP)
   final static String DERIVATION_GROUP = "Test Default";
-
-  // Event Type (EVENT_TYPE)
   final static String EVENT_TYPE = "Test";
-
-  // Created At (CREATED_AT)
   final static String CREATED_AT = "2024-01-01T00:00:00Z";
   //endregion
 
