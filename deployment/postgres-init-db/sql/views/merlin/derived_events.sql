@@ -87,7 +87,7 @@ begin
 end;
 $$;
 
--- events are the most basic source of information, so we have to trigger on their insertion
+-- events are the most basic source of information, so update when the set of events changes.
 create trigger refresh_derived_events_on_external_event
 after insert or update or delete on merlin.external_event
   for each statement execute function merlin.refresh_derived_events_on_trigger();
