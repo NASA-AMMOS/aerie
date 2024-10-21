@@ -183,14 +183,39 @@ public class ExternalEventTests {
   /**
    * Get all derived events.
    */
-  protected List<DerivedEvent> getDerivedEvents(String end) throws SQLException {
+  protected List<DerivedEvent> getDerivedEvents() throws SQLException {
     List<DerivedEvent> results = new ArrayList<>();
     try(final var statement = connection.createStatement()) {
       var res = statement.executeQuery(
           // language=sql
           """
-          SELECT * FROM merlin.derived_events %s
-          """.formatted(end)
+          SELECT * FROM merlin.derived_events;
+          """
+      );
+      while (res.next()) {
+        results.add(new DerivedEvent(
+            res.getString("event_key"),
+            res.getString("event_type_name"),
+            res.getString("source_key"),
+            res.getString("derivation_group_name"),
+            res.getString("start_time"),
+            res.getString("DURATION"),
+            res.getString("source_range"),
+            res.getString("valid_at")
+        ));
+      }
+    }
+    return results;
+  }
+
+  protected List<DerivedEvent> getDerivedEvents(String dg_name) throws SQLException {
+    List<DerivedEvent> results = new ArrayList<>();
+    try(final var statement = connection.createStatement()) {
+      var res = statement.executeQuery(
+          // language=sql
+          """
+          SELECT * FROM merlin.derived_events %s;
+          """.formatted(dg_name)
       );
       while (res.next()) {
         results.add(new DerivedEvent(
@@ -393,7 +418,7 @@ public class ExternalEventTests {
         insertExternalEvent(aE);
         insertExternalEvent(bE);
 
-        var results = getDerivedEvents("ORDER BY source_key");
+        var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -472,7 +497,7 @@ public class ExternalEventTests {
         insertExternalEvent(aE);
         insertExternalEvent(bE);
 
-        var results = getDerivedEvents("ORDER BY source_key");
+        var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -551,7 +576,7 @@ public class ExternalEventTests {
         insertExternalEvent(aE);
         insertExternalEvent(bE);
 
-        var results = getDerivedEvents("ORDER BY source_key");
+        var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -644,7 +669,7 @@ public class ExternalEventTests {
         insertExternalEvent(bE);
         insertExternalEvent(cE);
 
-        var results = getDerivedEvents("ORDER BY source_key");
+        var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -807,7 +832,7 @@ public class ExternalEventTests {
         insertExternalEvent(fE);
         insertExternalEvent(gE);
 
-        var results = getDerivedEvents("ORDER BY source_key");
+        var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -934,7 +959,7 @@ public class ExternalEventTests {
         insertExternalEvent(e);
 
         // ensure the result has the right size and keys
-        final var results = getDerivedEvents("");
+        final var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -1008,7 +1033,7 @@ public class ExternalEventTests {
         insertExternalEvent(after);
 
         // verify the expected keys are included
-        final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -1093,7 +1118,7 @@ public class ExternalEventTests {
         insertExternalEvent(b2);
 
         // verify the expected keys
-        final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -1190,7 +1215,7 @@ public class ExternalEventTests {
         insertExternalEvent(b2);
 
         // verify the expected keys
-        final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -1274,7 +1299,7 @@ public class ExternalEventTests {
         insertExternalSource(B);
 
         // verify expected keys (none)
-        final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents();
 
         assertEquals(0, results.size());
       }
@@ -1351,7 +1376,7 @@ public class ExternalEventTests {
         insertExternalEvent(e3);
 
         // verify expected keys
-        final var results = getDerivedEvents("ORDER BY source_key");
+        final var results = getDerivedEvents();
 
         // both ranges should only have a single element and be fully present
         final List<DerivedEvent> expectedResults = List.of(
@@ -1458,7 +1483,7 @@ public class ExternalEventTests {
       insertExternalEvent(e3);
 
       // all 3 keys should be present!
-      var results = getDerivedEvents("ORDER BY start_time, event_key ASC");
+      var results = getDerivedEvents();
 
       // both ranges should only have a single element and be fully present
       final List<DerivedEvent> expectedResults = List.of(
@@ -1929,7 +1954,7 @@ public class ExternalEventTests {
 
     // check that derived events in our prewritten case has the correct keys
     // verify everything is present
-    var results = getDerivedEvents("ORDER BY source_key");
+    var results = getDerivedEvents();
 
     // both ranges should only have a single element and be fully present
     List<DerivedEvent> expectedResults = List.of(
