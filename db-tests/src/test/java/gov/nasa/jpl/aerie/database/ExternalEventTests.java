@@ -418,6 +418,7 @@ public class ExternalEventTests {
                 "2024-01-02 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -496,6 +497,7 @@ public class ExternalEventTests {
                 "2024-01-02 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -574,6 +576,7 @@ public class ExternalEventTests {
                 "2024-01-02 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -676,6 +679,7 @@ public class ExternalEventTests {
                 "2024-01-03 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -872,6 +876,7 @@ public class ExternalEventTests {
                 "2024-01-07 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
     }
@@ -944,6 +949,7 @@ public class ExternalEventTests {
                 "2024-01-01 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -1037,6 +1043,7 @@ public class ExternalEventTests {
                 "2024-01-03 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -1121,6 +1128,7 @@ public class ExternalEventTests {
                 "2024-01-02 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -1207,6 +1215,7 @@ public class ExternalEventTests {
                 "2024-01-02 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
 
@@ -1357,6 +1366,7 @@ public class ExternalEventTests {
                 "2024-01-03 00:00:00+00"
             )
         );
+        assertEquals(expectedResults.size(), results.size());
         assertTrue(results.containsAll(expectedResults));
       }
     }
@@ -1483,6 +1493,7 @@ public class ExternalEventTests {
               "2024-01-01 00:00:00+00"
           )
       );
+      assertEquals(expectedResults.size(), results.size());
       assertTrue(results.containsAll(expectedResults));
     }
 
@@ -2063,6 +2074,7 @@ public class ExternalEventTests {
             "2024-01-21 00:00:00+00"
         )
     );
+    assertEquals(expectedResults.size(), results.size());
     assertTrue(results.containsAll(expectedResults));
 
     // verify for a given DERIVATION_GROUP expected keys are correct, no overlap inside DERIVATION_GROUP
@@ -2141,6 +2153,7 @@ public class ExternalEventTests {
             "2024-01-18 00:00:00+00"
         )
     );
+    assertEquals(expectedResults.size(), results.size());
     assertTrue(results.containsAll(expectedResults));
   }
 
