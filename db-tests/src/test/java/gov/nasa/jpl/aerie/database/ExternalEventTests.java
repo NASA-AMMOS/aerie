@@ -2082,8 +2082,6 @@ public class ExternalEventTests {
             "2024-01-21 00:00:00+00"
         )
     );
-    System.out.println(results);
-    System.out.println(expectedResults);
     assertTrue(results.containsAll(expectedResults));
 
     // verify for a given dg expected keys are correct, no overlap inside dg
