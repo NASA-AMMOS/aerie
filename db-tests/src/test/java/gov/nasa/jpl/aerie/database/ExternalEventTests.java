@@ -1951,7 +1951,7 @@ public class ExternalEventTests {
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
             "2024-01-18 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "8",
             "DerivationB",
             "Derivation_Test_00.json",
@@ -1961,7 +1961,7 @@ public class ExternalEventTests {
             "{[\"2024-01-10 00:00:00+00\",\"2024-01-11 00:00:00+00\")}",
             "2024-01-18 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "3",
             "DerivationB",
             "Derivation_Test_01.json",
@@ -1981,7 +1981,7 @@ public class ExternalEventTests {
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "1",
             "DerivationA",
             "Derivation_Test_01.json",
@@ -2001,7 +2001,7 @@ public class ExternalEventTests {
             "{[\"2024-01-01 00:00:00+00\",\"2024-01-01 12:00:00+00\"),[\"2024-01-02 12:00:00+00\",\"2024-01-03 00:00:00+00\")}",
             "2024-01-19 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "5",
             "DerivationC",
             "Derivation_Test_02.json",
@@ -2011,7 +2011,7 @@ public class ExternalEventTests {
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "6",
             "DerivationC",
             "Derivation_Test_02.json",
@@ -2021,7 +2021,7 @@ public class ExternalEventTests {
             "{[\"2024-01-03 00:00:00+00\",\"2024-01-10 00:00:00+00\")}",
             "2024-01-20 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "2",
             "DerivationB",
             "Derivation_Test_02.json",
@@ -2071,7 +2071,7 @@ public class ExternalEventTests {
             "{[\"2024-01-01 12:00:00+00\",\"2024-01-02 12:00:00+00\")}",
             "2024-01-21 00:00:00+00"
         ),
-        new DerivedEvent(//
+        new DerivedEvent(
             "9",
             "DerivationC",
             "Derivation_Test_03.json",
