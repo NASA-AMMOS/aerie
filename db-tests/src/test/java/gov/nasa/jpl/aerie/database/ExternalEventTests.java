@@ -54,21 +54,25 @@ public class ExternalEventTests {
 
   //region Commonly Repeated Variables
   // Source Type (st)
-  final String st = "Test";
+  final static String st = "Test";
 
   // Derivation Group (dg)
-  final String dg = "Test Default";
+  final static String dg = "Test Default";
 
   // Event Type (et)
-  final String et = "Test";
+  final static String et = "Test";
 
   // Created At (ca)
-  final String ca = "2024-01-01T00:00:00Z";
+  final static String ca = "2024-01-01T00:00:00Z";
   //endregion
 
 
   //region Records
-  protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration) {}
+  protected record ExternalEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration) {
+    ExternalEvent(String key, String start_time, String duration, ExternalSource source) {
+      this(key, et, source.key(), source.derivation_group_name(), start_time, duration);
+    }
+  }
   protected record ExternalSource(String key, String source_type_name, String derivation_group_name, String valid_at, String start_time, String end_time, String created_at){}
   protected record DerivedEvent(String key, String event_type_name, String source_key, String derivation_group_name, String start_time, String duration, String source_range, String valid_at){}
   //endregion
@@ -174,20 +178,6 @@ public class ExternalEventTests {
           """.formatted(planId, derivationGroupName)
       );
     }
-  }
-
-  /**
-   * Quick external event creator, leveraging constants from a provided source object (source).
-   */
-  protected ExternalEvent createEvent(String key, String start_time, String duration, ExternalSource source) {
-    return new ExternalEvent(
-        key,
-        et,
-        source.key(),
-        source.derivation_group_name(),
-        start_time,
-        duration
-    );
   }
 
   /**
@@ -353,7 +343,7 @@ public class ExternalEventTests {
     class DerivedSourcesTests {
 
       // Commonly Repeated:
-      final String duration = "00:00:00.000001";
+      final static String duration = "00:00:00.000001";
 
       @BeforeEach
       void beforeEach() throws SQLException {
@@ -892,7 +882,7 @@ public class ExternalEventTests {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class DerivedEventRuleTests {
 
-      // Commonly Repeated
+      // Commonly Repeated:
       @BeforeEach
       void beforeEach() throws SQLException {
         // insert generic external event type, source type, and derivation group
@@ -918,7 +908,7 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e = createEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
+        ExternalEvent e = new ExternalEvent("A.1", "2024-01-01T00:00:00Z", "01:00:00", eS);
 
 
         // insert sources
@@ -985,9 +975,9 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e = createEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
-        ExternalEvent before = createEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
-        ExternalEvent after = createEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
+        ExternalEvent e = new ExternalEvent("a", "2024-01-01T01:10:00Z", "00:10:00", A);
+        ExternalEvent before = new ExternalEvent("b", "2024-01-01T00:00:00Z", "00:30:00", B);
+        ExternalEvent after = new ExternalEvent("c", "2024-01-01T01:30:00Z", "01:00:00", C);
 
 
         // insert sources
@@ -1070,9 +1060,9 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e = createEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
-        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
-        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
+        ExternalEvent e = new ExternalEvent("a", "2024-01-01T00:25:00Z", "00:10:00", A); // spills into B
+        ExternalEvent b1 = new ExternalEvent("b1", "2024-01-01T00:30:00Z", "00:10:00", B);
+        ExternalEvent b2 = new ExternalEvent("b2", "2024-01-01T00:45:00Z", "00:10:00", B);
 
 
         // insert sources
@@ -1154,20 +1144,20 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e1 = createEvent(
+        ExternalEvent e1 = new ExternalEvent(
             "a1",
             "2024-01-01T00:40:00Z",
             "00:10:00",
             A
         ); // negated by B, very clearly
-        ExternalEvent e2 = createEvent(
+        ExternalEvent e2 = new ExternalEvent(
             "a2",
             "2024-01-01T00:55:00Z",
             "00:35:00",
             A
         ); // even empty space in B neg should negate
-        ExternalEvent b1 = createEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
-        ExternalEvent b2 = createEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
+        ExternalEvent b1 = new ExternalEvent("b1", "2024-01-01T00:00:00Z", "00:10:00", B);
+        ExternalEvent b2 = new ExternalEvent("b2", "2024-01-01T00:30:00Z", "00:20:00", B);
 
 
         // insert sources
@@ -1239,13 +1229,13 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e1 = createEvent(
+        ExternalEvent e1 = new ExternalEvent(
             "a1",
             "2024-01-01T00:40:00Z",
             "00:10:00",
             A
         ); // negated by empty space
-        ExternalEvent e2 = createEvent(
+        ExternalEvent e2 = new ExternalEvent(
             "a2",
             "2024-01-01T00:55:00Z",
             "00:35:00",
@@ -1311,19 +1301,19 @@ public class ExternalEventTests {
             ca
         );
 
-        ExternalEvent e1 = createEvent(
+        ExternalEvent e1 = new ExternalEvent(
             "a",
             "2024-01-01T01:50:00Z",
             "00:10:00",
             A
         ); // negated by empty space
-        ExternalEvent e2 = createEvent(
+        ExternalEvent e2 = new ExternalEvent(
             "a",
             "2024-01-01T03:40:00Z",
             "00:15:00",
             B
         ); // negated by empty space
-        ExternalEvent e3 = createEvent(
+        ExternalEvent e3 = new ExternalEvent(
             "a",
             "2024-01-01T00:30:00Z",
             "00:20:00",
@@ -1431,9 +1421,9 @@ public class ExternalEventTests {
           ca
       );
 
-      ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
-      ExternalEvent e2 = createEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
-      ExternalEvent e3 = createEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
+      ExternalEvent e1 = new ExternalEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+      ExternalEvent e2 = new ExternalEvent("b", "2024-01-01T00:00:00Z", "00:05:00", A);
+      ExternalEvent e3 = new ExternalEvent("c", "2024-01-01T00:00:00Z", "00:15:00", A);
 
       // insert generic external event type, source type, and derivation group
       insertStandardTypes();
@@ -1501,8 +1491,8 @@ public class ExternalEventTests {
           "2024-01-01T01:30:00Z",
           ca);
 
-      ExternalEvent e1 = createEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
-      ExternalEvent e2 = createEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
+      ExternalEvent e1 = new ExternalEvent("a", "2024-01-01T00:00:00Z", "00:10:00", A);
+      ExternalEvent e2 = new ExternalEvent("a", "2024-01-01T00:55:00Z", "00:15:00", A); // illegal!
 
       // uploading is fine for the first event, naturally
       // insert generic external event type, source type, and derivation group
@@ -1606,11 +1596,11 @@ public class ExternalEventTests {
           "2024-01-01T02:00:00Z",
           ca);
 
-      ExternalEvent legal = createEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
-      ExternalEvent completelyBefore = createEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
-      ExternalEvent beforeIntersect = createEvent("beforeIntersect", "2024-01-01T00:55:00Z", "00:25:00", A); // illegal!
-      ExternalEvent afterIntersect = createEvent("afterIntersect", "2024-01-01T01:45:00Z", "00:30:00", A); // illegal!
-      ExternalEvent completelyAfter = createEvent("completelyAfter", "2024-01-01T02:10:00Z", "00:15:00", A); // illegal!
+      ExternalEvent legal = new ExternalEvent("a", "2024-01-01T01:00:00Z", "00:10:00", A); // legal.
+      ExternalEvent completelyBefore = new ExternalEvent("completelyBefore", "2024-01-01T00:00:00Z", "00:10:00", A); // illegal!
+      ExternalEvent beforeIntersect = new ExternalEvent("beforeIntersect", "2024-01-01T00:55:00Z", "00:25:00", A); // illegal!
+      ExternalEvent afterIntersect = new ExternalEvent("afterIntersect", "2024-01-01T01:45:00Z", "00:30:00", A); // illegal!
+      ExternalEvent completelyAfter = new ExternalEvent("completelyAfter", "2024-01-01T02:10:00Z", "00:15:00", A); // illegal!
 
       // assert the legal event is okay (in the center of the source)
       // insert generic external event type, source type, and derivation group
@@ -1864,7 +1854,7 @@ public class ExternalEventTests {
             "2024-01-01T00:30:00Z",
             ca
         );
-        ExternalEvent evt = createEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
+        ExternalEvent evt = new ExternalEvent("A_1", "2024-01-01T00:00:00Z", "00:05:0", src);
 
         // insert the event and her types
         // insert generic external event type, source type, and derivation group
