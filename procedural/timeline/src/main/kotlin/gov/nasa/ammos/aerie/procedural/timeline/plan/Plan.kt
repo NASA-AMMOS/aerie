@@ -7,6 +7,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.AnyDirective
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives
 import gov.nasa.ammos.aerie.procedural.timeline.ops.SerialSegmentOps
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment
+import gov.nasa.ammos.aerie.procedural.timeline.collections.ExternalEvents
 import java.time.Instant
 
 /** An interface for querying plan information and simulation results. */
@@ -41,4 +42,13 @@ interface Plan {
    * @param name string name of the resource
    */
   fun <V: Any, TL: SerialSegmentOps<V, TL>> resource(name: String, deserializer: (List<Segment<SerializedValue>>) -> TL): TL
+
+  /** Get external events associated with this plan. */
+  fun events(query: EventQuery): ExternalEvents
+  /** Get external events belonging to a given derivation group and type associated with this plan. */
+  fun events(derivationGroup: String, type: String) = events(EventQuery(derivationGroup, type, null))
+  /** Get external events belonging to a given derivation group associated with this plan. */
+  fun events(derivationGroup: String) = events(EventQuery(derivationGroup, null, null))
+  /** Get all external events in all derivation groups associated with this plan. */
+  fun events() = events(EventQuery(null, null, null))
 }

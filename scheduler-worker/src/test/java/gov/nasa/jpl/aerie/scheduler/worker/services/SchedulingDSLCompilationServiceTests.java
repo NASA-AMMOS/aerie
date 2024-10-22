@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +109,13 @@ class SchedulingDSLCompilationServiceTests {
     @Override
     public ExternalProfiles getExternalProfiles(final PlanId planId) {
       return null;
+    }
+
+    @Override
+    public Map<String, List<ExternalEvent>> getExternalEvents(final PlanId planId, final Instant horizonStart)
+    throws MerlinServiceException, IOException
+    {
+      return Map.of();
     }
 
     @Override
