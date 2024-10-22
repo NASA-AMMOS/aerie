@@ -37,4 +37,4 @@ operator fun Instant.plus(duration: Duration): Instant = plusMillis(duration / M
 operator fun Instant.minus(other: Instant): Duration = microseconds(other.until(this, ChronoUnit.MICROS))
 
 /** Subtracts a duration from an instant, to produce another instant. */
-operator fun Instant.minus(duration: Duration) = this.plus(-duration)
+operator fun Instant.minus(duration: Duration): Instant = this.plus(-duration)
