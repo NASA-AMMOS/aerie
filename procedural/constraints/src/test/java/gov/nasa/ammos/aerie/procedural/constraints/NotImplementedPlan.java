@@ -2,11 +2,14 @@ package gov.nasa.ammos.aerie.procedural.constraints;
 
 import gov.nasa.ammos.aerie.procedural.timeline.Interval;
 import gov.nasa.ammos.aerie.procedural.timeline.collections.Directives;
+import gov.nasa.ammos.aerie.procedural.timeline.collections.ExternalEvents;
 import gov.nasa.ammos.aerie.procedural.timeline.ops.SerialSegmentOps;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.Segment;
+import gov.nasa.ammos.aerie.procedural.timeline.plan.EventQuery;
 import gov.nasa.ammos.aerie.procedural.timeline.plan.Plan;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import jdk.jshell.spi.ExecutionControl;
 import kotlin.NotImplementedError;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +52,12 @@ public class NotImplementedPlan implements Plan {
       @NotNull final String name,
       @NotNull final Function1<? super List<Segment<SerializedValue>>, ? extends TL> deserializer)
   {
+    throw new NotImplementedError();
+  }
+
+  @NotNull
+  @Override
+  public ExternalEvents events(@NotNull final EventQuery query) {
     throw new NotImplementedError();
   }
 }

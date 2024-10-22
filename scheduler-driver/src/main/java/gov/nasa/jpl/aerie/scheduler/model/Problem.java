@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -47,6 +48,7 @@ public class Problem {
 
   private final Map<String, LinearProfile> realExternalProfiles = new HashMap<>();
   private final Map<String, DiscreteProfile> discreteExternalProfiles = new HashMap<>();
+  private Map<String, List<ExternalEvent>> eventsByDerivationGroup = new HashMap<>();
 
   /**
    * the initial seed plan to start scheduling from
@@ -171,6 +173,10 @@ public class Problem {
     this.discreteExternalProfiles.putAll(discreteExternalProfiles);
   }
 
+  public void setEventsByDerivationGroup(final Map<String, List<ExternalEvent>> events) {
+    this.eventsByDerivationGroup = events;
+  }
+
   public Map<String, LinearProfile> getRealExternalProfiles(){
     return this.realExternalProfiles;
   }
@@ -178,6 +184,8 @@ public class Problem {
   public Map<String, DiscreteProfile> getDiscreteExternalProfiles(){
     return this.discreteExternalProfiles;
   }
+
+  public Map<String, List<ExternalEvent>> getEventsByDerivationGroup() { return this.eventsByDerivationGroup; }
 
   public void setGoals(List<Goal> goals){
     goalsOrderedByPriority.clear();
