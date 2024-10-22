@@ -14,8 +14,6 @@ data class ExternalEvent(
   /** The derivation group that this event comes from. */
   val derivationGroup: String,
   override val interval: Interval,
-  /** The properties associated with this event. */
-  val properties: Map<String, SerializedValue>
 ): IntervalLike<ExternalEvent> {
-  override fun withNewInterval(i: Interval) = ExternalEvent(key, type, source, derivationGroup, i, properties)
+  override fun withNewInterval(i: Interval) = ExternalEvent(key, type, source, derivationGroup, i)
 }

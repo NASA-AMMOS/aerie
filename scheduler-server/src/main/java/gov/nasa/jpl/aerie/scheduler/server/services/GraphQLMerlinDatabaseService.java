@@ -1036,9 +1036,6 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
             source_range
             start_time
             valid_at
-            external_event {
-              properties
-            }
           }
         }""".formatted(derivationGroups);
     final JsonObject eventsResponse = postRequest(eventsRequest).get();
@@ -1190,8 +1187,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
           e.getString("event_type_name"),
           e.getString("source_key"),
           e.getString("derivation_group_name"),
-          Interval.between(start, end),
-          serializedValueP.parse(e.getJsonObject("external_event").getJsonObject("properties")).getSuccessOrThrow().asMap().get()
+          Interval.between(start, end)
       ));
     }
     return result;
