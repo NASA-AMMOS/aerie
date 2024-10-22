@@ -1014,7 +1014,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
   throws MerlinServiceException, IOException {
     final var derivationGroupsRequest = """
         query DerivationGroupsForPlan {
-          plan_derivation_group(where: {plan_id: {_eq: %d}, enabled: {_eq: true}}) {
+          plan_derivation_group(where: {plan_id: {_eq: %d}}) {
             derivation_group_name
           }
         }
