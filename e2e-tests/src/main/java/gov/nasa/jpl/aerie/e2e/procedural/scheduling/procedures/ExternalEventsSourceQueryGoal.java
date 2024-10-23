@@ -17,7 +17,7 @@ public record ExternalEventsSourceQueryGoal() implements Goal {
   @Override
   public void run(@NotNull final EditablePlan plan) {
 
-    // demonstrate more complicated query functionality
+    // extract events belonging to the second source
     EventQuery eventQuery = new EventQuery(
         null,
         null,
@@ -25,7 +25,14 @@ public record ExternalEventsSourceQueryGoal() implements Goal {
     );
 
     for (final var e: plan.events(eventQuery)) {
-      plan.create("BiteBanana", new DirectiveStart.Absolute(e.getInterval().start), Map.of("biteSize", SerializedValue.of(1)));
+      // filter events that we schedule off of by key
+      if (e.key.contains("01")) {
+        plan.create(
+            "BiteBanana",
+            // place the directive such that it is coincident with the event's start
+            new DirectiveStart.Absolute(e.getInterval().start),
+            Map.of("biteSize", SerializedValue.of(1)));
+      }
     }
     plan.commit();
   }

@@ -41,7 +41,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           externalSource.key(),
           externalSource.derivation_group_name(),
           "2023-01-01T01:00:00Z",
-          "00:10:00"
+          "01:00:00"
       ),
       new HasuraRequests.ExternalEvent(
           "Event_02",
@@ -49,7 +49,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           externalSource.key(),
           externalSource.derivation_group_name(),
           "2023-01-01T03:00:00Z",
-          "00:10:00"
+          "01:00:00"
       ),
       new HasuraRequests.ExternalEvent(
           "Event_03",
@@ -57,7 +57,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           externalSource.key(),
           externalSource.derivation_group_name(),
           "2023-01-01T05:00:00Z",
-          "00:10:00"
+          "01:00:00"
       )
   );
 
@@ -65,7 +65,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
       "NewTest.json",
       SOURCE_TYPE,
       ADDITIONAL_DERIVATION_GROUP,
-      "2024-01-02T00:00:00Z",
+      "2024-01-01T00:00:00Z",
       "2023-01-01T00:00:00Z",
       "2023-01-08T00:00:00Z",
       "2024-10-01T00:00:00Z"
@@ -78,7 +78,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           additionalExternalSource.key(),
           additionalExternalSource.derivation_group_name(),
           "2023-01-02T01:00:00Z",
-          "00:10:00"
+          "01:00:00"
       ),
       new HasuraRequests.ExternalEvent(
           "Event_02",
@@ -86,7 +86,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           additionalExternalSource.key(),
           additionalExternalSource.derivation_group_name(),
           "2023-01-02T03:00:00Z",
-          "00:10:00"
+          "01:00:00"
       ),
       new HasuraRequests.ExternalEvent(
           "Event_03",
@@ -94,7 +94,7 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           additionalExternalSource.key(),
           additionalExternalSource.derivation_group_name(),
           "2023-01-02T05:00:00Z",
-          "00:10:00"
+          "01:00:00"
       )
   );
 
@@ -223,17 +223,12 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
     final var plan = hasura.getPlan(planId);
     final var activities = plan.activityDirectives();
 
-    // ensure the orderings line up
-    activities.sort(Comparator.comparing(Plan.ActivityDirective::startOffset));
-
-    // compare arrays
-    assertEquals(additionalExternalEvents.size(), activities.size());
-    for (int i = 0; i < activities.size(); i++) {
-      Instant activityStartTime = Duration.addToInstant(
-          Instant.parse(planStartTimestamp),
-          Duration.fromString(activities.get(i).startOffset())
-      );
-      assertEquals(activityStartTime.toString(), additionalExternalEvents.get(i).start_time());
-    }
+    // only 1 activity this time
+    assertEquals(1, activities.size());
+    Instant activityStartTime = Duration.addToInstant(
+        Instant.parse(planStartTimestamp),
+        Duration.fromString(activities.get(0).startOffset())
+    );
+    assertEquals(activityStartTime.toString(), additionalExternalEvents.get(0).start_time());
   }
 }
