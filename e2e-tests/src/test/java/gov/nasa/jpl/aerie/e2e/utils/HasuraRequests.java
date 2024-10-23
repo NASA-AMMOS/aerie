@@ -1126,7 +1126,7 @@ public class HasuraRequests implements AutoCloseable {
         .getJsonObject("deleteExternalSource")
         .getString("key");
   }
-  public String deletePlanDerivationGroup(
+  public String deletePlanDerivationGroupAssociation(
       int planId,
       String derivationGroupName
   ) throws IOException {

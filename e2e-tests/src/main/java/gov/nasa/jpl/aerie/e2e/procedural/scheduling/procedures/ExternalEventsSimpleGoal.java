@@ -10,13 +10,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 @SchedulingProcedure
-public record ExternalEventsGoal() implements Goal {
+public record ExternalEventsSimpleGoal() implements Goal {
   @Override
   public void run(@NotNull final EditablePlan plan) {
-    for (final var e: plan.events("Derivation Test Default")) {
+    for (final var e: plan.events("TestGroup")) {
       plan.create("BiteBanana", new DirectiveStart.Absolute(e.getInterval().start), Map.of("biteSize", SerializedValue.of(1)));
     }
-
     plan.commit();
   }
 }

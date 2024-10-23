@@ -65,7 +65,7 @@ data class SchedulerToProcedurePlanAdapter(
         ?: throw Error("derivation group either doesn't exist or isn't associated with plan: $it")
     }
     else eventsByDerivationGroup.values.flatten()
-    if (query.types != null) result = result.filter { it.type in query.types!! }
+    if (query.eventTypes != null) result = result.filter { it.type in query.eventTypes!! }
     if (query.sources != null) result = result.filter { it.source in query.sources!! }
     return ExternalEvents(result)
   }

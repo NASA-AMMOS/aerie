@@ -10,11 +10,11 @@ data class EventQuery(
   val derivationGroups: List<String>?,
 
   /**
-   * A nullable list of types; the event must belong to one of them if present.
+   * A nullable list of eventTypes; the event must belong to one of them if present.
    *
    * If null, all types are allowed.
    */
-  val types: List<String>?,
+  val eventTypes: List<String>?,
 
   /**
    * A nullable list of sources; the event must belong to one of them if present.
@@ -23,9 +23,9 @@ data class EventQuery(
    */
   val sources: List<String>?,
 ) {
-  constructor(derivationGroup: String?, type: String?, source: String?): this(
+  constructor(derivationGroup: String?, eventType: String?, source: String?): this(
     derivationGroup?.let { listOf(it) },
-    type?.let { listOf(it) },
+    eventType?.let { listOf(it) },
     source?.let { listOf(it) }
   )
   constructor(): this(null as String?, null, null)
