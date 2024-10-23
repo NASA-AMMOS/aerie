@@ -10,10 +10,8 @@ data class ExternalEvent(
   /** The type of the event. */
   val type: String,
   /** The source this event comes from. */
-  val source: String,
-  /** The derivation group that this event comes from. */
-  val derivationGroup: String,
+  val source: ExternalSource,
   override val interval: Interval,
 ): IntervalLike<ExternalEvent> {
-  override fun withNewInterval(i: Interval) = ExternalEvent(key, type, source, derivationGroup, i)
+  override fun withNewInterval(i: Interval) = ExternalEvent(key, type, source, i)
 }

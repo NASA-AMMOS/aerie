@@ -66,7 +66,9 @@ data class SchedulerToProcedurePlanAdapter(
     }
     else eventsByDerivationGroup.values.flatten()
     if (query.eventTypes != null) result = result.filter { it.type in query.eventTypes!! }
-    if (query.sources != null) result = result.filter { it.source in query.sources!! }
+    if (query.sources != null) result = result.filter { event ->
+      query.sources!!.map { it.key }.contains(event.source.key) && query.sources!!.map { it.derivationGroup }.contains(event.source.key)
+    }
     return ExternalEvents(result)
   }
   override fun <V : Any, TL : SerialSegmentOps<V, TL>> resource(

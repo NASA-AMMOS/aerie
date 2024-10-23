@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.ZERO;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.min;
 
 /**
  * prototype scheduling algorithm that schedules activities for a plan
@@ -618,7 +617,7 @@ public class PrioritySolver implements Solver {
         curPreviouslyInstantiated = null;
       }
       taskNetwork.startsAfterStart(
-          allActivitiesInNetwork.getLast(),
+          allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
           activityName,
           missingRecurrenceConflict.minMaxConstraints.start,
           missingRecurrenceConflict.minMaxConstraints.end);
@@ -635,12 +634,12 @@ public class PrioritySolver implements Solver {
       //add constraints between last task and end boundary
       if (missingRecurrenceConflict.afterBoundIsActivity) {
         taskNetwork.addStartInterval(
-            allActivitiesInNetwork.getLast(),
+            allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.start));
       } else {
         taskNetwork.addStartInterval(
-            allActivitiesInNetwork.getLast(),
+            allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end) ,
             missingRecurrenceConflict.nextStart);
       }

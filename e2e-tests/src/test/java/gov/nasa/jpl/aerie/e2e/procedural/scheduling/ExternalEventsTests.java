@@ -164,10 +164,10 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
   }
 
   @Test
-  void testExternalEventQuery() throws IOException {
+  void testExternalEventTypeQuery() throws IOException {
     // first, run the goal
     try (final var gateway = new GatewayRequests(playwright)) {
-      int procedureJarId = gateway.uploadJarFile("build/libs/ExternalEventsQueryGoal.jar");
+      int procedureJarId = gateway.uploadJarFile("build/libs/ExternalEventsTypeQueryGoal.jar");
       // Add Scheduling Procedure
       procedureId = hasura.createSchedulingSpecProcedure(
           "Test Scheduling Procedure",
@@ -203,6 +203,37 @@ public class ExternalEventsTests extends ProceduralSchedulingSetup {
           Duration.fromString(activities.get(i).startOffset())
       );
       assertEquals(activityStartTime.toString(), expected.get(i).start_time());
+    }
+  }
+
+  @Test
+  void testExternalEventSourceQuery() throws IOException {
+    // first, run the goal
+    try (final var gateway = new GatewayRequests(playwright)) {
+      int procedureJarId = gateway.uploadJarFile("build/libs/ExternalEventsSourceQueryGoal.jar");
+      // Add Scheduling Procedure
+      procedureId = hasura.createSchedulingSpecProcedure(
+          "Test Scheduling Procedure",
+          procedureJarId,
+          specId,
+          0
+      );
+    }
+    hasura.awaitScheduling(specId);
+    final var plan = hasura.getPlan(planId);
+    final var activities = plan.activityDirectives();
+
+    // ensure the orderings line up
+    activities.sort(Comparator.comparing(Plan.ActivityDirective::startOffset));
+
+    // compare arrays
+    assertEquals(additionalExternalEvents.size(), activities.size());
+    for (int i = 0; i < activities.size(); i++) {
+      Instant activityStartTime = Duration.addToInstant(
+          Instant.parse(planStartTimestamp),
+          Duration.fromString(activities.get(i).startOffset())
+      );
+      assertEquals(activityStartTime.toString(), additionalExternalEvents.get(i).start_time());
     }
   }
 }

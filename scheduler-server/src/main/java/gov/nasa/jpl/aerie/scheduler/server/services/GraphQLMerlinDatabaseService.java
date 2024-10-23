@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.ammos.aerie.procedural.timeline.Interval;
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalSource;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.json.BasicParsers;
@@ -1185,8 +1186,10 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
       result.add(new ExternalEvent(
           e.getString("event_key"),
           e.getString("event_type_name"),
-          e.getString("source_key"),
-          e.getString("derivation_group_name"),
+          new ExternalSource(
+              e.getString("source_key"),
+              e.getString("derivation_group_name")
+          ),
           Interval.between(start, end)
       ));
     }

@@ -6,6 +6,7 @@ import gov.nasa.ammos.aerie.procedural.timeline.payloads.activities.Instance
 import gov.nasa.ammos.aerie.procedural.timeline.ops.*
 import gov.nasa.ammos.aerie.procedural.timeline.ops.coalesce.CoalesceNoOp
 import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalSource
 import gov.nasa.ammos.aerie.procedural.timeline.util.preprocessList
 
 /**
@@ -23,8 +24,8 @@ data class ExternalEvents(private val timeline: Timeline<ExternalEvent, External
   fun filterByType(vararg types: String) = filter { it.type in types }
 
   /** Filter by one or more event sources. */
-  fun filterBySource(vararg sources: String) = filter { it.source in sources }
+  fun filterBySource(vararg sources: ExternalSource) = filter { it.source in sources }
 
   /** Filter by one or more derivation groups. */
-  fun filterByDerivationGroup(vararg groups: String) = filter { it.derivationGroup in groups }
+  fun filterByDerivationGroup(vararg groups: String) = filter { it.source.derivationGroup in groups }
 }
