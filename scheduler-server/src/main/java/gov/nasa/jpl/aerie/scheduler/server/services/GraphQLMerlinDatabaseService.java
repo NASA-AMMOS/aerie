@@ -1045,7 +1045,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
     final var unorganized =  parseExternalEvents(data, horizonStart);
     final var result = new HashMap<String, List<ExternalEvent>>();
     for (final var event: unorganized) {
-      final var list = result.computeIfAbsent(event.getDerivationGroup(), $ -> new ArrayList<>());
+      final var list = result.computeIfAbsent(event.source.derivationGroup, $ -> new ArrayList<>());
       list.add(event);
     }
     return result;
