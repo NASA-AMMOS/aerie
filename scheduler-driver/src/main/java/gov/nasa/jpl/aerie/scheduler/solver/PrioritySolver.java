@@ -491,8 +491,8 @@ public class PrioritySolver implements Solver {
       assert missing != null;
       logger.info("Processing conflict " + (++i));
       logger.info(missing.toString());
-      //determine the best activities to satisfy the conflict
-      ConflictSolverResult conflictSolverReturn = null;
+      //initialize conflict result to unsatisfied + no activities created
+      var conflictSolverReturn = new ConflictSolverResult();
       if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict missingActivityInstanceConflict)) {
         conflictSolverReturn = solveActivityInstanceConflict(missingActivityInstanceConflict, goal);
       } else if (!analysisOnly && (missing instanceof MissingActivityTemplateConflict missingActivityTemplateConflict)) {
