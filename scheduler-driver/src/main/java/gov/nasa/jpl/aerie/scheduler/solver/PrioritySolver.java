@@ -617,7 +617,7 @@ public class PrioritySolver implements Solver {
         curPreviouslyInstantiated = null;
       }
       taskNetwork.startsAfterStart(
-          allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
+          allActivitiesInNetwork.get(allActivitiesInNetwork.size()-1),
           activityName,
           missingRecurrenceConflict.minMaxConstraints.start,
           missingRecurrenceConflict.minMaxConstraints.end);
@@ -634,12 +634,12 @@ public class PrioritySolver implements Solver {
       //add constraints between last task and end boundary
       if (missingRecurrenceConflict.afterBoundIsActivity) {
         taskNetwork.addStartInterval(
-            allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
+            allActivitiesInNetwork.get(allActivitiesInNetwork.size()-1),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.start));
       } else {
         taskNetwork.addStartInterval(
-            allActivitiesInNetwork.get(allActivitiesInNetwork.size()),
+            allActivitiesInNetwork.get(allActivitiesInNetwork.size()-1),
             missingRecurrenceConflict.nextStart.minus(missingRecurrenceConflict.minMaxConstraints.end) ,
             missingRecurrenceConflict.nextStart);
       }
