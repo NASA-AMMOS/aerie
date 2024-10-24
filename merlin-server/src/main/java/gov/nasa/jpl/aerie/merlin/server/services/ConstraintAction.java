@@ -64,7 +64,7 @@ public class ConstraintAction {
 
     // Remove any constraints that we've already checked, so they aren't rechecked.
     for (ConstraintRunRecord constraintRun : validConstraintRuns.values()) {
-        constraintResultMap.put(constraintCode.remove(constraintRun.constraintId()), Fallible.of(constraintRun.result()));
+        constraintResultMap.put(constraintCode.remove(constraintRun.constraintInvocationId()), Fallible.of(constraintRun.result()));
     }
 
     // If the lengths don't match we need check the left-over constraints.

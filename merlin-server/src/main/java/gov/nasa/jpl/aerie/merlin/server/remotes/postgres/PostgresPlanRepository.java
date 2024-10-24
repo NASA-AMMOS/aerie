@@ -188,10 +188,12 @@ public final class PostgresPlanRepository implements PlanRepository {
             .orElseThrow(() -> new NoSuchPlanException(planId))
             .stream()
             .collect(Collectors.toMap(
-                ConstraintRecord::id,
+                ConstraintRecord::invocationId,
                 r -> new Constraint(
                     r.id(),
                     r.revision(),
+                    r.invocationId(),
+                    r.arguments(),
                     r.name(),
                     r.description(),
                     r.definition())));

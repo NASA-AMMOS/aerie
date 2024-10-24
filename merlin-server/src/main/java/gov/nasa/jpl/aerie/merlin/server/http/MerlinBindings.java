@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.parseJson;
+
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityBulkActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
@@ -510,18 +512,6 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
-    }
-  }
-
-  private <T> T parseJson(final String subject, final JsonParser<T> parser)
-  throws InvalidJsonException, InvalidEntityException
-  {
-    try {
-      final var requestJson = Json.createReader(new StringReader(subject)).readValue();
-      final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
-    } catch (JsonParsingException e) {
-      throw new InvalidJsonException(e);
     }
   }
 

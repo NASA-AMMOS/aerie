@@ -40,7 +40,7 @@ public class PostgresConstraintRepository implements ConstraintRepository {
       final var validConstraintRuns = new HashMap<Long, ConstraintRunRecord>();
 
       for (final var constraintRun : constraintRuns) {
-        validConstraintRuns.put(constraintRun.constraintId(), constraintRun);
+        validConstraintRuns.put(constraintRun.constraintInvocationId(), constraintRun);
       }
 
       return validConstraintRuns;
