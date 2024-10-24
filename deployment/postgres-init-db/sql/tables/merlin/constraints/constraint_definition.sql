@@ -2,7 +2,7 @@ create table merlin.constraint_definition(
   constraint_id integer not null,
   revision integer not null default 0,
 
-  type merlin.goal_type not null default 'EDSL',
+  type merlin.constraint_type not null default 'EDSL',
   definition text,
   uploaded_jar_id integer,
   parameter_schema jsonb,

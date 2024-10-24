@@ -1,1 +1,1 @@
-create type merlin.goal_type as enum ('EDSL', 'JAR');
+create type merlin.constraint_type as enum ('EDSL', 'JAR');
