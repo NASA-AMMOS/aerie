@@ -11,9 +11,6 @@ create table merlin.constraint_specification(
 
   constraint constraint_specification_pkey
     primary key (invocation_id),
-  constraint plan_spec_plan_exists
-    foreign key (plan_id)
-      references merlin.plan(id),
   constraint plan_spec_constraint_exists
     foreign key (constraint_id)
       references merlin.constraint_metadata(id)

@@ -78,7 +78,7 @@ public class ConstraintsTests {
         constraintName,
         planId,
         constraintDefinition,
-        "");
+        "").id();
   }
 
   @AfterEach
@@ -406,13 +406,16 @@ public class ConstraintsTests {
     hasura.awaitSimulation(planId);
     // Add a problematic constraint to the spec, then disable it
     final String problemConstraintName = "bad constraint";
-    final int problemConstraintId = hasura.insertPlanConstraint(
+    final var problemConstraintId = hasura.insertPlanConstraint(
         problemConstraintName,
         planId,
         "error :-(",
         "constraint that shouldn't compile");
+
+    final var invocationId = problemConstraintId.invocationId();
+
     try {
-      hasura.updatePlanConstraintSpecEnabled(planId, problemConstraintId, false);
+      hasura.updatePlanConstraintSpecEnabled(planId, invocationId, false);
 
       // Check constraints -- Validate that only the enabled constraint is included
       final var initResults = hasura.checkConstraints(planId);
@@ -421,7 +424,7 @@ public class ConstraintsTests {
       assertTrue(initResults.get(0).success());
 
       // Enable disabled constraint
-      hasura.updatePlanConstraintSpecEnabled(planId, problemConstraintId, true);
+      hasura.updatePlanConstraintSpecEnabled(planId, invocationId, true);
 
       // Check constraints -- Validate that the other constraint is present and a failure
       final var results = hasura.checkConstraints(planId);
@@ -442,7 +445,7 @@ public class ConstraintsTests {
       assertEquals("Constraint 'bad constraint' compilation failed:\n TypeError: TS1109 Expression expected.",
           problemResults.errors().get(1).message());
     } finally {
-      hasura.deleteConstraint(problemConstraintId);
+      hasura.deleteConstraint(problemConstraintId.id());
     }
   }
 

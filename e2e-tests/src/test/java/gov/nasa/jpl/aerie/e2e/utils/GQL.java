@@ -511,6 +511,7 @@ public enum GQL {
     mutation insertConstraintAssignToPlanSpec($constraint: constraint_specification_insert_input!) {
       constraint: insert_constraint_specification_one(object: $constraint){
         constraint_id
+        invocation_id
       }
     }"""),
   INSERT_PROFILE("""
@@ -597,13 +598,14 @@ public enum GQL {
         }
       }"""),
   UPDATE_CONSTRAINT_SPEC_ENABLED("""
-      mutation updateConstraintSpecVersion($plan_id: Int!, $constraint_id: Int!, $enabled: Boolean!) {
+      mutation updateConstraintSpecVersion($constraint_invocation_id: Int!, $enabled: Boolean!) {
         update_constraint_specification_by_pk(
-          pk_columns: {constraint_id: $constraint_id, plan_id: $plan_id},
+          pk_columns: {constraint_invocation_id: $constraint_invocation_id},
           _set: {enabled: $enabled}
         ) {
           plan_id
           constraint_id
+          constraint_invocation_id
           constraint_revision
           enabled
         }
