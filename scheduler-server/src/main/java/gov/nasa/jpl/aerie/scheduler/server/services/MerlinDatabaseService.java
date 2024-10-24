@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -99,6 +101,9 @@ public interface MerlinDatabaseService {
      */
     ExternalProfiles getExternalProfiles(final PlanId planId)
     throws MerlinServiceException, IOException;
+
+    Map<String, List<ExternalEvent>> getExternalEvents(final PlanId planId, final Instant horizonStart)
+      throws MerlinServiceException, IOException;
 
     /**
      * Gets resource types associated to a plan, those coming from the mission model as well as those coming from external dataset resources

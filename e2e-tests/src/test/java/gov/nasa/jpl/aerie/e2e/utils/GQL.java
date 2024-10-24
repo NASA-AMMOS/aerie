@@ -82,6 +82,38 @@ public enum GQL {
         id
       }
     }"""),
+  CREATE_EXTERNAL_EVENT_TYPE("""
+    mutation CreateExternalEventType($eventType: external_event_type_insert_input!) {
+      createExternalEventType: insert_external_event_type_one(object: $eventType) {
+        name
+      }
+    }"""),
+  CREATE_EXTERNAL_EVENTS("""
+    mutation InsertExternalEvents($objects: [external_event_insert_input!]!) {
+      insertExternalEvents: insert_external_event(objects: $objects) {
+        returning {
+           key
+        }
+      }
+    }"""),
+  CREATE_EXTERNAL_SOURCE("""
+    mutation InsertExternalSource($object: external_source_insert_input!) {
+      insertExternalSource: insert_external_source_one(object: $object) {
+        key
+      }
+    }"""),
+  CREATE_EXTERNAL_SOURCE_TYPE("""
+    mutation CreateExternalSourceType($sourceType: external_source_type_insert_input!) {
+      createExternalSourceType: insert_external_source_type_one(object: $sourceType) {
+        name
+      }
+    }"""),
+  CREATE_DERIVATION_GROUP("""
+    mutation CreateDerivationGroup($derivationGroup: derivation_group_insert_input!) {
+      createDerivationGroup: insert_derivation_group_one(object: $derivationGroup) {
+        name
+      }
+    }"""),
   CREATE_MISSION_MODEL("""
     mutation CreateMissionModel($model: mission_model_insert_input!) {
       insert_mission_model_one(object: $model) {
@@ -93,6 +125,12 @@ public enum GQL {
       insert_plan_one(object: $plan) {
         id
         revision
+      }
+    }"""),
+  CREATE_PLAN_DERIVATION_GROUP("""
+    mutation CreatePlanDerivationGroup($source: plan_derivation_group_insert_input!) {
+      planExternalSourceLink: insert_plan_derivation_group_one(object: $source) {
+        derivation_group_name
       }
     }"""),
   CREATE_SCHEDULING_SPEC_GOAL("""
@@ -140,10 +178,36 @@ public enum GQL {
         id
       }
     }"""),
+  DELETE_DERIVATION_GROUP("""
+    mutation DeleteDerivationGroup($name: String!) {
+      deleteDerivationGroup: delete_derivation_group(where: { name: { _eq: $name } }) {
+        returning {
+          name
+        }
+      }
+    }"""),
   DELETE_EXTERNAL_DATASET("""
     mutation deleteExtProfile($plan_id: Int!, $dataset_id: Int!) {
       delete_plan_dataset_by_pk(plan_id:$plan_id, dataset_id:$dataset_id) {
         dataset_id
+      }
+    }"""),
+  DELETE_EXTERNAL_EVENT_TYPE("""
+    mutation DeleteExternalEventType($name: String!) {
+      deleteExternalEventType: delete_external_event_type_by_pk(name: $name) {
+        name
+      }
+    }"""),
+  DELETE_EXTERNAL_SOURCE("""
+    mutation DeleteExternalSource($derivationGroupName: String!, $sourceKey: String!) {
+      deleteExternalSource: delete_external_source_by_pk(derivation_group_name: $derivationGroupName, key: $sourceKey) {
+        key
+      }
+    }"""),
+  DELETE_EXTERNAL_SOURCE_TYPE("""
+    mutation DeleteExternalSourceType($name: String!) {
+      deleteExternalSourceType: delete_external_source_type_by_pk(name: $name) {
+        name
       }
     }"""),
   DELETE_MISSION_MODEL("""
@@ -172,6 +236,12 @@ public enum GQL {
           constraint_id
           constraint_revision
         }
+      }
+    }"""),
+  DELETE_PLAN_DERIVATION_GROUP("""
+    mutation DeletePlanExternalSource($derivationGroupName: String!, $planId: Int!) {
+      planDerivationGroupLink: delete_plan_derivation_group_by_pk(derivation_group_name: $derivationGroupName, plan_id: $planId) {
+        derivation_group_name
       }
     }"""),
   DELETE_SCHEDULING_GOAL("""

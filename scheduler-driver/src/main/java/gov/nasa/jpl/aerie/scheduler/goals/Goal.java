@@ -219,7 +219,7 @@ public class Goal {
         if (this.resourceConstraints.size() > 1) {
           goal.resourceConstraints = new And(resourceConstraints);
         } else {
-          goal.resourceConstraints = resourceConstraints.getFirst();
+          goal.resourceConstraints = resourceConstraints.get(0);
         }
       }
 

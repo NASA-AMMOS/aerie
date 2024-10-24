@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.ammos.aerie.procedural.timeline.Interval;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalSource;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.json.BasicParsers;
@@ -60,7 +63,9 @@ import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -979,8 +984,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
 
   @Override
   public ExternalProfiles getExternalProfiles(final PlanId planId)
-  throws MerlinServiceException, IOException
-  {
+  throws MerlinServiceException, IOException {
     final Map<String, LinearProfile> realProfiles = new HashMap<>();
     final Map<String, DiscreteProfile> discreteProfiles = new HashMap<>();
     final var resourceTypes = new ArrayList<ResourceType>();
@@ -1004,7 +1008,48 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
       }
     }
     return new ExternalProfiles(realProfiles, discreteProfiles, resourceTypes);
-}
+  }
+
+  @Override
+  public Map<String, List<ExternalEvent>> getExternalEvents(final PlanId planId, final Instant horizonStart)
+  throws MerlinServiceException, IOException {
+    final var derivationGroupsRequest = """
+        query DerivationGroupsForPlan {
+          plan_derivation_group(where: {plan_id: {_eq: %d}}) {
+            derivation_group_name
+          }
+        }
+        """.formatted(planId.id());
+    final JsonObject derivationGroupsResponse = postRequest(derivationGroupsRequest).get();
+    final var derivationGroups = Json.createArrayBuilder(
+        derivationGroupsResponse.getJsonObject("data").getJsonArray("plan_derivation_group")
+        .stream().map($ -> $.asJsonObject().getString("derivation_group_name")).toList()
+    ).build();
+
+    final var eventsRequest = """
+        query DerivedEventsForPlan {
+          derived_events(where: {derivation_group_name: {_in: %s}}) {
+            source_key
+            event_type_name
+            event_key
+            duration
+            derivation_group_name
+            source_range
+            start_time
+            valid_at
+          }
+        }""".formatted(derivationGroups);
+    final JsonObject eventsResponse = postRequest(eventsRequest).get();
+
+    final var data = eventsResponse.getJsonObject("data").getJsonArray("derived_events");
+    final var unorganized =  parseExternalEvents(data, horizonStart);
+    final var result = new HashMap<String, List<ExternalEvent>>();
+    for (final var event: unorganized) {
+      final var list = result.computeIfAbsent(event.source.derivationGroup, $ -> new ArrayList<>());
+      list.add(event);
+    }
+    return result;
+  }
 
   private Collection<ResourceType> extractResourceTypes(final ProfileSet profileSet){
     final var resourceTypes = new ArrayList<ResourceType>();
@@ -1085,7 +1130,7 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
     return new ProfileSet(realProfiles, discreteProfiles);
   }
 
-  public <Dynamics> ResourceProfile<Optional<Dynamics>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
+  private <Dynamics> ResourceProfile<Optional<Dynamics>> parseProfile(JsonObject profile, JsonParser<Dynamics> dynamicsParser){
     // Profile segments are stored with their start offset relative to simulation start
     // We must convert these to durations describing how long each segment lasts
     final var type = chooseP(discreteValueSchemaTypeP, realValueSchemaTypeP).parse(profile.getJsonObject("type")).getSuccessOrThrow();
@@ -1128,6 +1173,27 @@ public record GraphQLMerlinDatabaseService(URI merlinGraphqlURI, String hasuraGr
       }
     }
     return ResourceProfile.of(type, segments);
+  }
+
+  private List<ExternalEvent> parseExternalEvents(final JsonArray eventsJson, final Instant horizonStart) {
+    final var result = new ArrayList<ExternalEvent>();
+    for (final var eventJson : eventsJson) {
+      final var e = eventJson.asJsonObject();
+      final var start = new Duration(
+          horizonStart.until(ZonedDateTime.parse(e.getString("start_time")).toInstant(), ChronoUnit.MICROS)
+      );
+      final var end = start.plus(Duration.fromString(e.getString("duration")));
+      result.add(new ExternalEvent(
+          e.getString("event_key"),
+          e.getString("event_type_name"),
+          new ExternalSource(
+              e.getString("source_key"),
+              e.getString("derivation_group_name")
+          ),
+          Interval.between(start, end)
+      ));
+    }
+    return result;
   }
 
   private Map<ActivityInstanceId, ActivityInstance> parseSimulatedActivities(JsonArray simulatedActivitiesArray, Instant simulationStart)
