@@ -1035,19 +1035,17 @@ public class HasuraRequests implements AutoCloseable {
     );
   }
 
-  public void updatePlanConstraintSpecVersion(int planId, int constraintId, int constraintRevision) throws IOException {
+  public void updatePlanConstraintSpecVersion(int invocationId, int constraintRevision) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("plan_id", planId)
-                              .add("constraint_id", constraintId)
+                              .add("invocation_id", invocationId)
                               .add("constraint_revision", constraintRevision)
                               .build();
     makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_VERSION, variables);
   }
 
-  public void updatePlanConstraintSpecEnabled(int planId, int invocationId, boolean enabled) throws IOException {
+  public void updatePlanConstraintSpecEnabled(int invocationId, boolean enabled) throws IOException {
     final var variables = Json.createObjectBuilder()
-                              .add("plan_id", planId)
-                              .add("constraint_invocation_id", invocationId)
+                              .add("invocation_id", invocationId)
                               .add("enabled", enabled)
                               .build();
     makeRequest(GQL.UPDATE_CONSTRAINT_SPEC_ENABLED, variables);
