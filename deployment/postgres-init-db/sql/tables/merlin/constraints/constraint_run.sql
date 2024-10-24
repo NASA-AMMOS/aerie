@@ -2,6 +2,8 @@ create table merlin.constraint_run (
   constraint_id integer not null,
   constraint_revision integer not null,
   simulation_dataset_id integer not null,
+  constraint_invocation_id integer not null,
+  arguments jsonb not null,
 
   results jsonb not null default '{}',
 
@@ -10,7 +12,7 @@ create table merlin.constraint_run (
   requested_at timestamptz not null default now(),
 
   constraint constraint_run_key
-    primary key (constraint_id, constraint_revision, simulation_dataset_id),
+    primary key (constraint_invocation_id, arguments, simulation_dataset_id),
   constraint constraint_run_to_constraint_definition
     foreign key (constraint_id, constraint_revision)
       references merlin.constraint_definition

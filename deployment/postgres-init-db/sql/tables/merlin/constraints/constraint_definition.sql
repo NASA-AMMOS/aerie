@@ -1,7 +1,11 @@
 create table merlin.constraint_definition(
   constraint_id integer not null,
   revision integer not null default 0,
-  definition text not null,
+
+  type merlin.goal_type not null default 'EDSL',
+  definition text,
+  uploaded_jar_id integer,
+  parameter_schema jsonb,
   author text,
   created_at timestamptz not null default now(),
 
@@ -16,7 +20,18 @@ create table merlin.constraint_definition(
     foreign key (author)
     references permissions.users
     on update cascade
-    on delete set null
+    on delete set null,
+  constraint scheduling_procedure_has_uploaded_jar
+    foreign key (uploaded_jar_id)
+      references merlin.uploaded_file
+      on update cascade
+      on delete restrict,
+  constraint check_goal_definition_type_consistency
+    check (
+      (type = 'EDSL' and definition is not null and uploaded_jar_id is null)
+      or
+      (type = 'JAR' and uploaded_jar_id is not null and definition is null)
+    )
 );
 
 comment on table merlin.constraint_definition is e''
