@@ -4,7 +4,7 @@ COPY build/distributions/*.tar /usr/src/app/server.tar
 RUN mkdir -p /usr/src/app/extracted \
     && tar --strip-components 1 -xf /usr/src/app/server.tar -C /usr/src/app/extracted
 
-FROM node:24.18.0-bullseye-slim AS dsl-node-builder
+FROM node:24.18.0-bookworm-slim AS dsl-node-builder
 
 WORKDIR /opt/constraints-dsl-compiler
 
@@ -22,7 +22,7 @@ RUN npm ci --ignore-scripts \
 COPY constraints-dsl-compiler/ ./
 RUN npm run build && npm prune --omit=dev
 
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-noble
 
 COPY --from=extractor /usr/src/app/extracted /usr/src/app
 COPY --from=dsl-node-builder /usr/local/bin/node /usr/local/bin/node
