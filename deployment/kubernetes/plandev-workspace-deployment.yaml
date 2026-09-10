@@ -26,9 +26,9 @@ spec:
             - name: JAVA_OPTS
               value: |
                 -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO -Dorg.slf4j.simpleLogger.logFile=System.err
-            - name: AERIE_DB_HOST
+            - name: PLANDEV_DB_HOST
               value: postgres
-            - name: AERIE_DB_PORT
+            - name: PLANDEV_DB_PORT
               value: "5432"
             - name: SEQUENCING_DB_USER
               valueFrom:

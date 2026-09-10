@@ -20,14 +20,14 @@ spec:
             - containerPort: 27183
           volumeMounts:
             - mountPath: /usr/src/app/merlin_file_store
-              name: aerie-file-store
+              name: plandev-file-store
           env:
             - name: JAVA_OPTS
               value: |
                 -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.logFile=System.err
-            - name: AERIE_DB_PORT
+            - name: PLANDEV_DB_PORT
               value: "5432"
-            - name: AERIE_DB_HOST
+            - name: PLANDEV_DB_HOST
               value: postgres
             - name: MERLIN_LOCAL_STORE
               value: /usr/src/app/merlin_file_store
@@ -47,6 +47,6 @@ spec:
                   key: MERLIN_PASSWORD
       restartPolicy: Always
       volumes:
-        - name: aerie-file-store
+        - name: plandev-file-store
           persistentVolumeClaim:
-            claimName: aerie-file-store
+            claimName: plandev-file-store

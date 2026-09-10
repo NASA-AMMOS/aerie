@@ -21,7 +21,7 @@ spec:
           resources: {}
           volumeMounts:
             - mountPath: /usr/src/app/merlin_file_store
-              name: aerie-file-store
+              name: plandev-file-store
               readOnly: true
           env:
             - name: HASURA_GRAPHQL_ADMIN_SECRET
@@ -38,9 +38,9 @@ spec:
               value: /usr/src/app/merlin_file_store
             - name: SCHEDULER_OUTPUT_MODE
               value: UpdateInputPlanWithNewActivities
-            - name: AERIE_DB_PORT
+            - name: PLANDEV_DB_PORT
               value: "5432"
-            - name: AERIE_DB_HOST
+            - name: PLANDEV_DB_HOST
               value: postgres
             - name: SCHEDULER_DB_USER
               valueFrom:
@@ -54,7 +54,7 @@ spec:
                   key: SCHEDULER_PASSWORD
       restartPolicy: Always
       volumes:
-        - name: aerie-file-store
+        - name: plandev-file-store
           persistentVolumeClaim:
-            claimName: aerie-file-store
+            claimName: plandev-file-store
             readOnly: true
