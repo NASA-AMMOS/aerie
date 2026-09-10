@@ -41,6 +41,8 @@ spec:
               value: postgres
             - name: PLANDEV_DB_PORT
               value: "5432"
+            - name: PLANDEV_DB
+              value: plandev
             - name: GATEWAY_DB_USER
               valueFrom:
                 secretKeyRef:

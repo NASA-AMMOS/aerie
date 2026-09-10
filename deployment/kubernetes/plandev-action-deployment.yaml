@@ -38,6 +38,8 @@ spec:
               value: "5432"
             - name: PLANDEV_DB_HOST
               value: postgres
+            - name: PLANDEV_DB
+              value: plandev
             - name: ACTION_COOKIE_NAMES
               valueFrom:
                 secretKeyRef:

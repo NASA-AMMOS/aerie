@@ -36,6 +36,8 @@ spec:
               value: "5432"
             - name: PLANDEV_DB_HOST
               value: postgres
+            - name: PLANDEV_DB
+              value: plandev
             - name: SCHEDULER_PORT
               value: "27185"
             - name: SCHEDULER_DB_USER

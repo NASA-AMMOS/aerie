@@ -24,6 +24,10 @@ spec:
           env:
             - name: POSTGRES_DB
               value: postgres
+            - name: PLANDEV_DB
+              value: plandev
+            - name: PLANDEV_METADATA_DB
+              value: plandev_hasura
           envFrom:
             - secretRef:
                 name: dev-env

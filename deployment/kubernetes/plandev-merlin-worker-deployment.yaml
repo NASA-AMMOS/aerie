@@ -31,6 +31,8 @@ spec:
               value: "5432"
             - name: PLANDEV_DB_HOST
               value: postgres
+            - name: PLANDEV_DB
+              value: plandev
             - name: MERLIN_WORKER_LOCAL_STORE
               value: /usr/src/app/merlin_file_store
             - name: UNTRUE_PLAN_START
