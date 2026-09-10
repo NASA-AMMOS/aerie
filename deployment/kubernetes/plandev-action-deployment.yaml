@@ -21,7 +21,7 @@ spec:
           resources: {}
           volumeMounts:
             - mountPath: /usr/src/app/action_file_store
-              name: aerie-file-store
+              name: plandev-file-store
           env:
             - name: HASURA_GRAPHQL_JWT_SECRET
               valueFrom:
@@ -34,10 +34,12 @@ spec:
               value: warn
             - name: MERLIN_GRAPHQL_URL
               value: http://hasura:8080/v1/graphql
-            - name: AERIE_DB_PORT
+            - name: PLANDEV_DB_PORT
               value: "5432"
-            - name: AERIE_DB_HOST
+            - name: PLANDEV_DB_HOST
               value: postgres
+            - name: PLANDEV_DB
+              value: plandev
             - name: ACTION_COOKIE_NAMES
               valueFrom:
                 secretKeyRef:
@@ -64,6 +66,6 @@ spec:
                   key: SEQUENCING_PASSWORD
       restartPolicy: Always
       volumes:
-        - name: aerie-file-store
+        - name: plandev-file-store
           persistentVolumeClaim:
-            claimName: aerie-file-store
+            claimName: plandev-file-store

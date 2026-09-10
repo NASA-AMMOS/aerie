@@ -20,12 +20,14 @@ spec:
             - containerPort: 9000
           volumeMounts:
             - mountPath: /app/files
-              name: aerie-file-store
+              name: plandev-file-store
           env:
             - name: AUTH_TYPE
               value: none
             - name: GQL_API_URL
               value: http://localhost:8080/v1/graphql
+            - name: HASURA_API_URL
+              value: http://hasura:8080/
             - name: HASURA_GRAPHQL_JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -37,10 +39,12 @@ spec:
               value: warn
             - name: PORT
               value: "9000"
-            - name: AERIE_DB_HOST
+            - name: PLANDEV_DB_HOST
               value: postgres
-            - name: AERIE_DB_PORT
+            - name: PLANDEV_DB_PORT
               value: "5432"
+            - name: PLANDEV_DB
+              value: plandev
             - name: GATEWAY_DB_USER
               valueFrom:
                 secretKeyRef:
@@ -52,6 +56,8 @@ spec:
                   name: dev-env
                   key: GATEWAY_PASSWORD
       volumes:
-        - name: aerie-file-store
+        # PlanDev Gateway runs as a non-root user
+        # Ensure the file-store volume is writable by the container `node` user.
+        - name: plandev-file-store
           persistentVolumeClaim:
-            claimName: aerie-file-store
+            claimName: plandev-file-store

@@ -19,21 +19,31 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: PLANDEV_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: PLANDEV_USERNAME
+            - name: PLANDEV_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: PLANDEV_PASSWORD
             - name: PLANDEV_DATABASE_URL
-              value: postgres://aerie:aerie@postgres:5432/plandev?options=-c%20search_path%3Dutil_functions%2Chasura%2Cpermissions%2Ctags%2Cmerlin%2Cscheduler%2Csequencing%2Cactions%2Cui%2Cpublic
+              value: "postgres://$(PLANDEV_USERNAME):$(PLANDEV_PASSWORD)@postgres:5432/plandev?options=-c%20search_path%3Dutil_functions%2Chasura%2Cpermissions%2Ctags%2Cmerlin%2Cscheduler%2Csequencing%2Cactions%2Cui%2Cpublic"
             - name: PLANDEV_MERLIN_URL
-              value: http://plandev_merlin:27183
+              value: http://plandev-merlin:27183
             - name: PLANDEV_SCHEDULER_URL
-              value: http://plandev_scheduler:27185
+              value: http://plandev-scheduler:27185
             - name: PLANDEV_SEQUENCING_URL
-              value: http://plandev_sequencing:27184
+              value: http://plandev-sequencing:27184
             - name: HASURA_GRAPHQL_ADMIN_SECRET
               valueFrom:
                 secretKeyRef:
                   name: dev-env
                   key: HASURA_GRAPHQL_ADMIN_SECRET
             - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
-              value: postgres://aerie:aerie@postgres:5432/plandev_hasura
+              value: "postgres://$(PLANDEV_USERNAME):$(PLANDEV_PASSWORD)@postgres:5432/plandev_hasura"
             - name: HASURA_GRAPHQL_DEV_MODE
               value: "true"
             - name: HASURA_GRAPHQL_ENABLED_LOG_TYPES
