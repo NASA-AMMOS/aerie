@@ -26,6 +26,8 @@ spec:
               value: none
             - name: GQL_API_URL
               value: http://localhost:8080/v1/graphql
+            - name: HASURA_API_URL
+              value: http://hasura:8080/
             - name: HASURA_GRAPHQL_JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -54,6 +56,8 @@ spec:
                   name: dev-env
                   key: GATEWAY_PASSWORD
       volumes:
+        # PlanDev Gateway runs as a non-root user
+        # Ensure the file-store volume is writable by the container `node` user.
         - name: plandev-file-store
           persistentVolumeClaim:
             claimName: plandev-file-store
