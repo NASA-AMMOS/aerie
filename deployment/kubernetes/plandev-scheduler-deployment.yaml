@@ -18,6 +18,7 @@ spec:
           image: ghcr.io/nasa-ammos/plandev-scheduler:develop
           ports:
             - containerPort: 27185
+            - containerPort: 8080
           volumeMounts:
             - mountPath: /usr/src/app/merlin_file_store
               name: plandev-file-store

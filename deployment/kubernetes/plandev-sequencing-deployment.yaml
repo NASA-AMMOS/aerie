@@ -18,6 +18,7 @@ spec:
           image: ghcr.io/nasa-ammos/plandev-sequencing:develop
           ports:
             - containerPort: 27184
+            - containerPort: 8080
           resources: {}
           volumeMounts:
             - mountPath: /usr/src/app/sequencing_file_store
