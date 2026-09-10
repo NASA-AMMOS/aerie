@@ -4,6 +4,7 @@
 import os
 import argparse
 import sys
+import shlex
 import shutil
 import subprocess
 from dotenv import load_dotenv
@@ -62,14 +63,15 @@ class Hasura:
     self.endpoint = self.endpoint.rstrip('/')
 
     # Set up the suffix flags to use when calling the Hasura CLI
-    self.command_suffix = f'--skip-update-check --project {hasura_path}'
+    self.command_suffix = f'--skip-update-check --project {shlex.quote(hasura_path)}'
     if env_path:
-      self.command_suffix += f' --envfile {env_path}'
+      self.command_suffix += f' --envfile {shlex.quote(env_path)}'
+
 
     # Set up the suffix flags to use when calling the 'migrate' subcommand on the CLI
-    self.migrate_suffix = f"--database-name {self.db_name} --endpoint {self.endpoint} --admin-secret '{self.admin_secret}'"
+    self.migrate_suffix = f'--database-name {shlex.quote(self.db_name)} --endpoint {shlex.quote(self.endpoint)} --admin-secret {shlex.quote(self.admin_secret)}'
     # Suffix flags to use when calling the 'metadata' subcommands on the CLI
-    self.metadata_suffix = f"--endpoint {self.endpoint} --admin-secret '{self.admin_secret}'"
+    self.metadata_suffix = f'--endpoint {shlex.quote(self.endpoint)} --admin-secret {shlex.quote(self.admin_secret)}'
 
     # Check that Hasura CLI is installed
     if not shutil.which('hasura'):
