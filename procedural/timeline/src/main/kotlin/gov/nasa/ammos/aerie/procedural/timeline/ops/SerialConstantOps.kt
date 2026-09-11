@@ -87,6 +87,35 @@ interface SerialConstantOps<V: Any, THIS: SerialConstantOps<V, THIS>>: SerialSeg
   /** Alias for [greaterThanOrEqualTo]. */
   infix fun noShorterThan(other: SerialConstantOps<V, *>) = greaterThanOrEqualTo(other)
 
+  /**
+   * [(DOC)][contains] Returns a [Booleans] that is `true` when this profile's value contains [v], where
+   * "contains" is interpreted according to the runtime type of [V] and [v]:
+   * - if [V] is a [CharSequence] (e.g. [String]) and [v] is a [CharSequence], this checks for substring containment.
+   * - if [V] is a [CharSequence] and [v] is a [Char], this checks whether that character occurs in the string.
+   * - if [V] is an [Iterable] or [Array] and [v] is also an [Iterable] or [Array], this checks whether every
+   *   element of [v] is present somewhere in [V] (not necessarily contiguous or in the same order).
+   * - if [V] is an [Iterable] or [Array] and [v] is anything else, this checks whether [v] itself is one of the
+   *   elements of [V].
+   *
+   * @throws UnsupportedOperationException if [V] and [v] don't match any of the above at runtime.
+   */
+  infix fun contains(v: Any): Booleans = mapValues(::Booleans) { seg ->
+    val l = seg.value
+    when {
+      l is CharSequence && v is CharSequence -> l.contains(v)
+      l is CharSequence && v is Char -> l.contains(v)
+      l is Iterable<*> && v is Iterable<*> -> l.toList().containsAll(v.toList())
+      l is Iterable<*> && v is Array<*> -> l.toList().containsAll(v.toList())
+      l is Iterable<*> -> l.contains(v)
+      l is Array<*> && v is Iterable<*> -> l.toList().containsAll(v.toList())
+      l is Array<*> && v is Array<*> -> l.toList().containsAll(v.toList())
+      l is Array<*> -> l.contains(v)
+      else -> throw UnsupportedOperationException(
+          "contains is not supported for type ${l::class.java.name}"
+      )
+    }
+  }
+
   override fun changes() = detectEdges(NullBinaryOperation.combineOrNull { l, r, _-> l != r })
 
   /**
