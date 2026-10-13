@@ -71,7 +71,8 @@ class WorkspaceFileSystemServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {
         ".git", ".git/HEAD", ".git/config", ".git/refs/heads/main", "foo/.git", "foo/.git/config", ".GIT/HEAD",
-        "a/../.git/HEAD", ".gitignore", "x/.gitattributes", ".gitmodules", ".seqdev", ".seqdev/state.json"})
+        "a/../.git/HEAD", ".gitignore", "x/.gitattributes", ".gitmodules", ".seqdev", ".seqdev/state.json",
+        ".seqdevkeep", "empty/.SEQDEVKEEP"})
     void reservedPathsAreRejected(String path) {
       assertThrows(ReservedPathException.class, () -> service.resolveReadingPath(root, Path.of(path)));
       assertThrows(ReservedPathException.class, () -> service.resolveWritingPath(root, Path.of(path)));

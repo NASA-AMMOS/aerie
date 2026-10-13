@@ -32,7 +32,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,16 +66,16 @@ import java.util.function.Predicate;
  * untracked files, and no ignored file exists outside .seqdev/. Ignore rules are fully controlled here:
  * core.excludesFile points at /dev/null, .git/info/exclude contains only /.seqdev/,
  * and .gitignore or .gitattributes cannot exist in the tree ({@link WorkspacePaths}). Outside the
- * definition by design: .git/ itself, .seqdev/ (temporary files, never committed) and empty
- * directories (not representable in Git; creating or deleting one produces no commit).
+ * definition by design: .git/ itself and .seqdev/ (temporary files, never committed). Empty directories are
+ * represented by a tracked .seqdevkeep file, which is hidden from workspace APIs.
  *
  * Failure:
  * If the mutation throws, reports failure, or its history cannot be recorded, the workspace is
  * restored to its pre-operation state: tracked files and the index are checked out from the pre-operation HEAD, the
  * paths this operation created (untracked or newly added after it ran; equivalent to "created by this operation"
  * because the repository was verified clean beforehand under the same lock) are removed along with any parent
- * directories that leaves empty. Empty directories are not versioned state, so a pre-existing empty directory the
- * operation removed is not recreated. If restoration itself fails, a
+ * directories that leaves empty. A pre-existing empty directory retains its tracked marker, so only directories the
+ * failed operation created can be pruned. If restoration itself fails, a
  * {@link Kind#REPOSITORY_INCONSISTENT} error is raised rather than claiming success. git clean is never run wholesale,
  * nor is the repository reset on the strength of an unverified assumption.
  *
@@ -352,6 +351,7 @@ public class WorkspaceHistory {
     try (final var git = open(root)) {
       final var repo = git.getRepository();
       configure(root, repo);
+      WorkspacePaths.initializeDirectoryMarkers(root);
       final var unborn = repo.resolve(Constants.HEAD) == null;
       if (stageAll(git) || unborn) {
         requireValidIndex(repo);
@@ -425,8 +425,8 @@ public class WorkspaceHistory {
 
   /**
    * Fail closed if the tree contains reserved names that would make Git skip or rewrite user files, or symbolic links
-   * (unsupported workspace content: one could point into .git or outside the workspace). Only possible for
-   * workspaces created or edited outside the file API, which rejects both. Links are never followed.
+   * (unsupported workspace content: one could point into .git or outside the workspace). A valid empty-directory
+   * marker is accepted so adoption can safely resume after interruption. Links are never followed.
    */
   private static void requireAdoptable(final Path root) throws IOException {
     final var found = new ArrayList<String>();
@@ -443,9 +443,13 @@ public class WorkspaceHistory {
       }
 
       @Override
-      public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
+      public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
         if (attrs.isSymbolicLink()) {
           found.add(WorkspacePaths.key(root, file) + " (symbolic link)");
+        } else if (WorkspacePaths.isDirectoryMarkerName(file.getFileName().toString())) {
+          if (file.getParent().equals(root) || !attrs.isRegularFile() || attrs.size() != 0 || !isOnlyDirectoryEntry(file)) {
+            found.add(WorkspacePaths.key(root, file));
+          }
         } else if (WorkspacePaths.isReservedName(file.getFileName().toString())) {
           found.add(WorkspacePaths.key(root, file));
         }
@@ -458,23 +462,66 @@ public class WorkspaceHistory {
     }
   }
 
-  /** The index (== HEAD once clean) holds only regular files outside reserved names: no symlinks or submodules. */
+  private static boolean isOnlyDirectoryEntry(final Path file) throws IOException {
+    try (final var entries = Files.list(file.getParent())) {
+      return entries.allMatch(file::equals);
+    }
+  }
+
+  /** The index (== HEAD once clean) holds plain user files plus empty-directory markers: no symlinks or submodules. */
   private static void requireValidIndex(final Repository repo) throws IOException {
     final var bad = new ArrayList<String>();
+    final var markers = new HashSet<String>();
+    final var occupiedDirectories = new HashSet<String>();
     final var index = repo.readDirCache();
     for (int i = 0; i < index.getEntryCount(); i++) {
       final var entry = index.getEntry(i);
       final var path = entry.getPathString();
       final var mode = entry.getRawMode();
+      final var directoryMarker = isDirectoryMarkerPath(path);
+      if (directoryMarker) markers.add(path);
+
+      // Any non-marker path makes each ancestor directory non-empty. A nested marker also makes its ancestors
+      // non-empty, but not its own directory.
+      final var ownDirectoryEnd = path.lastIndexOf('/');
+      for (int slash = path.indexOf('/'); slash >= 0; slash = path.indexOf('/', slash + 1)) {
+        if (!directoryMarker || slash != ownDirectoryEnd) occupiedDirectories.add(path.substring(0, slash));
+      }
       if (!FileMode.REGULAR_FILE.equals(mode) && !FileMode.EXECUTABLE_FILE.equals(mode)) {
         bad.add(path + " (" + entry.getFileMode() + ")");
-      } else if (Arrays.stream(path.split("/")).anyMatch(WorkspacePaths::isReservedName)) {
+      } else if (directoryMarker && !FileMode.REGULAR_FILE.equals(mode)) {
+        bad.add(path + " (" + entry.getFileMode() + ")");
+      } else if (directoryMarker && repo.open(entry.getObjectId(), Constants.OBJ_BLOB).getSize() != 0) {
+        bad.add(path + " (non-empty directory marker)");
+      } else if (hasUnsupportedTrackedSegment(path)) {
         bad.add(path);
+      }
+    }
+    for (final var marker : markers) {
+      final var directory = marker.substring(0, marker.lastIndexOf('/'));
+      if (occupiedDirectories.contains(directory)) {
+        bad.add(marker + " (directory is not empty)");
       }
     }
     if (!bad.isEmpty()) {
       throw inconsistent("Workspace at %s tracks unsupported paths %s.".formatted(repo.getWorkTree(), summarize(bad)));
     }
+  }
+
+  private static boolean isDirectoryMarkerPath(final String path) {
+    final var segments = path.split("/");
+    return segments.length > 1 && WorkspacePaths.isDirectoryMarkerName(segments[segments.length - 1]);
+  }
+
+  private static boolean hasUnsupportedTrackedSegment(final String path) {
+    final var segments = path.split("/");
+    for (int i = 0; i < segments.length; i++) {
+      if (!WorkspacePaths.isReservedName(segments[i])) continue;
+      // Only the exact marker name is allowed, and only as a file inside a user directory.
+      if (i == segments.length - 1 && isDirectoryMarkerPath(path)) continue;
+      return true;
+    }
+    return false;
   }
 
   static WorkspaceHistoryException inconsistent(final String message) {
@@ -600,8 +647,8 @@ public class WorkspaceHistory {
       checkout.setFailOnConflict(false);
       checkout.checkout();
 
-      // Remove what the operation created, then any parent directory that leaves empty (empty directories are not
-      // versioned state; this only avoids leaving a failed save's new folders behind).
+      // Remove what the operation created, then any parent directory that leaves empty. Existing empty directories
+      // have a tracked marker restored above, so this pruning can only remove directories created by this operation.
       for (final var path : created) {
         var p = root.resolve(path);
         Files.deleteIfExists(p);

@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
  *   once Git remote interoperability exists.
  * - .seqdev holds same-filesystem temporary files used for atomic replacement. It is never committed and is not part
  *   of the versioned workspace.
+ * - .seqdevkeep is an empty, tracked marker for an otherwise empty directory. It is managed by the server and hidden
+ *   from workspace APIs.
  *
  * Reserved names are rejected at every path segment, case-insensitively, by
  * {@link WorkspaceFileSystemService#resolveReadingPath}, so no user-facing file API can read or write them.
@@ -36,12 +38,19 @@ public final class WorkspacePaths {
 
   public static final String GIT_DIR = ".git";
   public static final String INTERNAL_DIR = ".seqdev";
+  public static final String DIRECTORY_MARKER = ".seqdevkeep";
 
-  private static final Set<String> RESERVED = Set.of(GIT_DIR, ".gitignore", ".gitattributes", ".gitmodules", INTERNAL_DIR);
+  private static final Set<String> RESERVED = Set.of(
+      GIT_DIR, ".gitignore", ".gitattributes", ".gitmodules", INTERNAL_DIR, DIRECTORY_MARKER);
   private static final Pattern TEMP_FILE = Pattern.compile("tmp-\\p{XDigit}{8}(-\\p{XDigit}{4}){3}-\\p{XDigit}{12}");
 
   public static boolean isReservedName(final String segment) {
     return RESERVED.contains(segment.toLowerCase(Locale.ROOT));
+  }
+
+  /** Exact match for the server-owned directory marker; case variants remain reserved but are not valid markers. */
+  public static boolean isDirectoryMarkerName(final String name) {
+    return DIRECTORY_MARKER.equals(name);
   }
 
   /** The first reserved segment of a workspace-relative path, or null if it has none. */
@@ -56,6 +65,63 @@ public final class WorkspacePaths {
   public static String key(final Path root, final Path absolutePath) {
     final var relative = root.normalize().relativize(absolutePath.normalize());
     return relative.toString().replace(relative.getFileSystem().getSeparator(), "/");
+  }
+
+  /**
+   * Create a directory tree and update markers from the leaf back toward the workspace root. A new leaf gets a marker;
+   * any parent containing that leaf is no longer empty and loses its marker.
+   */
+  public static void createDirectories(final Path root, final Path directory) throws IOException {
+    final var normalizedRoot = root.normalize();
+    final var normalizedDirectory = directory.normalize();
+    if (!normalizedDirectory.startsWith(normalizedRoot)) {
+      throw new IOException("Directory " + directory + " is outside workspace " + root);
+    }
+
+    Files.createDirectories(normalizedDirectory);
+    for (var current = normalizedDirectory; !current.equals(normalizedRoot); current = current.getParent()) {
+      updateDirectoryMarker(normalizedRoot, current);
+    }
+  }
+
+  /** Add markers to empty directories already present when a workspace is first adopted. */
+  public static void initializeDirectoryMarkers(final Path root) throws IOException {
+    for (final var path : walk(root, Integer.MAX_VALUE)) {
+      if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) updateDirectoryMarker(root, path);
+    }
+  }
+
+  /** Keep the marker in one directory exactly when it has no other entries. The workspace root needs no marker. */
+  public static void updateDirectoryMarker(final Path root, final Path directory) throws IOException {
+    final var normalizedRoot = root.normalize();
+    final var normalizedDirectory = directory.normalize();
+    if (normalizedDirectory.equals(normalizedRoot)) return;
+    if (!normalizedDirectory.startsWith(normalizedRoot)) {
+      throw new IOException("Directory " + directory + " is outside workspace " + root);
+    }
+    if (!Files.isDirectory(normalizedDirectory, LinkOption.NOFOLLOW_LINKS)) return;
+
+    final var marker = normalizedDirectory.resolve(DIRECTORY_MARKER);
+    if (Files.exists(marker, LinkOption.NOFOLLOW_LINKS)
+        && (!Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS) || Files.size(marker) != 0)) {
+      throw new IOException("Invalid directory marker " + marker);
+    }
+
+    final boolean otherwiseEmpty;
+    try (final var entries = Files.list(normalizedDirectory)) {
+      otherwiseEmpty = entries.allMatch(path -> isDirectoryMarkerName(path.getFileName().toString()));
+    }
+    if (otherwiseEmpty) {
+      if (!Files.exists(marker, LinkOption.NOFOLLOW_LINKS)) Files.createFile(marker);
+    } else {
+      Files.deleteIfExists(marker);
+    }
+  }
+
+  /** Let a filesystem rename replace a marker-only directory just as it previously replaced a literally empty one. */
+  public static void removeEmptyDirectoryMarker(final Path root, final Path directory) throws IOException {
+    updateDirectoryMarker(root, directory);
+    Files.deleteIfExists(directory.resolve(DIRECTORY_MARKER));
   }
 
   /**

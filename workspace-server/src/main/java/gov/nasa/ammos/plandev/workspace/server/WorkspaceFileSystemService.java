@@ -19,6 +19,7 @@ import java.io.StringWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
@@ -412,7 +413,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var md = WorkspaceService.newSHA256Digest();
     final var tmp = WorkspacePaths.tempFile(repoPath);
     try {
-      Files.createDirectories(path.getParent());
+      WorkspacePaths.createDirectories(repoPath, path.getParent());
       try (final var contentStream = new DigestInputStream(file.content(), md)) {
         Files.copy(contentStream, tmp);
       }
@@ -424,6 +425,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
       Files.deleteIfExists(tmp);
     }
     updateMetadata(repoPath, filePath, metadataUpdates, MetadataMergeBehavior.deepMerge);
+    WorkspacePaths.updateDirectoryMarker(repoPath, path.getParent());
     return Optional.of(WorkspaceService.eTagFromDigest(md.digest()));
   }
 
@@ -456,6 +458,8 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     updateMetadata(newRepoPath, newFilePath, metadataUpdates, MetadataMergeBehavior.deepMerge);
 
     Files.move(oldPath, newPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+    WorkspacePaths.updateDirectoryMarker(oldRepoPath, oldPath.getParent());
+    WorkspacePaths.updateDirectoryMarker(newRepoPath, newPath.getParent());
     return true;
   }
 
@@ -486,7 +490,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
           sourceWorkspaceId));
     }
     // Create any parent directories that don't already exist
-    Files.createDirectories(destPath.getParent());
+    WorkspacePaths.createDirectories(destRepoPath, destPath.getParent());
     copyAsNewFile(sourcePath, sourceMetadataPath, destRepoPath, destPath, destMetadataPath, userId, Instant.now());
     return true;
   }
@@ -520,6 +524,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
         .build();
     updateMetadata(destRoot, destRoot.normalize().relativize(destPath), metadataUpdates, MetadataMergeBehavior.deepMerge);
     Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+    WorkspacePaths.updateDirectoryMarker(destRoot, destPath.getParent());
   }
 
   @Override
@@ -540,7 +545,9 @@ public class WorkspaceFileSystemService implements WorkspaceService {
       }
     }
 
-    return rm(file);
+    final var deleted = rm(file);
+    if (deleted) WorkspacePaths.updateDirectoryMarker(repoPath, path.getParent());
+    return deleted;
   }
   //endregion
 
@@ -555,7 +562,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     }
     // Convert to our API from the Files API
     final var walkDepth = depth == -1 ? Integer.MAX_VALUE : depth + 1;
-    final var walkList = WorkspacePaths.walk(path, walkDepth); // never includes .git or .seqdev
+    final var walkList = WorkspacePaths.walk(path, walkDepth); // never includes Git or SeqDev internals
     final var view = withMetadata
         ? metadataView(root, walkList)
         : (BiFunction<Path, JsonObject, JsonObject>) (p, m) -> m;
@@ -568,7 +575,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     history.requireLocked(workspaceId);
     final var repoPath = roots.workspaceRootPath(workspaceId);
     final var path = resolveWritingPath(repoPath, directoryPath);
-    Files.createDirectories(path);
+    WorkspacePaths.createDirectories(repoPath, path);
     return true;
   }
 
@@ -595,7 +602,15 @@ public class WorkspaceFileSystemService implements WorkspaceService {
       throw new WorkspaceFileOpException("Cannot move a directory into itself.");
     }
 
-    return oldPath.toFile().renameTo(newPath.toFile());
+    if (Files.isDirectory(newPath, LinkOption.NOFOLLOW_LINKS)) {
+      WorkspacePaths.removeEmptyDirectoryMarker(newRepoPath, newPath);
+    }
+    final var moved = oldPath.toFile().renameTo(newPath.toFile());
+    if (moved) {
+      WorkspacePaths.updateDirectoryMarker(oldRepoPath, oldPath.getParent());
+      WorkspacePaths.updateDirectoryMarker(newRepoPath, newPath.getParent());
+    }
+    return moved;
   }
 
   @Override
@@ -631,11 +646,11 @@ public class WorkspaceFileSystemService implements WorkspaceService {
       // Every content file is copied exactly as copyFile copies one; sidecars travel with their content file, and a
       // sidecar whose content file is gone is metadata of nothing and is not copied.
       final var now = Instant.now();
-      Files.createDirectories(destPath);
+      WorkspacePaths.createDirectories(destRepoPath, destPath);
       for (final var source : WorkspacePaths.walk(sourcePath, Integer.MAX_VALUE)) {
         final Path target = destPath.resolve(sourcePath.relativize(source));
         if (Files.isDirectory(source)) {
-          Files.createDirectories(target);
+          WorkspacePaths.createDirectories(destRepoPath, target);
         } else if (!RenderType.isAerieMetadataFile(source.getFileName().toString())) {
           final var sidecarName = RenderType.toMetadataFileName(source.getFileName().toString());
           copyAsNewFile(source, source.resolveSibling(sidecarName), destRepoPath, target, target.resolveSibling(sidecarName), userId, now);
@@ -659,7 +674,9 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     if (path.equals(repoPath.normalize())) {
       throw new WorkspaceFileOpException("Cannot delete the workspace root directory.");
     }
-    return rmDirectory(path.toFile());
+    final var deleted = rmDirectory(path.toFile());
+    if (deleted) WorkspacePaths.updateDirectoryMarker(repoPath, path.getParent());
+    return deleted;
   }
 
   /** Whether a file's metadata marks it read-only. */
@@ -874,6 +891,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var path = metadataFile.toPath();
     if (Files.isRegularFile(path) && Files.readString(path, StandardCharsets.UTF_8).equals(serialized)) return;
     WorkspacePaths.writeAtomically(root, path, serialized.getBytes(StandardCharsets.UTF_8));
+    WorkspacePaths.updateDirectoryMarker(root, path.getParent());
   }
 
   /** The on-disk (and committed) form of a sidecar. Null fields are omitted; a missing version defaults to "1". */
@@ -1155,7 +1173,9 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     if(!metadataFilePath.toFile().exists()) {
       return true;
     }
-    return rm(metadataFilePath.toFile());
+    final var deleted = rm(metadataFilePath.toFile());
+    if (deleted) WorkspacePaths.updateDirectoryMarker(root, metadataFilePath.getParent());
+    return deleted;
   }
   //endregion
 }

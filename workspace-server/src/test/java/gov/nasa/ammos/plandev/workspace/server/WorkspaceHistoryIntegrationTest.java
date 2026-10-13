@@ -212,9 +212,9 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
-  /** Initialize a workspace's history (an empty directory creation is a no-op mutation). */
+  /** Initialize a workspace's history without adding workspace content. */
   private void init(final int ws) {
-    assertSuccess(bindings.handleCreateDirectory(ws, Path.of("scratch"), USER));
+    assertDoesNotThrow(() -> history.mutate(ws, USER, "unused", () -> true, result -> result));
   }
   //endregion
 
@@ -344,7 +344,7 @@ class WorkspaceHistoryIntegrationTest {
   class FailureSemantics {
     /**
      * Deterministic injection at the mutation boundary: every kind of file change is rolled back. Empty directories
-     * are not versioned state, so the layout of empty directories is not part of what rollback guarantees.
+     * created through the service are versioned by their marker and therefore have the same rollback guarantee.
      */
     @Test
     void injectedCommitFailureRestoresThePreOperationState() throws Exception {
@@ -462,6 +462,75 @@ class WorkspaceHistoryIntegrationTest {
       saveOk(WS1, "b.txt", "content");
       assertSuccess(bindings.handleDelete(WS1, Path.of("a.txt"), USER));
       assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headTree(WS1));
+      assertClean(WS1);
+    }
+  }
+
+  @Nested
+  class EmptyDirectories {
+    @BeforeEach
+    void initialize() {
+      init(WS1);
+    }
+
+    @Test
+    void creationAndFileChangesMaintainTheMarker() throws Exception {
+      final var commits = log(WS1).size();
+      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("empty/nested"), USER));
+
+      final var marker = root(WS1).resolve("empty/nested").resolve(WorkspacePaths.DIRECTORY_MARKER);
+      assertEquals(commits + 1, log(WS1).size());
+      assertEquals(Set.of("empty/nested/" + WorkspacePaths.DIRECTORY_MARKER), headTree(WS1));
+      assertEquals(0, Files.size(marker));
+      assertTrue(WorkspacePaths.walk(root(WS1), Integer.MAX_VALUE).stream()
+          .noneMatch(path -> WorkspacePaths.isDirectoryMarkerName(path.getFileName().toString())));
+
+      saveOk(WS1, "empty/nested/a.txt", "content");
+      assertFalse(Files.exists(marker));
+      assertSuccess(bindings.handleDelete(WS1, Path.of("empty/nested/a.txt"), USER));
+      assertTrue(Files.isRegularFile(marker), "deleting the last file keeps its directory in history");
+      assertClean(WS1);
+    }
+
+    @Test
+    void markerSurvivesCopyAndMoveButNotDirectoryDeletion() throws Exception {
+      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("source"), USER));
+      assertSuccess(bindings.handleCopy(Path.of("source"), Path.of("copied"), WS1, WS1, false, USER));
+      assertSuccess(bindings.handleMove(Path.of("copied"), Path.of("moved"), WS1, WS1, false, USER));
+      assertSuccess(bindings.handleDelete(WS1, Path.of("source"), USER));
+
+      assertEquals(Set.of("moved/" + WorkspacePaths.DIRECTORY_MARKER), headTree(WS1));
+      assertTrue(Files.isDirectory(root(WS1).resolve("moved")));
+      assertFalse(Files.exists(root(WS1).resolve("source")));
+      assertFalse(Files.exists(root(WS1).resolve("copied")));
+      assertClean(WS1);
+    }
+
+    @Test
+    void markerDoesNotPreventOverwritingAnEmptyDirectory() throws Exception {
+      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("source"), USER));
+      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("destination"), USER));
+
+      assertSuccess(bindings.handleMove(Path.of("source"), Path.of("destination"), WS1, WS1, true, USER));
+
+      assertEquals(Set.of("destination/" + WorkspacePaths.DIRECTORY_MARKER), headTree(WS1));
+      assertFalse(Files.exists(root(WS1).resolve("source")));
+      assertTrue(Files.isDirectory(root(WS1).resolve("destination")));
+      assertClean(WS1);
+    }
+
+    @Test
+    void failedCreationRemovesOnlyTheNewEmptyDirectory() throws Exception {
+      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("existing"), USER));
+      final var head = head(WS1);
+      history.failCommitsIn.add(root(WS1));
+
+      assertFailure(bindings.handleCreateDirectory(WS1, Path.of("new/nested"), USER), 500, "WORKSPACE_HISTORY_ERROR");
+
+      assertTrue(Files.isDirectory(root(WS1).resolve("existing")));
+      assertTrue(Files.isRegularFile(root(WS1).resolve("existing/" + WorkspacePaths.DIRECTORY_MARKER)));
+      assertFalse(Files.exists(root(WS1).resolve("new")));
+      assertEquals(head, head(WS1));
       assertClean(WS1);
     }
   }
@@ -638,7 +707,7 @@ class WorkspaceHistoryIntegrationTest {
     @Test
     void readsOfGitInternalsAreRejected() {
       for (final var path : List.of(".git/HEAD", ".git/config", ".git/refs/heads/main", "foo/.git/config",
-                                    ".GIT/HEAD", "a/../.git/HEAD", ".seqdev/state.json", ".gitignore")) {
+                                    ".GIT/HEAD", "a/../.git/HEAD", ".seqdev/state.json", ".seqdevkeep", ".gitignore")) {
         assertThrows(ReservedPathException.class, () -> fs.loadFile(WS1, Path.of(path)), path);
         assertThrows(ReservedPathException.class, () -> fs.checkFileExists(WS1, Path.of(path)), path);
       }
@@ -647,7 +716,8 @@ class WorkspaceHistoryIntegrationTest {
     @Test
     void writesOfGitInternalsAreRejected() throws Exception {
       final var config = Files.readString(root(WS1).resolve(".git/config"));
-      for (final var path : List.of(".git/config", ".git/hooks/post-commit", "foo/.git/HEAD", ".gitattributes", ".gitignore", ".seqdev/state.json")) {
+      for (final var path : List.of(".git/config", ".git/hooks/post-commit", "foo/.git/HEAD", ".gitattributes",
+                                    ".gitignore", ".seqdev/state.json", "empty/.seqdevkeep")) {
         assertFailure(save(WS1, path, "evil", "*"), 400, "RESERVED_PATH");
       }
       assertFailure(bindings.handleCreateDirectory(WS1, Path.of("x/.git"), USER), 400, "RESERVED_PATH");
@@ -665,6 +735,7 @@ class WorkspaceHistoryIntegrationTest {
       assertFailure(bindings.handleCopy(Path.of("a.txt"), Path.of(".git/objects/x"), WS1, WS1, true, USER), 400, "RESERVED_PATH");
       assertFailure(bindings.handleDelete(WS1, Path.of(".git"), USER), 400, "RESERVED_PATH");
       assertFailure(bindings.handleDelete(WS1, Path.of(".seqdev/state.json"), USER), 400, "RESERVED_PATH");
+      assertFailure(bindings.handleDelete(WS1, Path.of("empty/.seqdevkeep"), USER), 400, "RESERVED_PATH");
       assertEquals(head, head(WS1));
       assertTrue(Files.isRegularFile(root(WS1).resolve(".git/HEAD")));
       assertFalse(Files.exists(root(WS2).resolve("leak")));
@@ -676,7 +747,8 @@ class WorkspaceHistoryIntegrationTest {
       final var listed = WorkspacePaths.walk(root(WS1), Integer.MAX_VALUE).stream()
                                        .map(p -> root(WS1).relativize(p).toString()).toList();
       assertTrue(listed.contains("a.txt"));
-      assertTrue(listed.stream().noneMatch(p -> p.startsWith(".git") || p.startsWith(".seqdev")), listed::toString);
+      assertTrue(listed.stream().noneMatch(p -> p.startsWith(".git") || p.startsWith(".seqdev")
+          || p.endsWith(WorkspacePaths.DIRECTORY_MARKER)), listed::toString);
     }
   }
 
@@ -765,7 +837,7 @@ class WorkspaceHistoryIntegrationTest {
       init(WS1);
 
       final var commits = log(WS1);
-      assertEquals(1, commits.size(), "creating an empty directory adds nothing beyond the baseline");
+      assertEquals(1, commits.size(), "initialization adds only the baseline");
       assertEquals(WorkspaceHistory.INIT_MESSAGE, commits.getFirst().getFullMessage());
       assertEquals("PlanDev", commits.getFirst().getAuthorIdent().getName());
       assertEquals(Set.of("b.txt", "seq/a.txt", "seq/.a.txt.meta.seqdev"), headTree(WS1));
@@ -805,7 +877,6 @@ class WorkspaceHistoryIntegrationTest {
       init(WS1);
       final var head = head(WS1);
       init(WS1);
-      assertSuccess(bindings.handleCreateDirectory(WS1, Path.of("another"), USER));
       assertEquals(head, head(WS1));
       assertEquals(1, log(WS1).size());
       assertClean(WS1);
@@ -817,6 +888,34 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(1, log(WS2).size());
       assertEquals(Set.of(), headTree(WS2));
       assertClean(WS2);
+    }
+
+    @Test
+    void adoptionAddsMarkersToExistingEmptyDirectories() throws Exception {
+      Files.createDirectories(root(WS1).resolve("one/two"));
+
+      init(WS1);
+
+      assertEquals(Set.of("one/two/" + WorkspacePaths.DIRECTORY_MARKER), headTree(WS1));
+      assertTrue(Files.isDirectory(root(WS1).resolve("one/two")));
+      assertClean(WS1);
+    }
+
+    @Test
+    void adoptionCanResumeAfterMarkerCommitFailure() throws Exception {
+      Files.createDirectories(root(WS1).resolve("empty"));
+      history.failCommitsIn.add(root(WS1));
+
+      assertThrows(GitAPIException.class, () ->
+          history.mutate(WS1, USER, "unused", () -> true, result -> result));
+      assertFalse(history.isManaged(root(WS1)));
+      assertTrue(Files.isRegularFile(root(WS1).resolve("empty/" + WorkspacePaths.DIRECTORY_MARKER)));
+
+      history.failCommitsIn.remove(root(WS1));
+      init(WS1);
+      assertTrue(history.isManaged(root(WS1)));
+      assertEquals(Set.of("empty/" + WorkspacePaths.DIRECTORY_MARKER), headTree(WS1));
+      assertClean(WS1);
     }
 
     @Test
