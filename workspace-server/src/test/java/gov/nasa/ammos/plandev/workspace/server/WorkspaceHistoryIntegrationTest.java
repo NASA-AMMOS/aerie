@@ -1342,6 +1342,47 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(head, head(WS1));
     }
 
+    /** Staging is scoped, so a write that bypasses the scope guard would be left uncommitted: it fails instead. */
+    @Test
+    void anUndeclaredWriteFailsTheMutationAndIsRolledBack() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      final var head = head(WS1);
+      final var ex = assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () ->
+          history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
+            Files.writeString(root(WS1).resolve("a.txt"), "v2");
+            Files.writeString(root(WS1).resolve("undeclared.txt"), "x");
+            return true;
+          }, r -> true));
+      assertEquals(WorkspaceHistory.Kind.HISTORY_NOT_RECORDED, ex.kind);
+      assertEquals(head, head(WS1));
+      assertEquals("v1", read(WS1, "a.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("undeclared.txt")));
+      assertClean(WS1);
+    }
+
+    @Test
+    void eachOperationCommitsExactlyItsDeclaredPaths() throws Exception {
+      saveOk(WS1, "a.txt", "content");
+      saveOk(WS1, "b.txt", "content");
+      saveOk(WS1, "d/x.txt", "content");
+      init(WS2);
+
+      assertSuccess(bindings.handleDelete(WS1, Path.of("a.txt"), USER));
+      assertEquals(Set.of("a.txt", ".a.txt.meta.seqdev"), headChanges(WS1));
+      assertTrue(headDiff(WS1).stream().allMatch(d -> d.getChangeType() == DiffEntry.ChangeType.DELETE));
+      assertSuccess(bindings.handleMove(Path.of("d"), Path.of("e"), WS1, WS1, false, USER));
+      assertEquals(Set.of("d/x.txt", "d/.x.txt.meta.seqdev", "e/x.txt", "e/.x.txt.meta.seqdev"), headChanges(WS1));
+      assertSuccess(bindings.handleMove(Path.of("b.txt"), Path.of("moved.txt"), WS1, WS2, false, USER));
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      assertEquals(Set.of("moved.txt", ".moved.txt.meta.seqdev"), headChanges(WS2));
+      final var ws1Head = head(WS1);
+      assertSuccess(bindings.handleCopy(Path.of("e"), Path.of("copied"), WS1, WS2, false, USER));
+      assertEquals(ws1Head, head(WS1), "a copy's source records nothing");
+      assertEquals(Set.of("copied/x.txt", "copied/.x.txt.meta.seqdev"), headChanges(WS2));
+      assertClean(WS1);
+      assertClean(WS2);
+    }
+
     /** A directory root covers its subtree only: not siblings that merely share its name as a prefix. */
     @Test
     void aDirectoryRootDoesNotCoverPrefixSiblings() throws Exception {

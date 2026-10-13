@@ -10,6 +10,7 @@ import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.Repository;
@@ -57,8 +58,10 @@ import java.util.function.Predicate;
  * <p><b>Flow.</b> {@link #mutate} takes each involved workspace's lock (in ascending id order, so two cross-workspace
  * operations cannot deadlock; lock operations cannot nest), brings each repository to a clean, initialized state, records the pre-operation state,
  * runs the mutation (which performs its own validation, e.g. existence, readOnly and ETag checks, under the lock),
- * stages the complete resulting delta ({@code git add -A}), commits it if anything changed, and verifies the
- * repository is clean before returning. A request never reports success if the history update failed.
+ * stages only the declared path roots ({@code git add -A -- <roots>}), commits if the index then differs from HEAD,
+ * and verifies the repository is clean before returning. Because the workspace was clean before the mutation and
+ * must be clean after it, a write outside the declared roots fails the request (and is rolled back) rather than
+ * being committed or left behind. A request never reports success if the history update failed.
  *
  * <p><b>Clean.</b> A repository is clean when {@code git status} reports no staged, modified, missing, conflicting or
  * untracked files, and no ignored file exists outside {@code .seqdev/}. Ignore rules are fully controlled here:
@@ -256,7 +259,8 @@ public class WorkspaceHistory {
       for (final var id : ids) {
         final var root = rootsById.get(id);
         try (final var git = open(root)) {
-          if (stageAll(git)) {
+          stage(git, scopes.get(id));
+          if (indexDiffersFromHead(git.getRepository())) {
             requireValidIndex(git.getRepository());
             commit(git, changes.get(id).message(), userIdent(userId));
           }
@@ -609,7 +613,32 @@ public class WorkspaceHistory {
     return Git.open(root.toFile());
   }
 
-  /** {@code git add -A}. Returns whether anything is staged relative to HEAD. */
+  /** {@code git add -A -- <scope>}: make the index match the working tree under the declared roots, and only there. */
+  private static void stage(final Git git, final Set<String> scope) throws GitAPIException {
+    if (scope.isEmpty()) return;
+    final var add = git.add();
+    final var update = git.add().setUpdate(true); // the only way AddCommand stages a tracked file's deletion
+    scope.forEach(key -> {
+      add.addFilepattern(key);
+      update.addFilepattern(key);
+    });
+    add.call();
+    update.call();
+  }
+
+  /** Whether committing the index would change HEAD's tree. Hashed in memory; nothing is written. */
+  private static boolean indexDiffersFromHead(final Repository repo) throws IOException {
+    try (final var formatter = new ObjectInserter.Formatter() {
+      @Override
+      public ObjectId insert(final int type, final byte[] data, final int off, final int len) {
+        return idFor(type, data, off, len);
+      }
+    }) {
+      return !repo.readDirCache().writeTree(formatter).equals(repo.resolve(Constants.HEAD + "^{tree}"));
+    }
+  }
+
+  /** {@code git add -A}, for adoption only. Returns whether anything is staged relative to HEAD. */
   private static boolean stageAll(final Git git) throws GitAPIException {
     git.add().addFilepattern(".").call();
     git.add().addFilepattern(".").setUpdate(true).call();
