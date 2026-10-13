@@ -1416,6 +1416,23 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals("drift " + (WorkspaceHistory.MAX_INCIDENTS + 2), preserved(kept.getLast(), "a.txt"));
     }
 
+    /** The incident just written is never pruned, even if older-looking names (a clock that jumped back) sort after it. */
+    @Test
+    void theCurrentIncidentIsNeverPruned() throws Exception {
+      final var recovery = Files.createDirectories(WorkspaceHistory.recoveryDir(root(WS1)));
+      for (int i = 0; i < WorkspaceHistory.MAX_INCIDENTS; i++) {
+        Files.createDirectories(recovery.resolve("99991231T235959999Z-future-%02d".formatted(i)));
+      }
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      saveOk(WS1, "a.txt", "Y");
+
+      final var kept = incidents(WS1);
+      assertEquals(WorkspaceHistory.MAX_INCIDENTS, kept.size());
+      final var current = kept.stream().filter(p -> !p.getFileName().toString().startsWith("9999")).toList();
+      assertEquals(1, current.size(), kept::toString);
+      assertEquals("X", preserved(current.getFirst(), "a.txt"));
+    }
+
     /** Healing happens before the mutation; if the mutation then fails, rollback restores the healed (canonical) scope. */
     @Test
     void aMutationThatFailsAfterHealingRollsBackOnlyItsScope() throws Exception {

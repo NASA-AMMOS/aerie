@@ -50,6 +50,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * The single owner of workspace mutations and of the Git history that records them.
@@ -583,7 +584,7 @@ public class WorkspaceHistory {
               .formatted(root, summarize(drift.keySet()), summarize(stranded))
           + "remain in " + dir + ".", e);
     }
-    pruneIncidents(root);
+    pruneIncidents(root, dir);
     return dir;
   }
 
@@ -600,12 +601,14 @@ public class WorkspaceHistory {
   }
 
   /**
-   * Keep the newest {@link #MAX_INCIDENTS} incidents (names start with their time). Best effort: the current incident
-   * is already written, so a failure here is logged and never fails the mutation.
+   * Keep the newest {@link #MAX_INCIDENTS} incidents (names start with their time), never {@code current}, whatever the
+   * clock did. Best effort: the current incident is already written, so a failure here is logged and never fails the
+   * mutation.
    */
-  private static void pruneIncidents(final Path root) {
+  private static void pruneIncidents(final Path root, final Path current) {
     try (final var entries = Files.list(recoveryDir(root))) {
-      final var newestFirst = entries.sorted(Comparator.reverseOrder()).toList();
+      final var newestFirst = Stream.concat(Stream.of(current), entries.filter(p -> !p.equals(current))
+                                                                       .sorted(Comparator.reverseOrder())).toList();
       for (final var old : newestFirst.subList(Math.min(MAX_INCIDENTS, newestFirst.size()), newestFirst.size())) deleteTree(old);
     } catch (IOException e) {
       logger.warn("Could not prune old recovery incidents in {}", recoveryDir(root), e);
