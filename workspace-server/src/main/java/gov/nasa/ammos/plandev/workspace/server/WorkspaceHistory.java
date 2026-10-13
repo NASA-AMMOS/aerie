@@ -121,8 +121,9 @@ import java.util.function.Predicate;
  * after every {@link #MAINTENANCE_INTERVAL} commits to a workspace.
  *
  * <p><b>Deployment assumption.</b> Locks are in-process. This is correct only while a single workspace-server
- * instance owns the workspace volume (the current deployment: one replica, no other service mounts the volume) and
- * nothing outside this class writes to a workspace's working tree. Reads do not take the lock.
+ * instance owns the workspace volume (the current deployment: one replica, no other service mounts the volume, which
+ * {@code WorkspaceVolumeOwnershipTest} pins) and nothing outside this class writes to a workspace's working tree.
+ * Reads do not take the lock.
  */
 public class WorkspaceHistory {
   private static final Logger logger = LoggerFactory.getLogger(WorkspaceHistory.class);
