@@ -1178,6 +1178,33 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(Set.of("dx.txt", "d2/z.txt"), drift(WS1));
     }
 
+    /** A rollback restores only the declared paths, even when another writer changed other paths meanwhile. */
+    @Test
+    void aRollbackLeavesChangesMadeConcurrentlyElsewhereAlone() throws Exception {
+      final var head = head(WS1);
+      final var thrown = assertThrows(IOException.class, () ->
+          history.mutate(WS1, USER, Change.of("x", Path.of("a.txt"), Path.of("d")), () -> {
+            Files.writeString(root(WS1).resolve("a.txt"), "half-written");
+            Files.delete(root(WS1).resolve("d/x.txt"));
+            Files.writeString(root(WS1).resolve("d/new.txt"), "created");
+            // Meanwhile, outside PlanDev:
+            Files.writeString(root(WS1).resolve("m.txt"), "modified concurrently");
+            Files.delete(root(WS1).resolve("gone.txt"));
+            Files.writeString(root(WS1).resolve("new.txt"), "created concurrently");
+            throw new IOException("disk full");
+          }, r -> true));
+      assertEquals("disk full", thrown.getMessage());
+
+      assertEquals(head, head(WS1));
+      assertEquals("v1", read(WS1, "a.txt"));
+      assertEquals("v1", read(WS1, "d/x.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("d/new.txt")));
+      assertEquals("modified concurrently", read(WS1, "m.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("gone.txt")));
+      assertEquals("created concurrently", read(WS1, "new.txt"));
+      assertEquals(Set.of("m.txt", "gone.txt", "new.txt"), drift(WS1));
+    }
+
     /** A failed mutation restores its own paths and leaves drift elsewhere exactly as it was. */
     @Test
     void aRollbackLeavesUnrelatedDriftAlone() throws Exception {
@@ -1476,22 +1503,23 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(head, head(WS1));
     }
 
-    /** Staging is scoped, so a write that bypasses the scope guard would be left uncommitted: it fails instead. */
+    /**
+     * Only the declared paths are staged, committed or restored. A change elsewhere during the mutation (one that
+     * bypassed the scope guard, or a concurrent writer outside PlanDev) is ordinary drift: never committed or reset.
+     */
     @Test
-    void anUndeclaredWriteFailsTheMutationAndIsRolledBack() throws Exception {
+    void aChangeOutsideTheDeclaredPathsIsNeitherCommittedNorReverted() throws Exception {
       saveOk(WS1, "a.txt", "v1");
-      final var head = head(WS1);
-      final var ex = assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () ->
-          history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
-            Files.writeString(root(WS1).resolve("a.txt"), "v2");
-            Files.writeString(root(WS1).resolve("undeclared.txt"), "x");
-            return true;
-          }, r -> true));
-      assertEquals(WorkspaceHistory.Kind.HISTORY_NOT_RECORDED, ex.kind);
-      assertEquals(head, head(WS1));
-      assertEquals("v1", read(WS1, "a.txt"));
-      assertFalse(Files.exists(root(WS1).resolve("undeclared.txt")));
-      assertClean(WS1);
+      history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
+        Files.writeString(root(WS1).resolve("a.txt"), "v2");
+        Files.writeString(root(WS1).resolve("elsewhere.txt"), "x");
+        return true;
+      }, r -> true);
+      assertEquals(Set.of("a.txt"), headChanges(WS1));
+      assertEquals("x", read(WS1, "elsewhere.txt"));
+      try (final var git = git(WS1)) {
+        assertEquals(Set.of("elsewhere.txt"), WorkspaceHistory.dirtyPaths(git.status().call()));
+      }
     }
 
     @Test
