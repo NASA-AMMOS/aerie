@@ -38,9 +38,12 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,20 +72,24 @@ import java.util.function.Predicate;
  * <p><b>Flow.</b> {@link #mutate} takes each involved workspace's lock (in ascending id order, so two cross-workspace
  * operations cannot deadlock; lock operations cannot nest) and runs cheap checks that read no working-tree files
  * (managed repository, branch {@code main} checked out, no Git operation in progress, valid runtime state, an index of
- * plain files whose tree is HEAD's tree). It then records the pre-operation HEAD and runtime state, checks that the
- * working tree under the declared path roots still matches HEAD (so an external change to a path PlanDev is about to
- * write is refused, not overwritten), atomically writes a {@linkplain #recordFile mutation record}, runs the mutation
+ * plain files whose tree is HEAD's tree). It then records the pre-operation HEAD and runtime state, makes the working
+ * tree under the declared path roots match HEAD ({@linkplain #repairScope repairing} it if something outside PlanDev
+ * changed it), atomically writes a {@linkplain #recordFile mutation record}, runs the mutation
  * (which performs its own validation, e.g. existence, readOnly and ETag checks, under the lock), stages the declared
  * path roots ({@code git add -A -- <roots>}), commits them if they differ from HEAD, verifies the new commit holds
  * exactly what was staged on top of the pre-operation HEAD, and clears the record. Normal mutations do not inspect or
  * hash working-tree files outside the declared roots; what remains proportional to the workspace is index work (Git
  * reads the whole index, writes it back when staging, and builds trees from it when checking and committing).
  *
- * <p><b>Full integrity checks</b> ({@code git status}: no staged, modified, missing, conflicting or untracked files,
- * and no ignored file outside {@code .seqdev/}) are reserved for trust boundaries: adoption, crash recovery, the first
- * mutation of each workspace by this process (anything may have happened while no server owned the volume), and
- * {@link #verifyIntegrity}. Between them, the sole-writer deployment is what keeps the working tree equal to HEAD; an
- * out-of-band edit is not detected by a normal mutation, but it is never swept into a commit either. Ignore rules are
+ * <p><b>Drift and corruption.</b> Two kinds of damage are told apart. <i>Repository</i> problems (invalid runtime
+ * state, detached HEAD or another branch, a Git operation in progress, an index that differs from HEAD, unsupported
+ * tracked paths, an ambiguous mutation record) fail closed with {@link Kind#REPOSITORY_INCONSISTENT}. <i>Working-tree
+ * drift</i> (files modified, deleted or added outside PlanDev, violating the sole-writer invariant) does not take the
+ * workspace offline and never becomes history: it is left alone until a mutation declares a path under it, which first
+ * preserves the unexpected bytes under {@code .seqdev/recovery/} and restores just that scope from HEAD. Full checks
+ * ({@code git status}) run only at trust boundaries: adoption, crash recovery, the first mutation of each workspace by
+ * this process, and {@link #verifyIntegrity}; they fail on repository problems and log drift. Normal mutations never
+ * look for drift outside their declared roots, nor sweep it into a commit. Ignore rules are
  * fully controlled here: {@code core.excludesFile} points at {@code /dev/null}, {@code .git/info/exclude} contains
  * only {@code /.seqdev/}, and {@code .gitignore}/{@code .gitattributes} cannot exist in the tree
  * ({@link WorkspacePaths}). Empty directories are outside the definition: they are not representable in Git, and
@@ -97,10 +105,11 @@ import java.util.function.Predicate;
  * <p><b>Crash.</b> A process can die between changing files and committing them. The mutation record
  * ({@code .seqdev/mutation.json}: pre-operation HEAD, declared paths, pre-operation runtime state) is written
  * atomically before anything else changes and removed only once the workspace is consistent again, so its presence
- * means "a mutation did not finish". This covers the process or container dying, not power loss: neither the record
- * nor Git's own files are fsynced. The next use of the workspace recovers it deterministically (see {@link #recover}): if HEAD is
+ * means "a mutation did not finish". It is unrelated to recovery incidents ({@link #recoveryDir}), which preserve
+ * changes made outside PlanDev. This covers the process or container dying, not power loss: neither the record nor
+ * Git's own files are fsynced. The next use of the workspace recovers it deterministically (see {@link #recover}): if HEAD is
  * still the recorded HEAD the change never committed and is rolled back as above; if HEAD is exactly one commit on
- * top of it, the commit landed and is kept. Either way a full integrity check must pass before the record is
+ * top of it, the commit landed and is kept. Either way a full repository check must pass before the record is
  * removed; anything else fails closed with {@link Kind#REPOSITORY_INCONSISTENT}.
  *
  * <p><b>Cross-workspace.</b> Two repositories cannot share a transaction. Commits are made in the order the caller
@@ -138,6 +147,11 @@ public class WorkspaceHistory {
   private static final String MANAGED_SECTION = "plandev";
   private static final String MANAGED_KEY = "managed";
   private static final int RECORD_VERSION = 1;
+  private static final int INCIDENT_VERSION = 1;
+  /** Recovery incidents kept per workspace; older ones are deleted when a new one is written. */
+  static final int MAX_INCIDENTS = 20;
+  private static final DateTimeFormatter INCIDENT_TIME =
+      DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS'Z'").withZone(ZoneOffset.UTC);
 
   public enum Kind {
     /** The history could not be recorded; the workspace was restored to its pre-operation state. */
@@ -286,7 +300,7 @@ public class WorkspaceHistory {
         rootsById.put(id, root);
         ensureReady(root);
         before.put(id, capture(root, scopeKeys(root, changes.get(id).paths())));
-        requireScopeMatchesHead(root, before.get(id));
+        repairScope(id, root, before.get(id), changes.get(id).message(), userId);
       }
       writeRecords(rootsById, before);
       ids.forEach(id -> scopes.put(id, before.get(id).scope()));
@@ -493,7 +507,7 @@ public class WorkspaceHistory {
     } else if (Files.exists(recordFile(root), LinkOption.NOFOLLOW_LINKS)) {
       recover(root);
     } else if (!opened.contains(root)) {
-      requireIntegrity(root);
+      checkIntegrity(root);
     }
     requireUsable(root);
     opened.add(root);
@@ -514,21 +528,36 @@ public class WorkspaceHistory {
   }
 
   /**
-   * Fail closed unless a managed workspace is exactly as this class left it: valid runtime state, the expected Git
-   * state, and a working tree and index equal to HEAD. Walks the whole working tree, so it runs only at trust
-   * boundaries (see the class Javadoc).
+   * Fail closed unless a managed workspace's repository is as this class left it: valid runtime state, the expected
+   * Git state, and an index equal to HEAD. Working-tree files that differ from HEAD are drift, not corruption: they
+   * are logged, left untouched, and returned; a mutation that declares them repairs them first ({@link #repairScope}).
+   * Walks the whole working tree, so it runs only at trust boundaries (see the class Javadoc).
+   *
+   * @return the working-tree paths that differ from HEAD
    */
-  private void requireIntegrity(final Path root) throws IOException, GitAPIException {
+  private static Set<String> checkIntegrity(final Path root) throws IOException, GitAPIException {
     requireValidRuntimeState(root, true);
     try (final var git = open(root)) {
-      requireExpectedGitState(git.getRepository(), false);
-      configure(git.getRepository());
-      requireValidIndex(git.getRepository());
-      final var dirty = dirtyPaths(git.status().call());
-      if (!dirty.isEmpty()) {
-        throw inconsistent("Workspace at %s has changes that are not in its history: %s. They were left untouched."
-                               .formatted(root, summarize(dirty)));
+      final var repo = git.getRepository();
+      requireExpectedGitState(repo, false);
+      configure(repo);
+      requireValidIndex(repo);
+      final var status = git.status().call();
+      final var staged = new TreeSet<String>();
+      staged.addAll(status.getAdded());
+      staged.addAll(status.getChanged());
+      staged.addAll(status.getRemoved());
+      staged.addAll(status.getConflicting());
+      if (!staged.isEmpty()) {
+        throw inconsistent("Workspace at %s has staged changes that are not in its history: %s. They were left untouched."
+                               .formatted(root, summarize(staged)));
       }
+      final var drift = dirtyPaths(status);
+      if (!drift.isEmpty()) {
+        logger.warn("Workspace at {} has files modified outside managed history, left untouched until a change touches "
+                    + "them: {}", root, summarize(drift));
+      }
+      return drift;
     }
   }
 
@@ -536,20 +565,17 @@ public class WorkspaceHistory {
    * Explicitly check a workspace's integrity, recovering an interrupted mutation first if there is one. Walks the
    * whole working tree. Unmanaged workspaces are reported, not adopted.
    *
-   * @throws WorkspaceHistoryException ({@link Kind#REPOSITORY_INCONSISTENT}) naming what is wrong
+   * @return working-tree paths that differ from HEAD (drift: reported, not repaired)
+   * @throws WorkspaceHistoryException ({@link Kind#REPOSITORY_INCONSISTENT}) naming what is wrong with the repository
    */
-  public void verifyIntegrity(final int workspaceId) throws Exception {
+  public Set<String> verifyIntegrity(final int workspaceId) throws Exception {
     final var root = roots.workspaceRootPath(workspaceId).normalize();
-    locked(workspaceId, () -> {
+    return locked(workspaceId, () -> {
       if (!isManaged(root)) throw inconsistent("Workspace at %s is not under history yet.".formatted(root));
-      if (Files.exists(recordFile(root), LinkOption.NOFOLLOW_LINKS)) {
-        recover(root);
-      } else {
-        requireIntegrity(root);
-      }
+      final var drift = Files.exists(recordFile(root), LinkOption.NOFOLLOW_LINKS) ? recover(root) : checkIntegrity(root);
       requireUsable(root);
       opened.add(root);
-      return null;
+      return drift;
     });
   }
 
@@ -859,26 +885,172 @@ public class WorkspaceHistory {
   }
 
   /**
-   * Fail closed, before anything is written, if the working tree under the scope is not what HEAD records there: an
-   * external change PlanDev must not overwrite or sweep into its commit. Only the scope is read and hashed; a path
-   * absent from both HEAD and disk is fine.
+   * Make the working tree under a mutation's scope match HEAD before the mutation writes anything. If it does not,
+   * something outside PlanDev changed files PlanDev is about to write (the sole-writer invariant was violated). Those
+   * bytes must neither become history nor be destroyed, and the workspace must stay usable: they are first preserved
+   * in a {@linkplain #recoveryDir recovery incident}, then only the scope is restored from HEAD and checked again.
+   * Runtime state is not touched; this repairs versioned files, it does not undo a mutation. If preserving fails,
+   * nothing is changed; if restoring fails, the incident is kept. Either way the request fails.
    */
-  private static void requireScopeMatchesHead(final Path root, final Before before) throws IOException {
+  private static void repairScope(
+      final int workspaceId,
+      final Path root,
+      final Before before,
+      final String operation,
+      final String userId) throws IOException, GitAPIException
+  {
     try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
       final var repo = git.getRepository();
       final var expected = treeEntries(repo, walk.parseCommit(before.head()).getTree(), before.scope());
-      final var differing = new TreeSet<>(expected.keySet()); // what remains was deleted from disk
-      for (final var key : before.scope()) {
-        for (final var file : filesUnder(root, key).entrySet()) {
-          final var blob = expected.get(file.getKey());
-          if (blob != null && matches(repo, file.getValue(), blob)) differing.remove(file.getKey());
-          else differing.add(file.getKey());
+      final var drift = scopeDrift(repo, root, expected, before.scope());
+      if (drift.isEmpty()) return;
+      final var incident = preserve(workspaceId, root, before, expected, drift, operation, userId);
+      try {
+        restoreScope(git, root, expected, before.scope());
+        final var remaining = scopeDrift(repo, root, expected, before.scope());
+        if (!remaining.isEmpty()) throw new IOException("still differs from history: " + summarize(remaining.keySet()));
+      } catch (IOException | GitAPIException | WorkspaceHistoryException e) {
+        logger.error("Workspace {}: could not restore {} from history after preserving unexpected changes; the request "
+                     + "was refused. incident={} head={} operation=\"{}\" recovery={}",
+                     workspaceId, summarize(drift.keySet()), incident.getFileName(), before.head().name(), operation,
+                     incident, e);
+        throw new WorkspaceHistoryException(
+            Kind.REPOSITORY_INCONSISTENT,
+            "Workspace at %s has changes that are not in its history: %s. They were preserved in %s, but could not be "
+                .formatted(root, summarize(drift.keySet()), incident)
+            + "restored from history.",
+            e);
+      }
+      logger.warn("Workspace {}: files were modified outside managed history; PlanDev preserved them for investigation, "
+                  + "restored them from history and continued the request. incident={} head={} paths={} "
+                  + "operation=\"{}\" recovery={}",
+                  workspaceId, incident.getFileName(), before.head().name(), summarize(drift.keySet()), operation,
+                  incident);
+    }
+  }
+
+  /**
+   * How the working tree under the scope differs from HEAD's entries there, by path: {@code modified},
+   * {@code mode-changed}, {@code deleted} or {@code untracked}. Only the scope is read and hashed; a path absent from
+   * both HEAD and disk is fine.
+   */
+  private static Map<String, String> scopeDrift(
+      final Repository repo,
+      final Path root,
+      final Map<String, Blob> expected,
+      final Set<String> scope) throws IOException
+  {
+    final var drift = new TreeMap<String, String>();
+    expected.keySet().forEach(key -> drift.put(key, "deleted")); // until found on disk
+    for (final var key : scope) {
+      for (final var file : filesUnder(root, key).entrySet()) {
+        final var blob = expected.get(file.getKey());
+        if (blob == null) drift.put(file.getKey(), "untracked");
+        else if (matches(repo, file.getValue(), blob)) drift.remove(file.getKey());
+        else drift.put(file.getKey(), contentId(file.getValue()).equals(blob.id()) ? "mode-changed" : "modified");
+      }
+    }
+    return drift;
+  }
+
+  /**
+   * Where unexpected working-tree bytes are preserved before a scope is repaired: one directory per incident, named
+   * by time and a UUID, holding {@code incident.json} and the files under {@code files/} at their workspace-relative
+   * paths. Runtime state: ignored by Git and reserved from the file API, like the mutation record.
+   */
+  static Path recoveryDir(final Path root) {
+    return root.resolve(WorkspacePaths.STATE_DIR).resolve("recovery");
+  }
+
+  /**
+   * Copy the drifted files into a new incident and verify the copies, then write its metadata atomically. Reads the
+   * workspace only; on failure the partial incident is removed and the request fails with the workspace untouched.
+   */
+  private static Path preserve(
+      final int workspaceId,
+      final Path root,
+      final Before before,
+      final Map<String, Blob> expected,
+      final Map<String, String> drift,
+      final String operation,
+      final String userId)
+  {
+    final var now = Instant.now();
+    final var id = INCIDENT_TIME.format(now) + "-" + UUID.randomUUID();
+    final var dir = recoveryDir(root).resolve(id);
+    try {
+      final var parent = recoveryDir(root);
+      if (Files.exists(parent, LinkOption.NOFOLLOW_LINKS) && !Files.isDirectory(parent, LinkOption.NOFOLLOW_LINKS)) {
+        throw new IOException(parent + " is not a directory");
+      }
+      Files.createDirectories(parent);
+      Files.createDirectory(dir); // never an earlier incident's
+      final var paths = Json.createArrayBuilder();
+      for (final var e : drift.entrySet()) {
+        final var preserved = !e.getValue().equals("deleted");
+        if (preserved) {
+          final var source = root.resolve(e.getKey());
+          final var copy = dir.resolve("files").resolve(e.getKey());
+          Files.createDirectories(copy.getParent());
+          Files.copy(source, copy, LinkOption.NOFOLLOW_LINKS);
+          if (Files.mismatch(source, copy) != -1) throw new IOException("the preserved copy of " + e.getKey() + " differs");
         }
+        final var path = Json.createObjectBuilder().add("path", e.getKey()).add("change", e.getValue()).add("preserved", preserved);
+        final var blob = expected.get(e.getKey());
+        if (blob != null) path.add("expectedBlob", blob.id().name()).add("expectedMode", blob.mode().toString());
+        paths.add(path);
       }
-      if (!differing.isEmpty()) {
-        throw inconsistent("Workspace at %s has changes that are not in its history: %s. They were left untouched."
-                               .formatted(root, summarize(differing)));
+      final var scope = Json.createArrayBuilder();
+      before.scope().forEach(scope::add);
+      final var json = Json.createObjectBuilder()
+                           .add("version", INCIDENT_VERSION)
+                           .add("id", id)
+                           .add("workspaceId", workspaceId)
+                           .add("createdAt", now.toString())
+                           .add("head", before.head().name())
+                           .add("operation", operation)
+                           .add("scope", scope)
+                           .add("paths", paths);
+      if (userId != null) json.add("userId", userId);
+      WorkspacePaths.writeAtomically(root, dir.resolve("incident.json"), json.build().toString().getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      try {
+        deleteTree(dir);
+      } catch (IOException suppressed) {
+        e.addSuppressed(suppressed);
       }
+      logger.error("Workspace {}: could not preserve files modified outside managed history; the request was refused "
+                   + "and they were left untouched. head={} paths={} operation=\"{}\"",
+                   workspaceId, before.head().name(), summarize(drift.keySet()), operation, e);
+      throw new WorkspaceHistoryException(
+          Kind.REPOSITORY_INCONSISTENT,
+          "Workspace at %s has changes that are not in its history: %s. They could not be preserved, so they were left untouched."
+              .formatted(root, summarize(drift.keySet())),
+          e);
+    }
+    pruneIncidents(root);
+    return dir;
+  }
+
+  /** Keep the newest {@link #MAX_INCIDENTS} incidents, so a misbehaving external writer cannot fill the volume. */
+  private static void pruneIncidents(final Path root) {
+    try (final var entries = Files.list(recoveryDir(root))) {
+      final var newestFirst = entries.filter(p -> Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS))
+                                     .sorted(Comparator.reverseOrder()) // names start with the time
+                                     .toList();
+      for (final var old : newestFirst.subList(Math.min(MAX_INCIDENTS, newestFirst.size()), newestFirst.size())) {
+        deleteTree(old);
+      }
+    } catch (IOException e) {
+      logger.warn("Could not prune recovery incidents in {}", recoveryDir(root), e);
+    }
+  }
+
+  /** Delete a directory tree without following symbolic links. */
+  private static void deleteTree(final Path dir) throws IOException {
+    if (!Files.exists(dir, LinkOption.NOFOLLOW_LINKS)) return;
+    try (final var paths = Files.walk(dir)) {
+      for (final var p : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(p);
     }
   }
 
@@ -1018,11 +1190,11 @@ public class WorkspaceHistory {
   /**
    * Resolve a mutation this or an earlier process did not finish. If HEAD is the recorded pre-operation HEAD, the
    * change never committed: its declared paths and runtime state are restored. If HEAD is exactly one commit on top
-   * of it, the commit landed and only the record was left: the change is kept. Then the whole workspace must be
-   * clean before the record is removed. Anything else is ambiguous and fails closed, keeping the record. Caller holds
+   * of it, the commit landed and only the record was left: the change is kept. Then the repository must pass a full
+   * check before the record is removed (drift elsewhere is only logged). Anything else is ambiguous and fails closed, keeping the record. Caller holds
    * the lock.
    */
-  private void recover(final Path root) throws IOException, GitAPIException {
+  private Set<String> recover(final Path root) throws IOException, GitAPIException {
     final var record = readRecord(root);
     try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
       final var repo = git.getRepository();
@@ -1044,8 +1216,9 @@ public class WorkspaceHistory {
                            + "be recovered automatically and was left untouched.");
       }
     }
-    requireIntegrity(root);
+    final var drift = checkIntegrity(root);
     Files.delete(recordFile(root));
+    return drift;
   }
 
   /** Restore each workspace; if any cannot be restored, fail with REPOSITORY_INCONSISTENT, keeping its record. */
@@ -1101,43 +1274,59 @@ public class WorkspaceHistory {
           throw new IOException("Could not move HEAD back to " + before.head().name() + ": " + result);
         }
       }
-      final var expected = treeEntries(repo, walk.parseCommit(before.head()).getTree(), before.scope());
-
-      // Remove what the operation created, then any parent directory that leaves empty (empty directories are not
-      // versioned state; this only avoids leaving a failed save's new folders behind).
-      for (final var key : before.scope()) {
-        for (final var file : filesUnder(root, key).entrySet()) {
-          if (expected.containsKey(file.getKey())) continue;
-          Files.delete(file.getValue());
-          for (var p = file.getValue().getParent(); !p.equals(root) && isEmptyDirectory(p); p = p.getParent()) Files.delete(p);
-        }
-      }
-      // Rewrite what it changed or deleted, each file atomically
-      for (final var e : expected.entrySet()) {
-        final var file = root.resolve(e.getKey());
-        if (matches(repo, file, e.getValue())) continue;
-        Files.createDirectories(file.getParent());
-        final var tmp = WorkspacePaths.tempFile(root);
-        try {
-          try (final var out = Files.newOutputStream(tmp)) {
-            repo.open(e.getValue().id(), Constants.OBJ_BLOB).copyTo(out);
-          }
-          if (repo.getFS().supportsExecute()) repo.getFS().setExecute(tmp.toFile(), e.getValue().mode() == FileMode.EXECUTABLE_FILE);
-          Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } finally {
-          Files.deleteIfExists(tmp);
-        }
-      }
-      stage(git, root, before.scope());
+      restoreScope(git, root, treeEntries(repo, walk.parseCommit(before.head()).getTree(), before.scope()), before.scope());
       WorkspacePaths.writeAtomically(root, WorkspaceState.file(root), before.state());
     }
+  }
+
+  /**
+   * Make the working tree and index under the scope exactly {@code expected} (a commit's entries there). Only
+   * working-tree files under the scope are read or written.
+   */
+  private static void restoreScope(
+      final Git git,
+      final Path root,
+      final Map<String, Blob> expected,
+      final Set<String> scope) throws IOException, GitAPIException
+  {
+    final var repo = git.getRepository();
+    // Remove files HEAD does not have, then any parent directory that leaves empty (empty directories are not
+    // versioned state; this only avoids leaving a failed save's new folders behind).
+    for (final var key : scope) {
+      for (final var file : filesUnder(root, key).entrySet()) {
+        if (expected.containsKey(file.getKey())) continue;
+        Files.delete(file.getValue());
+        for (var p = file.getValue().getParent(); !p.equals(root) && isEmptyDirectory(p); p = p.getParent()) Files.delete(p);
+      }
+    }
+    // Rewrite files that differ or are missing, each atomically
+    for (final var e : expected.entrySet()) {
+      final var file = root.resolve(e.getKey());
+      if (matches(repo, file, e.getValue())) continue;
+      Files.createDirectories(file.getParent());
+      final var tmp = WorkspacePaths.tempFile(root);
+      try {
+        try (final var out = Files.newOutputStream(tmp)) {
+          repo.open(e.getValue().id(), Constants.OBJ_BLOB).copyTo(out);
+        }
+        if (repo.getFS().supportsExecute()) repo.getFS().setExecute(tmp.toFile(), e.getValue().mode() == FileMode.EXECUTABLE_FILE);
+        Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+      } finally {
+        Files.deleteIfExists(tmp);
+      }
+    }
+    stage(git, root, scope);
   }
 
   /** Whether a working file already has a blob's content and mode. */
   private static boolean matches(final Repository repo, final Path file, final Blob blob) throws IOException {
     if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) || modeOf(repo, file) != blob.mode()) return false;
+    return contentId(file).equals(blob.id());
+  }
+
+  private static ObjectId contentId(final Path file) throws IOException {
     try (final var in = Files.newInputStream(file); final var formatter = new ObjectInserter.Formatter()) {
-      return formatter.idFor(Constants.OBJ_BLOB, Files.size(file), in).equals(blob.id());
+      return formatter.idFor(Constants.OBJ_BLOB, Files.size(file), in);
     }
   }
 

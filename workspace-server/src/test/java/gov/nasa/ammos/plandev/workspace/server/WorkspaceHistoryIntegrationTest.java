@@ -37,8 +37,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -950,7 +952,7 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
-  /** A managed workspace must be exactly as PlanDev left it before anything is mutated. */
+  /** A managed workspace's repository must be exactly as PlanDev left it before anything is mutated. */
   @Nested
   class Trust {
     private static final String INCONSISTENT = "WORKSPACE_REPOSITORY_INCONSISTENT";
@@ -972,55 +974,25 @@ class WorkspaceHistoryIntegrationTest {
 
     /**
      * Normal mutations rely on workspace-server being the sole writer and do not scan the workspace, so an out-of-band
-     * edit is not detected by them; it is never swept into their commits, and it is rejected at the next trust
-     * boundary: an explicit integrity check, or the first mutation by a new process.
+     * edit outside their paths is neither detected by them nor swept into their commits. Trust boundaries (an explicit
+     * check, the first mutation by a new process) report it as drift; it does not take the workspace offline.
      */
     @Test
-    void outOfBandChangesAreNeverCommittedAndAreRejectedAtTrustBoundaries() throws Exception {
+    void outOfBandChangesAreNeverCommittedAndDoNotBlockTheWorkspace() throws Exception {
       Files.writeString(root(WS1).resolve("a.txt"), "edited on disk");
       Files.writeString(root(WS1).resolve("dropped-in.txt"), "new on disk");
 
       saveOk(WS1, "c.txt", "v1");
       assertEquals(Set.of("c.txt", ".c.txt.meta.seqdev"), headChanges(WS1));
-      assertFalse(headTree(WS1).contains("dropped-in.txt"));
-
-      final var check = assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () -> history.verifyIntegrity(WS1));
-      assertEquals(WorkspaceHistory.Kind.REPOSITORY_INCONSISTENT, check.kind);
-      assertTrue(check.getMessage().contains("a.txt") && check.getMessage().contains("dropped-in.txt"), check.getMessage());
+      assertEquals(Set.of("a.txt", "dropped-in.txt"), history.verifyIntegrity(WS1));
 
       restart();
-      final var message = assertRefused();
-      assertTrue(message.contains("a.txt") && message.contains("dropped-in.txt"), message);
+      saveOk(WS1, "b.txt", "v1");
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
       assertEquals("edited on disk", read(WS1, "a.txt"), "left untouched, not reset");
       assertTrue(Files.exists(root(WS1).resolve("dropped-in.txt")));
-      assertTrue(log(WS1).stream().noneMatch(c -> c.getAuthorIdent().getName().equals("PlanDev") && c.getParentCount() > 0));
-    }
-
-    /** Before writing, a mutation checks its own declared paths, and only those, against HEAD. */
-    @Test
-    void aMutationRefusesToOverwriteAnExternalChangeToItsOwnPaths() throws Exception {
-      saveOk(WS1, "d/x.txt", "v1");
-      final var commits = log(WS1).size();
-      Files.writeString(root(WS1).resolve("a.txt"), "edited on disk");
-      Files.writeString(root(WS1).resolve("d/dropped-in.txt"), "new on disk");
-      Files.writeString(root(WS1).resolve("taken.txt"), "new on disk");
-
-      final var save = save(WS1, "a.txt", "from PlanDev", null);
-      assertFailure(save, 500, INCONSISTENT);
-      assertTrue(save.jsonResponse().asJsonObject().getString("message").contains("a.txt"));
-      assertEquals("edited on disk", read(WS1, "a.txt"));
-      assertFailure(bindings.handleDelete(WS1, Path.of("d"), USER), 500, INCONSISTENT); // a directory's whole subtree
-      assertTrue(Files.exists(root(WS1).resolve("d/x.txt")));
-      assertFailure(bindings.handleMove(Path.of("d/x.txt"), Path.of("taken.txt"), WS1, WS1, true, USER), 500, INCONSISTENT);
-      assertEquals("new on disk", read(WS1, "taken.txt"));
-      // A copy's source is checked too, so an external edit is never copied into a commit
-      assertFailure(bindings.handleCopy(Path.of("a.txt"), Path.of("copy.txt"), WS1, WS2, false, USER), 500, INCONSISTENT);
-      assertFalse(Files.exists(root(WS2).resolve("copy.txt")));
-      assertEquals(commits, log(WS1).size());
-
-      // Paths that match HEAD, including new ones absent from both, are unaffected
-      saveOk(WS1, "fresh.txt", "v1");
-      assertEquals(Set.of("fresh.txt", ".fresh.txt.meta.seqdev"), headChanges(WS1));
+      assertFalse(headTree(WS1).contains("dropped-in.txt"));
+      assertFalse(Files.exists(WorkspaceHistory.recoveryDir(root(WS1))), "nothing is preserved until a change touches it");
     }
 
     @Test
@@ -1125,6 +1097,282 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(WorkspaceHistory.ADOPT_MESSAGE, log(WS1).get(1).getFullMessage());
       assertTrue(history.isManaged(root(WS1)));
       assertClean(WS1);
+    }
+  }
+
+  /**
+   * A mutation whose own paths were changed outside PlanDev preserves those bytes in a recovery incident, restores
+   * just its paths from HEAD, and continues: the unexpected state is neither committed nor destroyed.
+   */
+  @Nested
+  class DriftRecovery {
+    private static final String INCONSISTENT = "WORKSPACE_REPOSITORY_INCONSISTENT";
+
+    private List<Path> incidents(final int ws) throws IOException {
+      final var dir = WorkspaceHistory.recoveryDir(root(ws));
+      if (!Files.isDirectory(dir)) return List.of();
+      try (final var entries = Files.list(dir)) {
+        return entries.sorted().toList();
+      }
+    }
+
+    private Path onlyIncident(final int ws) throws IOException {
+      final var all = incidents(ws);
+      assertEquals(1, all.size(), all::toString);
+      return all.getFirst();
+    }
+
+    private static JsonObject metadataOf(final Path incident) throws IOException {
+      try (final var reader = Json.createReader(Files.newBufferedReader(incident.resolve("incident.json")))) {
+        return reader.readObject();
+      }
+    }
+
+    /** path -> change, as the incident recorded them. */
+    private static Map<String, String> changesIn(final Path incident) throws IOException {
+      final var changes = new TreeMap<String, String>();
+      for (final var p : metadataOf(incident).getJsonArray("paths").getValuesAs(JsonObject.class)) {
+        changes.put(p.getString("path"), p.getString("change"));
+      }
+      return changes;
+    }
+
+    private static String preserved(final Path incident, final String path) throws IOException {
+      return Files.readString(incident.resolve("files").resolve(path));
+    }
+
+    private String contentAt(final int ws, final RevCommit commit, final String path) throws IOException {
+      try (final var git = git(ws); final var tw = TreeWalk.forPath(git.getRepository(), path, commit.getTree())) {
+        return new String(git.getRepository().open(tw.getObjectId(0)).getBytes(), StandardCharsets.UTF_8);
+      }
+    }
+
+    @Test
+    void aModifiedFileIsPreservedRestoredAndTheSaveContinues() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      final var before = head(WS1);
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+
+      saveOk(WS1, "a.txt", "Y");
+      assertEquals("Y", read(WS1, "a.txt"));
+      assertEquals(before, head(WS1).getParent(0));
+      assertEquals(Set.of("a.txt"), headChanges(WS1), "history is A -> Y, never X");
+      assertEquals("A", contentAt(WS1, before, "a.txt"));
+      assertClean(WS1);
+
+      final var incident = onlyIncident(WS1);
+      assertEquals("X", preserved(incident, "a.txt"));
+      assertEquals(Map.of("a.txt", "modified"), changesIn(incident));
+      final var meta = metadataOf(incident);
+      assertEquals(1, meta.getInt("version"));
+      assertEquals(incident.getFileName().toString(), meta.getString("id"));
+      assertEquals(WS1, meta.getInt("workspaceId"));
+      assertEquals(before.name(), meta.getString("head"));
+      assertEquals("Update a.txt", meta.getString("operation"));
+      assertEquals(USER, meta.getString("userId"));
+      assertEquals(List.of(".a.txt.meta.seqdev", "a.txt"),
+                   meta.getJsonArray("scope").getValuesAs(javax.json.JsonString.class).stream().map(j -> j.getString()).toList());
+      try (final var git = git(WS1); final var tw = TreeWalk.forPath(git.getRepository(), "a.txt", before.getTree())) {
+        final var path = meta.getJsonArray("paths").getJsonObject(0);
+        assertEquals(tw.getObjectId(0).name(), path.getString("expectedBlob"));
+        assertTrue(path.getBoolean("preserved"));
+      }
+    }
+
+    @Test
+    void aDeletedFileIsRestoredFromHistoryBeforeTheOperationContinues() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      Files.delete(root(WS1).resolve("a.txt"));
+
+      assertSuccess(bindings.handleMove(Path.of("a.txt"), Path.of("b.txt"), WS1, WS1, false, USER));
+      assertEquals("A", read(WS1, "b.txt"), "the move moved what history has");
+      assertFalse(Files.exists(root(WS1).resolve("a.txt")));
+      assertClean(WS1);
+
+      final var incident = onlyIncident(WS1);
+      assertEquals(Map.of("a.txt", "deleted"), changesIn(incident));
+      assertFalse(metadataOf(incident).getJsonArray("paths").getJsonObject(0).getBoolean("preserved"));
+      assertFalse(Files.exists(incident.resolve("files")));
+    }
+
+    @Test
+    void anUntrackedFileInTheWayIsPreservedAndRemoved() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      Files.writeString(root(WS1).resolve("new.txt"), "X");
+
+      saveOk(WS1, "new.txt", "Y");
+      assertEquals("Y", read(WS1, "new.txt"));
+      assertEquals(Set.of("new.txt", ".new.txt.meta.seqdev"), headChanges(WS1));
+      final var incident = onlyIncident(WS1);
+      assertEquals(Map.of("new.txt", "untracked"), changesIn(incident));
+      assertEquals("X", preserved(incident, "new.txt"));
+      assertClean(WS1);
+    }
+
+    @Test
+    void unexpectedSidecarsArePreservedAndRepaired() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      setUserMetadata(WS1, "a.txt", "draft");
+      final var sidecar = read(WS1, ".a.txt.meta.seqdev");
+      Files.writeString(root(WS1).resolve(".a.txt.meta.seqdev"), "not json");
+      Files.writeString(root(WS1).resolve(".b.txt.meta.seqdev"), "orphan");
+
+      setUserMetadata(WS1, "a.txt", "final");
+      assertEquals("final", metadata(WS1, "a.txt").getJsonObject("user").getString("status"));
+      assertEquals(Set.of(".a.txt.meta.seqdev"), headChanges(WS1));
+      final var first = onlyIncident(WS1);
+      assertEquals(Map.of(".a.txt.meta.seqdev", "modified"), changesIn(first));
+      assertEquals("not json", preserved(first, ".a.txt.meta.seqdev"));
+      assertNotEquals(sidecar, read(WS1, ".a.txt.meta.seqdev"));
+
+      saveOk(WS1, "b.txt", "B");
+      final var second = incidents(WS1).getLast();
+      assertNotEquals(first, second, "an earlier incident is never overwritten");
+      assertEquals(Map.of(".b.txt.meta.seqdev", "untracked"), changesIn(second));
+      assertEquals("orphan", preserved(second, ".b.txt.meta.seqdev"));
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      assertClean(WS1);
+    }
+
+    @Test
+    void aDirectoryOperationPreservesEveryDescendantAndNoSibling() throws Exception {
+      saveOk(WS1, "d/x.txt", "x");
+      saveOk(WS1, "d/sub/y.txt", "y");
+      saveOk(WS1, "dx.txt", "dx");
+      saveOk(WS1, "d2/z.txt", "z");
+      Files.writeString(root(WS1).resolve("d/x.txt"), "changed");
+      Files.delete(root(WS1).resolve("d/sub/y.txt"));
+      Files.writeString(root(WS1).resolve("d/sub/stray.txt"), "stray");
+      Files.writeString(root(WS1).resolve("dx.txt"), "sibling drift");
+      Files.writeString(root(WS1).resolve("d2/z.txt"), "sibling drift");
+
+      assertSuccess(bindings.handleDelete(WS1, Path.of("d"), USER));
+      assertFalse(Files.exists(root(WS1).resolve("d")));
+      assertEquals(Set.of("d/x.txt", "d/.x.txt.meta.seqdev", "d/sub/y.txt", "d/sub/.y.txt.meta.seqdev"), headChanges(WS1));
+      final var incident = onlyIncident(WS1);
+      assertEquals(Map.of("d/x.txt", "modified", "d/sub/y.txt", "deleted", "d/sub/stray.txt", "untracked"), changesIn(incident));
+      assertEquals("changed", preserved(incident, "d/x.txt"));
+      assertEquals("stray", preserved(incident, "d/sub/stray.txt"));
+      assertEquals("sibling drift", read(WS1, "dx.txt"), "d does not cover dx.txt");
+      assertEquals("sibling drift", read(WS1, "d2/z.txt"), "d does not cover d2/");
+      assertEquals(Set.of("dx.txt", "d2/z.txt"), history.verifyIntegrity(WS1));
+    }
+
+    @Test
+    void movesAndCopiesNeverCarryUnexpectedBytes() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      saveOk(WS1, "b.txt", "B");
+      init(WS2);
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      Files.writeString(root(WS1).resolve("taken.txt"), "T");
+
+      assertSuccess(bindings.handleCopy(Path.of("a.txt"), Path.of("copy.txt"), WS1, WS2, false, USER));
+      assertEquals("A", read(WS2, "copy.txt"), "the copy's source is repaired first");
+      assertEquals("A", read(WS1, "a.txt"));
+      assertSuccess(bindings.handleMove(Path.of("b.txt"), Path.of("taken.txt"), WS1, WS1, true, USER));
+      assertEquals("B", read(WS1, "taken.txt"));
+
+      final var all = incidents(WS1);
+      assertEquals(2, all.size());
+      assertEquals("X", preserved(all.get(0), "a.txt"));
+      assertEquals("T", preserved(all.get(1), "taken.txt"));
+      assertClean(WS1);
+      assertClean(WS2);
+    }
+
+    @Test
+    void ifTheBytesCannotBePreservedNothingIsTouched() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      final var commits = log(WS1).size();
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      Files.writeString(WorkspaceHistory.recoveryDir(root(WS1)), "in the way");
+
+      final var result = save(WS1, "a.txt", "Y", null);
+      assertFailure(result, 500, INCONSISTENT);
+      assertTrue(result.jsonResponse().asJsonObject().getString("message").contains("could not be preserved"));
+      assertEquals("X", read(WS1, "a.txt"));
+      assertEquals(commits, log(WS1).size());
+      assertFalse(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
+
+      Files.delete(WorkspaceHistory.recoveryDir(root(WS1)));
+      saveOk(WS1, "a.txt", "Y");
+      assertEquals("X", preserved(onlyIncident(WS1), "a.txt"));
+    }
+
+    @Test
+    void ifTheScopeCannotBeRestoredTheIncidentIsKeptAndNothingIsCommitted() throws Exception {
+      saveOk(WS1, "d/x.txt", "A");
+      final var commits = log(WS1).size();
+      deleteRecursively(root(WS1).resolve("d"));
+      Files.writeString(root(WS1).resolve("d"), "a file where the folder was"); // outside the scope: never touched
+
+      final var result = save(WS1, "d/x.txt", "Y", null);
+      assertFailure(result, 500, INCONSISTENT);
+      assertTrue(result.jsonResponse().asJsonObject().getString("message").contains("could not be restored"));
+      assertEquals("a file where the folder was", read(WS1, "d"));
+      assertEquals(commits, log(WS1).size());
+      assertFalse(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
+      assertEquals(Map.of("d/x.txt", "deleted", "d/.x.txt.meta.seqdev", "deleted"), changesIn(onlyIncident(WS1)));
+    }
+
+    @Test
+    void driftOutsideTheScopeIsNeitherTouchedNorCommitted() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+
+      saveOk(WS1, "b.txt", "B");
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      assertEquals("X", read(WS1, "a.txt"));
+      assertEquals(List.of(), incidents(WS1));
+    }
+
+    @Test
+    void repositoryCorruptionStillFailsClosedWithoutRecovery() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      final var commits = log(WS1).size();
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      try (final var git = git(WS1)) {
+        git.add().addFilepattern("a.txt").call(); // the index no longer matches HEAD
+      }
+
+      for (final var fresh : List.of(false, true)) {
+        if (fresh) restart();
+        assertFailure(save(WS1, "a.txt", "Y", null), 500, INCONSISTENT);
+        assertEquals("X", read(WS1, "a.txt"));
+        assertEquals(commits, log(WS1).size());
+        assertFalse(Files.exists(WorkspaceHistory.recoveryDir(root(WS1))));
+      }
+    }
+
+    @Test
+    void recoveryArtifactsAreInvisibleToGitAndTheFileApi() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      saveOk(WS1, "a.txt", "Y");
+      final var incident = root(WS1).relativize(onlyIncident(WS1));
+
+      assertClean(WS1);
+      assertTrue(headTree(WS1).stream().noneMatch(p -> p.startsWith(".seqdev")));
+      assertTrue(WorkspacePaths.walk(root(WS1), Integer.MAX_VALUE).stream()
+                               .noneMatch(p -> root(WS1).relativize(p).startsWith(".seqdev")));
+      for (final var path : List.of(incident.resolve("incident.json"), incident.resolve("files/a.txt"))) {
+        assertThrows(ReservedPathException.class, () -> fs.loadFile(WS1, path), path::toString);
+        assertFailure(save(WS1, path.toString(), "evil", "*"), 400, "RESERVED_PATH");
+      }
+      assertFailure(bindings.handleDelete(WS1, Path.of(".seqdev/recovery"), USER), 400, "RESERVED_PATH");
+    }
+
+    @Test
+    void onlyTheNewestIncidentsAreKept() throws Exception {
+      saveOk(WS1, "a.txt", "A");
+      for (int i = 0; i < WorkspaceHistory.MAX_INCIDENTS + 3; i++) {
+        Files.writeString(root(WS1).resolve("a.txt"), "drift " + i);
+        saveOk(WS1, "a.txt", "A");
+      }
+      final var kept = incidents(WS1);
+      assertEquals(WorkspaceHistory.MAX_INCIDENTS, kept.size());
+      assertEquals("drift " + (WorkspaceHistory.MAX_INCIDENTS + 2), preserved(kept.getLast(), "a.txt"));
+      assertEquals("drift 3", preserved(kept.getFirst(), "a.txt"));
     }
   }
 
@@ -1648,12 +1896,18 @@ class WorkspaceHistoryIntegrationTest {
       assertRecovered(WS1);
     }
 
-    /** Recovery is retried until the whole workspace is consistent; the record is kept until then. */
+    /**
+     * Recovery is retried until the repository is consistent; the record is kept until then. Drift outside the
+     * interrupted change does not block it.
+     */
     @Test
     void aRecoveryBlockedByOtherDamageKeepsItsRecordAndIsRetried() throws Exception {
       saveOk(WS1, "a.txt", "v1");
       crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1, () -> save(WS1, "new.txt", "x", null));
       Files.writeString(root(WS1).resolve("stray.txt"), "out of band");
+      try (final var git = git(WS1)) {
+        git.add().addFilepattern("stray.txt").call();
+      }
 
       final var result = save(WS1, "b.txt", "v1", null);
       assertFailure(result, 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
@@ -1661,8 +1915,12 @@ class WorkspaceHistoryIntegrationTest {
       assertTrue(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
       assertTrue(Files.exists(root(WS1).resolve("stray.txt")), "never deleted: it is outside the interrupted change");
 
-      Files.delete(root(WS1).resolve("stray.txt"));
+      try (final var git = git(WS1)) {
+        git.rm().addFilepattern("stray.txt").setCached(true).call(); // now only drift
+      }
       saveOk(WS1, "b.txt", "v1");
+      assertEquals(Set.of("stray.txt"), history.verifyIntegrity(WS1));
+      Files.delete(root(WS1).resolve("stray.txt"));
       assertFalse(Files.exists(root(WS1).resolve("new.txt")));
       assertRecovered(WS1);
     }
