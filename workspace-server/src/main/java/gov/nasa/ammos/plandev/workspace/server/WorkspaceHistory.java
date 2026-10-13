@@ -7,8 +7,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.dircache.DirCache;
-import org.eclipse.jgit.dircache.DirCacheEditor;
-import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -68,14 +66,16 @@ import java.util.function.Predicate;
  * write, so a path that bypasses this class, or strays outside its declared scope, fails loudly.
  *
  * <p><b>Flow.</b> {@link #mutate} takes each involved workspace's lock (in ascending id order, so two cross-workspace
- * operations cannot deadlock) and runs cheap checks that do not depend on the size of the workspace (managed
- * repository, branch {@code main} checked out, no Git operation in progress, valid runtime state, an index of plain
- * files whose tree is HEAD's tree). It then records the pre-operation HEAD and runtime state, durably writes a
- * {@linkplain #recordFile mutation record}, runs the mutation (which performs its own validation, e.g. existence,
- * readOnly and ETag checks, under the lock), stages exactly the files under the declared path roots, commits them if
- * they differ from HEAD, verifies the new commit holds exactly what was staged on top of the pre-operation HEAD, and
- * clears the record. Nothing outside the declared roots is read, hashed, staged or committed, so the cost of a
- * mutation depends on what it changed, not on the size of the workspace.
+ * operations cannot deadlock; lock operations cannot nest) and runs cheap checks that read no working-tree files
+ * (managed repository, branch {@code main} checked out, no Git operation in progress, valid runtime state, an index of
+ * plain files whose tree is HEAD's tree). It then records the pre-operation HEAD and runtime state, checks that the
+ * working tree under the declared path roots still matches HEAD (so an external change to a path PlanDev is about to
+ * write is refused, not overwritten), atomically writes a {@linkplain #recordFile mutation record}, runs the mutation
+ * (which performs its own validation, e.g. existence, readOnly and ETag checks, under the lock), stages the declared
+ * path roots ({@code git add -A -- <roots>}), commits them if they differ from HEAD, verifies the new commit holds
+ * exactly what was staged on top of the pre-operation HEAD, and clears the record. Normal mutations do not inspect or
+ * hash working-tree files outside the declared roots; what remains proportional to the workspace is index work (Git
+ * reads the whole index, writes it back when staging, and builds trees from it when checking and committing).
  *
  * <p><b>Full integrity checks</b> ({@code git status}: no staged, modified, missing, conflicting or untracked files,
  * and no ignored file outside {@code .seqdev/}) are reserved for trust boundaries: adoption, crash recovery, the first
@@ -95,9 +95,10 @@ import java.util.function.Predicate;
  * so the next mutation retries the recovery rather than trusting the workspace.
  *
  * <p><b>Crash.</b> A process can die between changing files and committing them. The mutation record
- * ({@code .seqdev/mutation.json}: pre-operation HEAD, declared paths, pre-operation runtime state) is written before
- * anything else changes and removed only once the workspace is consistent again, so its presence means "a mutation
- * did not finish". The next use of the workspace recovers it deterministically (see {@link #recover}): if HEAD is
+ * ({@code .seqdev/mutation.json}: pre-operation HEAD, declared paths, pre-operation runtime state) is written
+ * atomically before anything else changes and removed only once the workspace is consistent again, so its presence
+ * means "a mutation did not finish". This covers the process or container dying, not power loss: neither the record
+ * nor Git's own files are fsynced. The next use of the workspace recovers it deterministically (see {@link #recover}): if HEAD is
  * still the recorded HEAD the change never committed and is rolled back as above; if HEAD is exactly one commit on
  * top of it, the commit landed and is kept. Either way a full integrity check must pass before the record is
  * removed; anything else fails closed with {@link Kind#REPOSITORY_INCONSISTENT}.
@@ -109,8 +110,9 @@ import java.util.function.Predicate;
  * which is preferable to losing data.
  *
  * <p><b>Adoption.</b> A workspace is <i>managed</i> once its repository config carries {@code plandev.managed=true},
- * which is written only after adoption has fully succeeded. An unmanaged workspace (new, pre-history, or a repository
- * PlanDev did not finish adopting) is adopted on its first mutation: its tree must contain no reserved names and no
+ * which is written only after initialization or adoption has fully succeeded. New workspaces are initialized
+ * ({@link #initializeNewWorkspace}) before their database row makes them visible. An existing unmanaged workspace
+ * (pre-history, or a repository PlanDev did not finish adopting) is adopted on its first mutation: its tree must contain no reserved names and no
  * symbolic links; legacy sidecar metadata is migrated (resumably); a repository is created if missing; and the
  * current state is recorded by one baseline commit authored by {@link #systemIdent()} ("Initialize workspace
  * history" for a new repository, "Adopt workspace into history" for an existing one with uncommitted state). History
@@ -214,6 +216,7 @@ public class WorkspaceHistory {
   // ponytail: one lock per workspace id, never evicted; a few bytes per workspace ever touched by this process.
   private final Map<Integer, ReentrantLock> locks = new ConcurrentHashMap<>();
   private final Map<Integer, Set<String>> scopes = new ConcurrentHashMap<>();
+  private final ThreadLocal<Boolean> inLockScope = ThreadLocal.withInitial(() -> false);
   private final Map<Path, LastEditIndex> lastEditCache = new ConcurrentHashMap<>();
   /** Workspaces this process has fully verified (and configured) since it started. */
   private final Set<Path> opened = ConcurrentHashMap.newKeySet();
@@ -262,6 +265,15 @@ public class WorkspaceHistory {
       final Mutation<T> mutation,
       final Predicate<T> succeeded) throws Exception
   {
+    return notNested(() -> mutateUnderLocks(changes, userId, mutation, succeeded));
+  }
+
+  private <T> T mutateUnderLocks(
+      final LinkedHashMap<Integer, Change> changes,
+      final String userId,
+      final Mutation<T> mutation,
+      final Predicate<T> succeeded) throws Exception
+  {
     final var ids = List.copyOf(changes.keySet());
     final var lockOrder = ids.stream().sorted().map(this::lockFor).toList();
     lockOrder.forEach(ReentrantLock::lock);
@@ -274,6 +286,7 @@ public class WorkspaceHistory {
         rootsById.put(id, root);
         ensureReady(root);
         before.put(id, capture(root, scopeKeys(root, changes.get(id).paths())));
+        requireScopeMatchesHead(root, before.get(id));
       }
       writeRecords(rootsById, before);
       ids.forEach(id -> scopes.put(id, before.get(id).scope()));
@@ -282,11 +295,11 @@ public class WorkspaceHistory {
       try {
         result = mutation.apply();
       } catch (Exception e) {
-        restoreAll(ids, rootsById, before, e);
+        rollbackAll(ids, rootsById, before, e);
         throw e;
       }
       if (!succeeded.test(result)) {
-        restoreAll(ids, rootsById, before, null);
+        rollbackAll(ids, rootsById, before, null);
         return result;
       }
 
@@ -297,7 +310,7 @@ public class WorkspaceHistory {
         try (final var git = open(root)) {
           final var repo = git.getRepository();
           checkpoint(Checkpoint.BEFORE_STAGE, root);
-          final var staged = stage(repo, root, b.scope());
+          final var staged = stage(git, root, b.scope());
           checkpoint(Checkpoint.BEFORE_COMMIT, root);
           final boolean changed;
           try (final var walk = new RevWalk(repo)) {
@@ -311,7 +324,7 @@ public class WorkspaceHistory {
           if (changed) committedAny.add(id);
         } catch (Exception e) {
           logger.error("Recording history for workspace {} failed; restoring", id, e);
-          restoreAll(ids.subList(recorded.size(), ids.size()), rootsById, before, e);
+          rollbackAll(ids.subList(recorded.size(), ids.size()), rootsById, before, e);
           if (recorded.isEmpty()) {
             throw new WorkspaceHistoryException(
                 Kind.HISTORY_NOT_RECORDED,
@@ -341,12 +354,31 @@ public class WorkspaceHistory {
   }
 
   private <T> T locked(final int workspaceId, final Mutation<T> action) throws Exception {
-    final var lock = lockFor(workspaceId);
-    lock.lock();
+    return notNested(() -> {
+      final var lock = lockFor(workspaceId);
+      lock.lock();
+      try {
+        return action.apply();
+      } finally {
+        lock.unlock();
+      }
+    });
+  }
+
+  /**
+   * Workspace lock operations cannot nest: an inner one could take a lock out of the global order (deadlock), and an
+   * inner mutation of the same workspace would replace the outer one's declared scope. Callers declare every affected
+   * workspace in one outer mutation.
+   */
+  private <T> T notNested(final Mutation<T> action) throws Exception {
+    if (inLockScope.get()) {
+      throw new IllegalStateException("Workspace lock operations cannot be nested; declare every workspace in one mutation.");
+    }
+    inLockScope.set(true);
     try {
       return action.apply();
     } finally {
-      lock.unlock();
+      inLockScope.remove();
     }
   }
 
@@ -431,6 +463,23 @@ public class WorkspaceHistory {
 
   //region Opening, adoption and trust
   /**
+   * Initialize a newly created, empty directory before its database row makes it visible as a workspace. No lock is
+   * needed: no other request can resolve the directory yet. Existing workspaces are still adopted on first mutation.
+   */
+  void initializeNewWorkspace(final Path root) throws IOException, GitAPIException {
+    final var normalizedRoot = root.normalize();
+    if (!Files.isDirectory(normalizedRoot)) {
+      throw new IOException("New workspace directory " + normalizedRoot + " is missing.");
+    }
+    try (final var entries = Files.list(normalizedRoot)) {
+      if (entries.findAny().isPresent()) {
+        throw new IOException("New workspace directory " + normalizedRoot + " is not empty.");
+      }
+    }
+    adopt(normalizedRoot);
+  }
+
+  /**
    * Bring a workspace to "managed and usable": adopt it if it is not managed yet, recover an interrupted mutation,
    * or fully verify it the first time this process uses it; then run the cheap per-mutation checks. Caller holds the
    * lock.
@@ -451,8 +500,8 @@ public class WorkspaceHistory {
   }
 
   /**
-   * The checks run before every mutation of a managed workspace. None of them reads the working tree, so they cost
-   * the same however large the workspace is.
+   * The checks run before every mutation of a managed workspace. None of them reads working-tree files; checking the
+   * index walks it in memory, so that part grows with the number of tracked files.
    */
   private static void requireUsable(final Path root) throws IOException {
     requireValidRuntimeState(root, true);
@@ -540,7 +589,10 @@ public class WorkspaceHistory {
     }
   }
 
-  /** Whether a workspace has been fully adopted (see the class Javadoc). Never discovers a parent repository. */
+  /**
+   * Whether a workspace has been fully initialized or adopted (see the class Javadoc). Never discovers a parent
+   * repository.
+   */
   boolean isManaged(final Path root) throws IOException {
     if (!Files.isDirectory(root.resolve(WorkspacePaths.GIT_DIR), LinkOption.NOFOLLOW_LINKS)) return false;
     try (final var git = open(root)) {
@@ -774,61 +826,59 @@ public class WorkspaceHistory {
   }
 
   /**
-   * Make the index match the working tree under the scope, and only there: every file under a scope root is hashed
-   * into the object store, and index entries under a root with no file behind them are removed. Returns the staged
-   * entries.
+   * {@code git add -A -- <scope>}: make the index match the working tree under the scope, and only there. Paths Git
+   * must not see (symbolic links, reserved names, special files) are rejected first. Returns the staged entries.
    */
-  private static Map<String, Blob> stage(final Repository repo, final Path root, final Set<String> scope) throws IOException {
-    final var staged = new TreeMap<String, Blob>();
-    try (final var inserter = repo.newObjectInserter()) {
-      for (final var key : scope) {
-        for (final var file : filesUnder(root, key).entrySet()) {
-          final ObjectId id;
-          try (final var in = Files.newInputStream(file.getValue())) {
-            id = inserter.insert(Constants.OBJ_BLOB, Files.size(file.getValue()), in);
-          }
-          staged.put(file.getKey(), new Blob(id, modeOf(repo, file.getValue())));
-        }
-      }
-      inserter.flush();
+  private static Map<String, Blob> stage(final Git git, final Path root, final Set<String> scope)
+  throws IOException, GitAPIException
+  {
+    for (final var key : scope) filesUnder(root, key);
+    if (!scope.isEmpty()) {
+      final var add = git.add();
+      final var update = git.add().setUpdate(true); // the only way AddCommand stages a tracked file's deletion
+      scope.forEach(key -> {
+        add.addFilepattern(key);
+        update.addFilepattern(key);
+      });
+      add.call();
+      update.call();
     }
-    updateIndex(repo, root, scope, staged);
-    return staged;
+    return indexEntries(git.getRepository(), scope);
   }
 
-  /** Replace the index entries under the scope with {@code entries}, whose files are on disk. */
-  private static void updateIndex(
-      final Repository repo,
-      final Path root,
-      final Set<String> scope,
-      final Map<String, Blob> entries) throws IOException
-  {
-    final var index = repo.lockDirCache();
-    try {
-      final var editor = index.editor();
-      for (final var key : scope) {
-        final var existing = new ArrayList<>(Arrays.asList(index.getEntriesWithin(key)));
-        final var exact = index.getEntry(key);
-        if (exact != null) existing.add(exact);
-        for (final var entry : existing) {
-          if (!entries.containsKey(entry.getPathString())) editor.add(new DirCacheEditor.DeletePath(entry));
+  /** The index entries under the scope. */
+  private static Map<String, Blob> indexEntries(final Repository repo, final Set<String> scope) throws IOException {
+    final var entries = new TreeMap<String, Blob>();
+    final var index = repo.readDirCache();
+    for (final var key : scope) {
+      final var exact = index.getEntry(key);
+      if (exact != null) entries.put(key, new Blob(exact.getObjectId(), exact.getFileMode()));
+      for (final var e : index.getEntriesWithin(key)) entries.put(e.getPathString(), new Blob(e.getObjectId(), e.getFileMode()));
+    }
+    return entries;
+  }
+
+  /**
+   * Fail closed, before anything is written, if the working tree under the scope is not what HEAD records there: an
+   * external change PlanDev must not overwrite or sweep into its commit. Only the scope is read and hashed; a path
+   * absent from both HEAD and disk is fine.
+   */
+  private static void requireScopeMatchesHead(final Path root, final Before before) throws IOException {
+    try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
+      final var repo = git.getRepository();
+      final var expected = treeEntries(repo, walk.parseCommit(before.head()).getTree(), before.scope());
+      final var differing = new TreeSet<>(expected.keySet()); // what remains was deleted from disk
+      for (final var key : before.scope()) {
+        for (final var file : filesUnder(root, key).entrySet()) {
+          final var blob = expected.get(file.getKey());
+          if (blob != null && matches(repo, file.getValue(), blob)) differing.remove(file.getKey());
+          else differing.add(file.getKey());
         }
       }
-      for (final var e : entries.entrySet()) {
-        final var attrs = Files.readAttributes(root.resolve(e.getKey()), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-        editor.add(new DirCacheEditor.PathEdit(e.getKey()) {
-          @Override
-          public void apply(final DirCacheEntry ent) {
-            ent.setFileMode(e.getValue().mode());
-            ent.setObjectId(e.getValue().id());
-            ent.setLength(attrs.size());
-            ent.setLastModified(attrs.lastModifiedTime().toInstant());
-          }
-        });
+      if (!differing.isEmpty()) {
+        throw inconsistent("Workspace at %s has changes that are not in its history: %s. They were left untouched."
+                               .formatted(root, summarize(differing)));
       }
-      if (!editor.commit()) throw new IOException("Could not write the index of " + root);
-    } finally {
-      index.unlock();
     }
   }
 
@@ -985,7 +1035,7 @@ public class WorkspaceHistory {
       final var head = walk.parseCommit(repo.resolve(Constants.HEAD));
       if (head.equals(record.head())) {
         logger.warn("Rolling back an interrupted change to {} in workspace {}", record.scope(), root);
-        restore(root, record);
+        rollbackMutation(root, record);
       } else if (head.getParentCount() == 1 && head.getParent(0).equals(record.head())) {
         logger.warn("An interrupted change to {} in workspace {} had been committed; keeping it", record.scope(), root);
       } else {
@@ -999,7 +1049,7 @@ public class WorkspaceHistory {
   }
 
   /** Restore each workspace; if any cannot be restored, fail with REPOSITORY_INCONSISTENT, keeping its record. */
-  private void restoreAll(
+  private void rollbackAll(
       final List<Integer> ids,
       final Map<Integer, Path> rootsById,
       final Map<Integer, Before> before,
@@ -1010,7 +1060,7 @@ public class WorkspaceHistory {
     for (final var id : ids) {
       try {
         final var root = rootsById.get(id);
-        restore(root, before.get(id));
+        rollbackMutation(root, before.get(id));
         try (final var git = open(root)) {
           requireIndexMatchesHead(git.getRepository());
         }
@@ -1035,9 +1085,10 @@ public class WorkspaceHistory {
 
   /**
    * Put a workspace's declared paths, their index entries and its runtime state back to the pre-operation state.
-   * Only the declared paths are read or written, so the cost does not depend on the size of the workspace.
+   * Only working-tree files under the declared paths are read or written. Undoes an unfinished mutation; unrelated to
+   * restoring a file's earlier revision, which is an ordinary forward mutation.
    */
-  private static void restore(final Path root, final Before before) throws IOException {
+  private static void rollbackMutation(final Path root, final Before before) throws IOException, GitAPIException {
     try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
       final var repo = git.getRepository();
 
@@ -1077,7 +1128,7 @@ public class WorkspaceHistory {
           Files.deleteIfExists(tmp);
         }
       }
-      updateIndex(repo, root, before.scope(), expected);
+      stage(git, root, before.scope());
       WorkspacePaths.writeAtomically(root, WorkspaceState.file(root), before.state());
     }
   }

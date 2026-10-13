@@ -967,13 +967,18 @@ public class WorkspaceBindings implements Plugin {
       boolean overwrite,
       String userId
   ) {
-    // The source is locked too, so it cannot change while being read; it may change nothing.
+    // The source is declared too, so it is locked while read and must match HEAD: an external edit is never copied
+    // into a commit. Copying writes nothing there, so it produces no commit.
     final var changes = new LinkedHashMap<Integer, WorkspaceHistory.Change>();
-    changes.put(destinationWorkspaceId, new WorkspaceHistory.Change(sourceWorkspaceId == destinationWorkspaceId
-        ? "Copy %s -> %s".formatted(toCopy, destinationPath)
-        : "Copy workspace %d:%s -> %s".formatted(sourceWorkspaceId, toCopy, destinationPath), withSidecars(destinationPath)));
-    changes.putIfAbsent(sourceWorkspaceId, WorkspaceHistory.Change.of(
-        "Copy %s -> workspace %d:%s".formatted(toCopy, destinationWorkspaceId, destinationPath)));
+    if (sourceWorkspaceId == destinationWorkspaceId) {
+      changes.put(destinationWorkspaceId, new WorkspaceHistory.Change(
+          "Copy %s -> %s".formatted(toCopy, destinationPath), withSidecars(destinationPath, toCopy)));
+    } else {
+      changes.put(destinationWorkspaceId, new WorkspaceHistory.Change(
+          "Copy workspace %d:%s -> %s".formatted(sourceWorkspaceId, toCopy, destinationPath), withSidecars(destinationPath)));
+      changes.put(sourceWorkspaceId, new WorkspaceHistory.Change(
+          "Copy %s -> workspace %d:%s".formatted(toCopy, destinationWorkspaceId, destinationPath), withSidecars(toCopy)));
+    }
     return mutate(changes, userId, null, () -> handleCopyLocked(
         toCopy, destinationPath, sourceWorkspaceId, destinationWorkspaceId, overwrite, userId));
   }

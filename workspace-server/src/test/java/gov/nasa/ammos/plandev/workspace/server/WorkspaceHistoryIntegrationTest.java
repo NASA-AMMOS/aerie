@@ -683,6 +683,25 @@ class WorkspaceHistoryIntegrationTest {
 
   @Nested
   class Concurrency {
+    @Test
+    void nestedWorkspaceLockAcquisitionIsRejected() throws Exception {
+      init(WS1);
+      init(WS2);
+      final var inner = Change.of("inner", Path.of("inner.txt"));
+
+      for (final var innerWs : List.of(WS2, WS1)) { // out of lock order, and the same workspace's scope
+        final var nested = assertThrows(IllegalStateException.class, () ->
+            history.mutate(WS1, USER, Change.of("outer", Path.of("outer.txt")), () ->
+                history.mutate(innerWs, USER, inner, () -> true, r -> r), r -> r));
+        assertTrue(nested.getMessage().contains("cannot be nested"));
+      }
+      assertThrows(IllegalStateException.class, () -> history.withLock(WS1, () ->
+          history.mutate(WS2, USER, inner, () -> true, r -> r)));
+      assertClean(WS1);
+      assertClean(WS2);
+      saveOk(WS1, "after.txt", "the guard does not outlive the outer operation");
+    }
+
     /** A second mutation cannot run between the first one's filesystem write and its commit. */
     @Test
     void mutationsDoNotInterleaveBetweenWriteAndCommit() throws Exception {
@@ -977,6 +996,33 @@ class WorkspaceHistoryIntegrationTest {
       assertTrue(log(WS1).stream().noneMatch(c -> c.getAuthorIdent().getName().equals("PlanDev") && c.getParentCount() > 0));
     }
 
+    /** Before writing, a mutation checks its own declared paths, and only those, against HEAD. */
+    @Test
+    void aMutationRefusesToOverwriteAnExternalChangeToItsOwnPaths() throws Exception {
+      saveOk(WS1, "d/x.txt", "v1");
+      final var commits = log(WS1).size();
+      Files.writeString(root(WS1).resolve("a.txt"), "edited on disk");
+      Files.writeString(root(WS1).resolve("d/dropped-in.txt"), "new on disk");
+      Files.writeString(root(WS1).resolve("taken.txt"), "new on disk");
+
+      final var save = save(WS1, "a.txt", "from PlanDev", null);
+      assertFailure(save, 500, INCONSISTENT);
+      assertTrue(save.jsonResponse().asJsonObject().getString("message").contains("a.txt"));
+      assertEquals("edited on disk", read(WS1, "a.txt"));
+      assertFailure(bindings.handleDelete(WS1, Path.of("d"), USER), 500, INCONSISTENT); // a directory's whole subtree
+      assertTrue(Files.exists(root(WS1).resolve("d/x.txt")));
+      assertFailure(bindings.handleMove(Path.of("d/x.txt"), Path.of("taken.txt"), WS1, WS1, true, USER), 500, INCONSISTENT);
+      assertEquals("new on disk", read(WS1, "taken.txt"));
+      // A copy's source is checked too, so an external edit is never copied into a commit
+      assertFailure(bindings.handleCopy(Path.of("a.txt"), Path.of("copy.txt"), WS1, WS2, false, USER), 500, INCONSISTENT);
+      assertFalse(Files.exists(root(WS2).resolve("copy.txt")));
+      assertEquals(commits, log(WS1).size());
+
+      // Paths that match HEAD, including new ones absent from both, are unaffected
+      saveOk(WS1, "fresh.txt", "v1");
+      assertEquals(Set.of("fresh.txt", ".fresh.txt.meta.seqdev"), headChanges(WS1));
+    }
+
     @Test
     void detachedHeadIsRejected() throws Exception {
       try (final var git = git(WS1)) {
@@ -1079,6 +1125,49 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(WorkspaceHistory.ADOPT_MESSAGE, log(WS1).get(1).getFullMessage());
       assertTrue(history.isManaged(root(WS1)));
       assertClean(WS1);
+    }
+  }
+
+  @Nested
+  class WorkspaceInitialization {
+    @Test
+    void newWorkspaceGetsManagedHistoryBeforeItsFirstMutation() throws Exception {
+      final var newRoot = Files.createDirectory(base.resolve("new"));
+
+      history.initializeNewWorkspace(newRoot);
+
+      assertTrue(history.isManaged(newRoot));
+      try (final var git = Git.open(newRoot.toFile())) {
+        final var commits = new ArrayList<RevCommit>();
+        git.log().call().forEach(commits::add);
+        assertEquals(1, commits.size());
+        assertEquals(WorkspaceHistory.INIT_MESSAGE, commits.getFirst().getFullMessage());
+        assertEquals(Set.of(), WorkspaceHistory.dirtyPaths(git.status().call()));
+      }
+    }
+
+    @Test
+    void newWorkspaceInitializationDoesNotAdoptExistingFiles() throws Exception {
+      final var newRoot = Files.createDirectory(base.resolve("not-new"));
+      Files.writeString(newRoot.resolve("existing.txt"), "existing");
+
+      assertThrows(IOException.class, () -> history.initializeNewWorkspace(newRoot));
+
+      assertFalse(Files.exists(newRoot.resolve(WorkspacePaths.GIT_DIR)));
+      assertEquals("existing", Files.readString(newRoot.resolve("existing.txt")));
+    }
+
+    @Test
+    void failedInitializationDoesNotMarkTheWorkspaceManaged() throws Exception {
+      final var newRoot = Files.createDirectory(base.resolve("failed"));
+      history.failCommitsIn.add(newRoot.toRealPath());
+
+      assertThrows(GitAPIException.class, () -> history.initializeNewWorkspace(newRoot));
+
+      assertFalse(history.isManaged(newRoot));
+      try (final var git = Git.open(newRoot.toFile())) {
+        assertNull(git.getRepository().resolve("HEAD"));
+      }
     }
   }
 
