@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -641,27 +642,27 @@ public class WorkspaceBindings implements Plugin {
   private HandlerResult mutate(
       final int workspaceId,
       final String userId,
-      final String commitMessage,
+      final WorkspaceHistory.Change change,
       final WorkspaceHistory.Mutation<HandlerResult> handler)
   {
-    final var commits = new LinkedHashMap<Integer, String>();
-    commits.put(workspaceId, commitMessage);
-    return mutate(commits, userId, null, handler);
+    final var changes = new LinkedHashMap<Integer, WorkspaceHistory.Change>();
+    changes.put(workspaceId, change);
+    return mutate(changes, userId, null, handler);
   }
 
   /**
-   * As {@link #mutate(int, String, String, WorkspaceHistory.Mutation)}, across workspaces committed in the given
+   * As {@link #mutate(int, String, WorkspaceHistory.Change, WorkspaceHistory.Mutation)}, across workspaces committed in the given
    * order. {@code partialMessage} describes the outcome if a later workspace's commit fails after an earlier one's
    * succeeded (see {@link WorkspaceHistory.PartialMutationException}).
    */
   private HandlerResult mutate(
-      final LinkedHashMap<Integer, String> commits,
+      final LinkedHashMap<Integer, WorkspaceHistory.Change> changes,
       final String userId,
       final String partialMessage,
       final WorkspaceHistory.Mutation<HandlerResult> handler)
   {
     try {
-      return history.mutate(commits, userId, handler, result -> result instanceof HandlerResult.Success);
+      return history.mutate(changes, userId, handler, result -> result instanceof HandlerResult.Success);
     } catch (WorkspaceHistory.WorkspaceHistoryException whe) {
       final var message = whe instanceof WorkspaceHistory.PartialMutationException && partialMessage != null
           ? partialMessage
@@ -684,6 +685,21 @@ public class WorkspaceBindings implements Plugin {
     }
   }
 
+  /** The paths a single-item file operation may change: each given path (a file, or a directory's subtree) and its sidecar. */
+  private static List<Path> withSidecars(final Path... paths) {
+    final var scope = new ArrayList<Path>();
+    for (final var path : paths) {
+      scope.add(path);
+      scope.add(sidecar(path));
+    }
+    return scope;
+  }
+
+  private static Path sidecar(final Path path) {
+    final var name = path.getFileName();
+    return name == null ? path : path.resolveSibling(RenderType.toMetadataFileName(name.toString()));
+  }
+
   private static void respond(final Context context, final HandlerResult result) {
     switch (result) {
       case HandlerResult.Success success -> context.status(success.status()).result(success.response());
@@ -698,7 +714,7 @@ public class WorkspaceBindings implements Plugin {
       boolean overwrite,
       String ifMatch,
       final String userId) {
-    return mutate(workspaceId, userId, "Update " + uploadPath,
+    return mutate(workspaceId, userId, new WorkspaceHistory.Change("Update " + uploadPath, withSidecars(uploadPath)),
                   () -> handleFileUploadLocked(workspaceId, uploadPath, file, overwrite, ifMatch, userId));
   }
 
@@ -782,7 +798,7 @@ public class WorkspaceBindings implements Plugin {
 
   HandlerResult handleCreateDirectory(int workspaceId, Path destinationPath, String userId) {
     // Empty directories are not representable in Git, so this usually records nothing; it still runs under the lock.
-    return mutate(workspaceId, userId, "Create directory " + destinationPath,
+    return mutate(workspaceId, userId, WorkspaceHistory.Change.of("Create directory " + destinationPath, destinationPath),
                   () -> handleCreateDirectoryLocked(workspaceId, destinationPath));
   }
 
@@ -833,17 +849,20 @@ public class WorkspaceBindings implements Plugin {
       String userId
   ) {
     // Destination first: if the source's commit then fails, the move degrades to a copy instead of losing data.
-    final var commits = new LinkedHashMap<Integer, String>();
+    final var changes = new LinkedHashMap<Integer, WorkspaceHistory.Change>();
     if (sourceWorkspaceId == destinationWorkspaceId) {
-      commits.put(sourceWorkspaceId, "Move %s -> %s".formatted(toMove, destinationPath));
+      changes.put(sourceWorkspaceId, new WorkspaceHistory.Change(
+          "Move %s -> %s".formatted(toMove, destinationPath), withSidecars(toMove, destinationPath)));
     } else {
-      commits.put(destinationWorkspaceId, "Move workspace %d:%s -> %s".formatted(sourceWorkspaceId, toMove, destinationPath));
-      commits.put(sourceWorkspaceId, "Move %s -> workspace %d:%s".formatted(toMove, destinationWorkspaceId, destinationPath));
+      changes.put(destinationWorkspaceId, new WorkspaceHistory.Change(
+          "Move workspace %d:%s -> %s".formatted(sourceWorkspaceId, toMove, destinationPath), withSidecars(destinationPath)));
+      changes.put(sourceWorkspaceId, new WorkspaceHistory.Change(
+          "Move %s -> workspace %d:%s".formatted(toMove, destinationWorkspaceId, destinationPath), withSidecars(toMove)));
     }
     final var partialMessage = ("Move degraded to a copy: '%s' in Workspace %d was copied, with its metadata, to '%s' in "
                                 + "Workspace %d, but could not be removed from Workspace %d and was restored there.")
         .formatted(toMove, sourceWorkspaceId, destinationPath, destinationWorkspaceId, sourceWorkspaceId);
-    return mutate(commits, userId, partialMessage, () -> handleMoveLocked(
+    return mutate(changes, userId, partialMessage, () -> handleMoveLocked(
         toMove, destinationPath, sourceWorkspaceId, destinationWorkspaceId, overwrite, userId));
   }
 
@@ -948,13 +967,14 @@ public class WorkspaceBindings implements Plugin {
       boolean overwrite,
       String userId
   ) {
-    // The source is locked too, so it cannot change while being read; it has nothing to commit.
-    final var commits = new LinkedHashMap<Integer, String>();
-    commits.put(destinationWorkspaceId, sourceWorkspaceId == destinationWorkspaceId
+    // The source is locked too, so it cannot change while being read; it declares no paths, so it has nothing to commit.
+    final var changes = new LinkedHashMap<Integer, WorkspaceHistory.Change>();
+    changes.put(destinationWorkspaceId, new WorkspaceHistory.Change(sourceWorkspaceId == destinationWorkspaceId
         ? "Copy %s -> %s".formatted(toCopy, destinationPath)
-        : "Copy workspace %d:%s -> %s".formatted(sourceWorkspaceId, toCopy, destinationPath));
-    commits.putIfAbsent(sourceWorkspaceId, "Copy %s -> workspace %d:%s".formatted(toCopy, destinationWorkspaceId, destinationPath));
-    return mutate(commits, userId, null, () -> handleCopyLocked(
+        : "Copy workspace %d:%s -> %s".formatted(sourceWorkspaceId, toCopy, destinationPath), withSidecars(destinationPath)));
+    changes.putIfAbsent(sourceWorkspaceId, WorkspaceHistory.Change.of(
+        "Copy %s -> workspace %d:%s".formatted(toCopy, destinationWorkspaceId, destinationPath)));
+    return mutate(changes, userId, null, () -> handleCopyLocked(
         toCopy, destinationPath, sourceWorkspaceId, destinationWorkspaceId, overwrite, userId));
   }
 
@@ -1032,7 +1052,8 @@ public class WorkspaceBindings implements Plugin {
   }
 
   HandlerResult handleDelete(int workspaceId, Path filePath, String userId) {
-    return mutate(workspaceId, userId, "Delete " + filePath, () -> handleDeleteLocked(workspaceId, filePath));
+    return mutate(workspaceId, userId, new WorkspaceHistory.Change("Delete " + filePath, withSidecars(filePath)),
+                  () -> handleDeleteLocked(workspaceId, filePath));
   }
 
   private HandlerResult handleDeleteLocked(int workspaceId, Path filePath) {
@@ -1626,7 +1647,8 @@ public class WorkspaceBindings implements Plugin {
       return;
     }
 
-    respond(context, mutate(pathInfo.workspaceId, authorize(context).userId(), "Update metadata for " + pathInfo.filePath, () -> {
+    final var change = WorkspaceHistory.Change.of("Update metadata for " + pathInfo.filePath, sidecar(pathInfo.filePath));
+    respond(context, mutate(pathInfo.workspaceId, authorize(context).userId(), change, () -> {
       // Check that the underlying file exists
       if (!workspaceService.checkFileExists(pathInfo.workspaceId, pathInfo.filePath)) {
         return new HandlerResult.Failure(404, new WorkspaceFormattedError(new NoSuchFileException(pathInfo.workspaceId, pathInfo.filePath)));
@@ -1711,7 +1733,8 @@ public class WorkspaceBindings implements Plugin {
     }
 
     final var userId = authorize(context).userId();
-    respond(context, mutate(pathInfo.workspaceId, userId, "Update metadata for " + pathInfo.filePath, () -> {
+    final var change = WorkspaceHistory.Change.of("Update metadata for " + pathInfo.filePath, sidecar(pathInfo.filePath));
+    respond(context, mutate(pathInfo.workspaceId, userId, change, () -> {
       // Check that the underlying file exists
       if (!workspaceService.checkFileExists(pathInfo.workspaceId, pathInfo.filePath)) {
         return new HandlerResult.Failure(404, new WorkspaceFormattedError(new NoSuchFileException(pathInfo.workspaceId, pathInfo.filePath)));
@@ -1757,7 +1780,8 @@ public class WorkspaceBindings implements Plugin {
     }
 
     // Delete Metadata File
-    respond(context, mutate(pathInfo.workspaceId, authorize(context).userId(), "Delete metadata for " + pathInfo.filePath, () -> {
+    final var change = WorkspaceHistory.Change.of("Delete metadata for " + pathInfo.filePath, sidecar(pathInfo.filePath));
+    respond(context, mutate(pathInfo.workspaceId, authorize(context).userId(), change, () -> {
       try {
         if(workspaceService.deleteMetadataFile(pathInfo.workspaceId, pathInfo.filePath)) {
           return new HandlerResult.Success(200, "Metadata for file %s deleted.".formatted(pathInfo.filePath));

@@ -1,5 +1,7 @@
 package gov.nasa.ammos.plandev.workspace.server;
 
+import gov.nasa.ammos.plandev.workspace.server.exceptions.ReservedPathException;
+import gov.nasa.ammos.plandev.workspace.server.exceptions.WorkspaceFileOpException;
 import gov.nasa.ammos.plandev.workspace.server.postgres.RenderType;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -47,11 +49,13 @@ import java.util.function.Predicate;
  *
  * <p><b>Invariant.</b> After every successful workspace mutation, the workspace working tree is represented by Git
  * history and the repository is clean. Every mutation of workspace-managed files (file and directory create, save,
- * move, copy, delete, metadata edits, cross-workspace operations) runs inside {@link #mutate}; the mutating methods of
- * {@link WorkspaceFileSystemService} call {@link #requireLocked} so a path that bypasses this class fails loudly.
+ * move, copy, delete, metadata edits, cross-workspace operations) runs inside {@link #mutate}, which is told up front
+ * which path roots ({@link Change}) the operation may change. The mutating methods of
+ * {@link WorkspaceFileSystemService} call {@link #requireInScope} for every path they write, so a path that bypasses
+ * this class, or strays outside its declared scope, fails loudly.
  *
  * <p><b>Flow.</b> {@link #mutate} takes each involved workspace's lock (in ascending id order, so two cross-workspace
- * operations cannot deadlock), brings each repository to a clean, initialized state, records the pre-operation state,
+ * operations cannot deadlock; lock operations cannot nest), brings each repository to a clean, initialized state, records the pre-operation state,
  * runs the mutation (which performs its own validation, e.g. existence, readOnly and ETag checks, under the lock),
  * stages the complete resulting delta ({@code git add -A}), commits it if anything changed, and verifies the
  * repository is clean before returning. A request never reports success if the history update failed.
@@ -146,6 +150,20 @@ public class WorkspaceHistory {
     T apply() throws Exception;
   }
 
+  /**
+   * One workspace's part of a mutation: its commit message and the workspace-relative path roots the mutation may
+   * change there. A root covers the path itself and everything beneath it, so a directory root covers its subtree.
+   */
+  public record Change(String message, List<Path> paths) {
+    public Change {
+      paths = List.copyOf(paths);
+    }
+
+    public static Change of(final String message, final Path... paths) {
+      return new Change(message, List.of(paths));
+    }
+  }
+
   /** A file's most recent content change, derived from history. {@code baseline} marks the history's root commit. */
   public record LastEdit(String by, Instant at, boolean baseline) {}
 
@@ -156,6 +174,8 @@ public class WorkspaceHistory {
   private final WorkspaceRoots roots;
   // ponytail: one lock per workspace id, never evicted; a few bytes per workspace ever touched by this process.
   private final Map<Integer, ReentrantLock> locks = new ConcurrentHashMap<>();
+  private final Map<Integer, Set<String>> scopes = new ConcurrentHashMap<>();
+  private final ThreadLocal<Boolean> inLockScope = ThreadLocal.withInitial(() -> false);
   private final Map<Path, LastEditIndex> lastEditCache = new ConcurrentHashMap<>();
   private final Set<Path> configured = ConcurrentHashMap.newKeySet();
 
@@ -168,34 +188,44 @@ public class WorkspaceHistory {
   public <T> T mutate(
       final int workspaceId,
       final String userId,
-      final String message,
+      final Change change,
       final Mutation<T> mutation,
       final Predicate<T> succeeded) throws Exception
   {
-    final var commits = new LinkedHashMap<Integer, String>();
-    commits.put(workspaceId, message);
-    return mutate(commits, userId, mutation, succeeded);
+    final var changes = new LinkedHashMap<Integer, Change>();
+    changes.put(workspaceId, change);
+    return mutate(changes, userId, mutation, succeeded);
   }
 
   /**
    * Run a mutation across one or more workspaces under their locks, then record it in each workspace's history.
    *
-   * @param commits the involved workspaces, in commit order, each with its commit message
+   * @param changes the involved workspaces, in commit order, each with its commit message and the paths it may change
    * @param userId the PlanDev user the commits are authored by
    * @param mutation performs validation and the filesystem change; may return a failure result instead of throwing
    * @param succeeded whether a returned result is a success; a failure result is rolled back and returned as-is
    * @return the mutation's result
    * @throws WorkspaceHistoryException if history could not be recorded (the change was rolled back), was recorded in
    *     only some workspaces, or the repository could not be restored
+   * @throws ReservedPathException if a declared path names a reserved name or goes through a symbolic link
    * @throws Exception anything the mutation throws, after the workspaces have been restored
    */
   public <T> T mutate(
-      final LinkedHashMap<Integer, String> commits,
+      final LinkedHashMap<Integer, Change> changes,
       final String userId,
       final Mutation<T> mutation,
       final Predicate<T> succeeded) throws Exception
   {
-    final var ids = List.copyOf(commits.keySet());
+    return notNested(() -> mutateUnderLocks(changes, userId, mutation, succeeded));
+  }
+
+  private <T> T mutateUnderLocks(
+      final LinkedHashMap<Integer, Change> changes,
+      final String userId,
+      final Mutation<T> mutation,
+      final Predicate<T> succeeded) throws Exception
+  {
+    final var ids = List.copyOf(changes.keySet());
     final var lockOrder = ids.stream().sorted().map(this::lockFor).toList();
     lockOrder.forEach(ReentrantLock::lock);
     try {
@@ -204,8 +234,10 @@ public class WorkspaceHistory {
       for (final var id : ids) {
         final var root = roots.workspaceRootPath(id).normalize();
         rootsById.put(id, root);
+        final var scope = scopeKeys(root, changes.get(id).paths());
         ensureReady(root);
         before.put(id, capture(root));
+        scopes.put(id, scope);
       }
 
       final T result;
@@ -226,7 +258,7 @@ public class WorkspaceHistory {
         try (final var git = open(root)) {
           if (stageAll(git)) {
             requireValidIndex(git.getRepository());
-            commit(git, commits.get(id), userIdent(userId));
+            commit(git, changes.get(id).message(), userIdent(userId));
           }
           requireClean(git, root);
           committed.add(id);
@@ -244,22 +276,42 @@ public class WorkspaceHistory {
       }
       return result;
     } finally {
+      ids.forEach(scopes::remove);
       lockOrder.reversed().forEach(ReentrantLock::unlock);
     }
   }
 
   /** Run an action under a workspace's lock without recording history (e.g. deleting the whole workspace). */
   public <T> T withLock(final int workspaceId, final Mutation<T> action) throws Exception {
-    final var lock = lockFor(workspaceId);
-    lock.lock();
+    return notNested(() -> {
+      final var lock = lockFor(workspaceId);
+      lock.lock();
+      try {
+        final var root = roots.workspaceRootPath(workspaceId).normalize(); // before the action may delete the record
+        final var result = action.apply();
+        lastEditCache.remove(root);
+        configured.remove(root);
+        return result;
+      } finally {
+        lock.unlock();
+      }
+    });
+  }
+
+  /**
+   * Workspace lock operations cannot nest: an inner one could take a lock out of the global order (deadlock), and an
+   * inner mutation of the same workspace would replace the outer one's declared scope. Callers declare every affected
+   * workspace in one outer mutation.
+   */
+  private <T> T notNested(final Mutation<T> action) throws Exception {
+    if (inLockScope.get()) {
+      throw new IllegalStateException("Workspace lock operations cannot be nested; declare every workspace in one mutation.");
+    }
+    inLockScope.set(true);
     try {
-      final var root = roots.workspaceRootPath(workspaceId).normalize(); // before the action may delete the record
-      final var result = action.apply();
-      lastEditCache.remove(root);
-      configured.remove(root);
-      return result;
+      return action.apply();
     } finally {
-      lock.unlock();
+      inLockScope.remove();
     }
   }
 
@@ -271,6 +323,22 @@ public class WorkspaceHistory {
         throw new IllegalStateException(
             "Workspace %d was mutated outside WorkspaceHistory.mutate; every workspace mutation must go through it."
                 .formatted(id));
+      }
+    }
+  }
+
+  /**
+   * Throw unless the current thread is inside a mutation of the workspace whose declared paths cover every given
+   * absolute path. A path outside them would change the workspace without being committed, or restored on failure.
+   */
+  public void requireInScope(final int workspaceId, final Path root, final Path... paths) {
+    requireLocked(workspaceId);
+    final var scope = scopes.getOrDefault(workspaceId, Set.of());
+    for (final var path : paths) {
+      final var key = WorkspacePaths.key(root, path);
+      if (scope.stream().noneMatch(s -> isAtOrUnder(key, s))) {
+        throw new IllegalStateException(
+            "Workspace %d: '%s' is outside the paths this mutation declared (%s).".formatted(workspaceId, key, scope));
       }
     }
   }
@@ -289,6 +357,35 @@ public class WorkspaceHistory {
        .setSign(false)
        .setNoVerify(true)
        .call();
+  }
+
+  /**
+   * Normalize declared paths to workspace-relative keys, rejecting what no mutation may touch: the root itself (it
+   * owns the history and runtime state), anything outside it, reserved names, and paths through a symbolic link.
+   */
+  private static Set<String> scopeKeys(final Path root, final List<Path> paths) throws WorkspaceFileOpException {
+    final var keys = new TreeSet<String>();
+    for (final var path : paths) {
+      if (path.isAbsolute()) throw new SecurityException("Absolute file paths not allowed");
+      final var resolved = root.resolve(path).normalize();
+      if (!resolved.startsWith(root)) throw new SecurityException("Path traversal attempt detected");
+      if (resolved.equals(root)) throw new WorkspaceFileOpException("Cannot modify the workspace root directory.");
+      final var reserved = WorkspacePaths.firstReservedSegment(root.relativize(resolved));
+      if (reserved != null) throw new ReservedPathException(path, reserved);
+      for (var p = resolved; !p.equals(root); p = p.getParent()) {
+        if (Files.isSymbolicLink(p)) throw ReservedPathException.symbolicLink(path, p.getFileName().toString());
+      }
+      keys.add(WorkspacePaths.key(root, resolved));
+    }
+    // A root already covered by another adds nothing
+    final var all = Set.copyOf(keys);
+    keys.removeIf(k -> all.stream().anyMatch(other -> !other.equals(k) && isAtOrUnder(k, other)));
+    return keys;
+  }
+
+  /** Path-segment containment: {@code d} covers {@code d/x}, not {@code dx} or {@code d2/x}. */
+  private static boolean isAtOrUnder(final String key, final String root) {
+    return key.equals(root) || key.startsWith(root + "/");
   }
   //endregion
 
