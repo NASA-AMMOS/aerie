@@ -400,7 +400,8 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     history.requireLocked(workspaceId);
     final var repoPath = roots.workspaceRootPath(workspaceId);
     final var path = resolveWritingPath(repoPath, filePath);
-    resolveMetadataPath(repoPath, filePath); // validates the path can carry metadata
+    final var metadataPath = resolveMetadataPath(repoPath, filePath); // validates the path can carry metadata
+    history.requireInScope(workspaceId, repoPath, path, metadataPath);
     // lastEdited* is derived from history; here it only seeds createdBy/createdAt for a new file.
     final var metadataUpdates = new MetadataUpdates.Builder(userId)
         .lastEditedAt(Instant.now())
@@ -447,6 +448,8 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var newRepoPath = (oldWorkspaceId == newWorkspaceId) ? oldRepoPath : roots.workspaceRootPath(newWorkspaceId);
     final var newPath = resolveWritingPath(newRepoPath, newFilePath);
     final var newMetadataPath = resolveMetadataPath(newRepoPath, newFilePath);
+    history.requireInScope(oldWorkspaceId, oldRepoPath, oldPath, oldMetadataPath);
+    history.requireInScope(newWorkspaceId, newRepoPath, newPath, newMetadataPath);
 
     // The moved file keeps its own metadata, never that of a file it overwrites
     if(Files.exists(oldMetadataPath)) {
@@ -485,6 +488,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
         : roots.workspaceRootPath(destWorkspaceId);
     final var destPath = resolveWritingPath(destRepoPath, destFilePath);
     final var destMetadataPath = resolveMetadataPath(destWorkspaceId, destFilePath);
+    history.requireInScope(destWorkspaceId, destRepoPath, destPath, destMetadataPath);
 
     // Do not copy the file if the source file does not exist
     if (!Files.exists(sourcePath)) {
@@ -542,6 +546,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var path = resolveReadingPath(repoPath, filePath);
     final var file = path.toFile();
     final var metadataFile = resolveMetadataPath(repoPath, filePath).toFile();
+    history.requireInScope(workspaceId, repoPath, path, metadataFile.toPath());
 
     // Delete the metadata file if it exists
     if(metadataFile.exists()) {
@@ -580,6 +585,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     history.requireLocked(workspaceId);
     final var repoPath = roots.workspaceRootPath(workspaceId);
     final var path = resolveWritingPath(repoPath, directoryPath);
+    history.requireInScope(workspaceId, repoPath, path);
     Files.createDirectories(path);
     return true;
   }
@@ -593,6 +599,8 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var oldPath = resolveReadingPath(oldRepoPath, oldDirectoryPath);
     final var newRepoPath = (oldWorkspaceId == newWorkspaceId) ? oldRepoPath : roots.workspaceRootPath(newWorkspaceId).normalize();
     final var newPath = resolveWritingPath(newRepoPath, newDirectoryPath);
+    history.requireInScope(oldWorkspaceId, oldRepoPath, oldPath);
+    history.requireInScope(newWorkspaceId, newRepoPath, newPath);
 
     // Do not permit the source workspace's root directory to be moved
     if(Files.isSameFile(oldPath, oldRepoPath)) throw new WorkspaceFileOpException("Cannot move the workspace root directory.");
@@ -626,6 +634,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     final var sourcePath = resolveReadingPath(sourceRepoPath, sourceFilePath);
     final var destRepoPath = (sourceWorkspaceId == destWorkspaceId) ? sourceRepoPath : roots.workspaceRootPath(destWorkspaceId);
     final var destPath = resolveWritingPath(destRepoPath, destFilePath);
+    history.requireInScope(destWorkspaceId, destRepoPath, destPath);
 
     // The root owns the workspace's history and runtime state; copying "the whole workspace" is not a file operation
     if (sourcePath.equals(sourceRepoPath.normalize())) {
@@ -673,6 +682,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     if (path.equals(repoPath.normalize())) {
       throw new WorkspaceFileOpException("Cannot delete the workspace root directory.");
     }
+    history.requireInScope(workspaceId, repoPath, path);
     if (!rmDirectory(path.toFile())) return false;
     final var key = WorkspacePaths.key(repoPath, path);
     updateState(repoPath, s -> s.remove(key));
@@ -861,7 +871,9 @@ public class WorkspaceFileSystemService implements WorkspaceService {
   throws NoSuchWorkspaceException, WorkspaceFileOpException, IOException, JsonException
   {
     history.requireLocked(workspaceId);
-    updateMetadata(roots.workspaceRootPath(workspaceId), filePath, updates, mergeBehavior);
+    final var root = roots.workspaceRootPath(workspaceId);
+    history.requireInScope(workspaceId, root, resolveMetadataPath(root, filePath));
+    updateMetadata(root, filePath, updates, mergeBehavior);
     return true;
   }
 
@@ -1101,6 +1113,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     history.requireLocked(workspaceId);
     final var root = roots.workspaceRootPath(workspaceId);
     final var metadataFile = resolveMetadataPath(root, filePath).toFile();
+    history.requireInScope(workspaceId, root, metadataFile.toPath());
 
     // Get the contents of the current metadata file, or the default template if it doesn't exist
     final var fileContentsBuilder = generateUpdatedMetadataFile(
@@ -1182,6 +1195,7 @@ public class WorkspaceFileSystemService implements WorkspaceService {
     history.requireLocked(workspaceId);
     final var root = roots.workspaceRootPath(workspaceId);
     final var metadataFilePath = resolveMetadataPath(root, filePath);
+    history.requireInScope(workspaceId, root, metadataFilePath);
     // Deleting a file's metadata also clears its runtime state (readOnly), as it did when readOnly lived in the sidecar
     final var key = WorkspacePaths.key(root, resolveReadingPath(root, filePath));
     updateState(root, s -> s.remove(key));

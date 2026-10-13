@@ -1,5 +1,6 @@
 package gov.nasa.ammos.plandev.workspace.server;
 
+import gov.nasa.ammos.plandev.workspace.server.WorkspaceHistory.Change;
 import gov.nasa.ammos.plandev.workspace.server.exceptions.ReservedPathException;
 import gov.nasa.ammos.plandev.workspace.server.exceptions.WorkspaceFileOpException;
 import gov.nasa.ammos.plandev.workspace.server.types.HandlerResult;
@@ -59,16 +60,30 @@ class WorkspaceHistoryIntegrationTest {
 
   @TempDir Path tmp;
   private Path base;
+  private WorkspaceRoots roots;
   private FlakyHistory history;
   private WorkspaceFileSystemService fs;
   private WorkspaceBindings bindings;
 
-  /** A WorkspaceHistory whose commit step can be made to fail for chosen workspaces (deterministic injection). */
+  /** Stands in for the process dying: an Error, which WorkspaceHistory never catches, so no rollback runs. */
+  static final class SimulatedCrash extends Error {}
+
+  /**
+   * A WorkspaceHistory whose commit step can be made to fail for chosen workspaces, and which can "crash" at a chosen
+   * checkpoint in a chosen workspace (deterministic injection).
+   */
   static final class FlakyHistory extends WorkspaceHistory {
     final Set<Path> failCommitsIn = ConcurrentHashMap.newKeySet();
+    volatile Checkpoint crashAt;
+    volatile Path crashIn;
 
     FlakyHistory(final WorkspaceRoots roots) {
       super(roots);
+    }
+
+    @Override
+    protected void checkpoint(final Checkpoint point, final Path root) {
+      if (point == crashAt && root.equals(crashIn)) throw new SimulatedCrash();
     }
 
     @Override
@@ -89,7 +104,12 @@ class WorkspaceHistoryIntegrationTest {
     base = tmp.toRealPath();
     Files.createDirectories(base.resolve("ws1"));
     Files.createDirectories(base.resolve("ws2"));
-    final WorkspaceRoots roots = id -> base.resolve("ws" + id);
+    roots = id -> base.resolve("ws" + id);
+    restart();
+  }
+
+  /** A new server process on the same volume: no locks, caches or per-process verification carried over. */
+  private void restart() {
     history = new FlakyHistory(roots);
     fs = new WorkspaceFileSystemService(roots, null, history);
     bindings = new WorkspaceBindings(null, fs, history, null, "");
@@ -175,6 +195,16 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
+  /** Every path the HEAD commit added, changed or removed. */
+  private Set<String> headChanges(final int ws) throws Exception {
+    final var paths = new TreeSet<String>();
+    for (final var d : headDiff(ws)) {
+      if (d.getChangeType() != DiffEntry.ChangeType.ADD) paths.add(d.getOldPath());
+      if (d.getChangeType() != DiffEntry.ChangeType.DELETE) paths.add(d.getNewPath());
+    }
+    return paths;
+  }
+
   private String read(final int ws, final String path) throws IOException {
     return Files.readString(root(ws).resolve(path));
   }
@@ -186,13 +216,13 @@ class WorkspaceHistoryIntegrationTest {
   }
 
   private void setReadOnly(final int ws, final String path, final boolean readOnly) throws Exception {
-    history.mutate(ws, USER, "lock", () -> fs.updateMetadataKeys(
+    history.mutate(ws, USER, Change.of("lock", Path.of(sidecar(path))), () -> fs.updateMetadataKeys(
         ws, Path.of(path), new MetadataUpdates.Builder(USER).readOnly(readOnly).build(), MetadataMergeBehavior.deepMerge),
         r -> true);
   }
 
   private boolean isReadOnly(final int ws, final String path) throws Exception {
-    return history.mutate(ws, USER, "check", () -> fs.isReadOnly(ws, Path.of(path)), r -> true);
+    return history.mutate(ws, USER, Change.of("check"), () -> fs.isReadOnly(ws, Path.of(path)), r -> true);
   }
 
   private static final boolean POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
@@ -205,11 +235,11 @@ class WorkspaceHistoryIntegrationTest {
   }
 
   private void deleteSidecar(final int ws, final String path) throws Exception {
-    history.mutate(ws, USER, "drop metadata", () -> fs.deleteMetadataFile(ws, Path.of(path)), r -> r);
+    history.mutate(ws, USER, Change.of("drop metadata", Path.of(sidecar(path))), () -> fs.deleteMetadataFile(ws, Path.of(path)), r -> r);
   }
 
   private void setUserMetadata(final int ws, final String path, final String status) throws Exception {
-    history.mutate(ws, USER, "meta", () -> fs.updateMetadataKeys(
+    history.mutate(ws, USER, Change.of("meta", Path.of(sidecar(path))), () -> fs.updateMetadataKeys(
         ws, Path.of(path),
         new MetadataUpdates.Builder(USER).user(Json.createObjectBuilder().add("status", status).build()).build(),
         MetadataMergeBehavior.deepMerge), r -> true);
@@ -296,7 +326,7 @@ class WorkspaceHistoryIntegrationTest {
     void userMetadataIsVersionedAndLastEditedIsDerivedFromHistory() throws Exception {
       saveOk(WS1, "a.txt", "v1");
       final var savedAt = head(WS1).getAuthorIdent().getWhenAsInstant();
-      history.mutate(WS1, "bob", "Update metadata for a.txt", () -> fs.updateMetadataKeys(
+      history.mutate(WS1, "bob", Change.of("Update metadata for a.txt", Path.of(".a.txt.meta.seqdev")), () -> fs.updateMetadataKeys(
           WS1, Path.of("a.txt"),
           new MetadataUpdates.Builder("bob").user(Json.createObjectBuilder().add("status", "draft").build()).build(),
           MetadataMergeBehavior.deepMerge), r -> true);
@@ -324,7 +354,7 @@ class WorkspaceHistoryIntegrationTest {
 
       history.failCommitsIn.add(root(WS1));
       final var ex = assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () ->
-          history.mutate(WS1, USER, "doomed", () -> {
+          history.mutate(WS1, USER, Change.of("doomed", Path.of("keep.txt"), Path.of("gone.txt"), Path.of("new"), Path.of("untracked.txt")), () -> {
             Files.writeString(root(WS1).resolve("keep.txt"), "modified");
             Files.delete(root(WS1).resolve("gone.txt"));
             Files.createDirectories(root(WS1).resolve("new/nested"));
@@ -349,7 +379,7 @@ class WorkspaceHistoryIntegrationTest {
     @Test
     void aMutationThatThrowsIsRolledBackAndTheExceptionPropagates() throws Exception {
       saveOk(WS1, "a.txt", "original");
-      final var thrown = assertThrows(IOException.class, () -> history.mutate(WS1, USER, "x", () -> {
+      final var thrown = assertThrows(IOException.class, () -> history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
         Files.writeString(root(WS1).resolve("a.txt"), "half-written");
         throw new IOException("disk full");
       }, r -> true));
@@ -361,7 +391,7 @@ class WorkspaceHistoryIntegrationTest {
     @Test
     void aFailureResultIsRolledBack() throws Exception {
       saveOk(WS1, "a.txt", "original");
-      final var result = history.mutate(WS1, USER, "x", () -> {
+      final var result = history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
         Files.writeString(root(WS1).resolve("a.txt"), "partial");
         return false;
       }, r -> r);
@@ -477,11 +507,11 @@ class WorkspaceHistoryIntegrationTest {
     void theWorkspaceRootCannotBeDeletedOrCopied() throws Exception {
       // The handlers cannot address the root by name; the service still refuses it outright.
       for (final var rootPath : List.of(Path.of(""), Path.of("."), Path.of("d/.."))) {
-        assertThrows(WorkspaceFileOpException.class, () -> history.mutate(WS1, USER, "x",
+        assertThrows(WorkspaceFileOpException.class, () -> history.mutate(WS1, USER, Change.of("x", rootPath),
             () -> fs.deleteDirectory(WS1, rootPath), r -> r));
-        final var commits = new LinkedHashMap<Integer, String>();
-        commits.put(WS2, "x");
-        commits.put(WS1, "x");
+        final var commits = new LinkedHashMap<Integer, Change>();
+        commits.put(WS2, Change.of("x", Path.of("x")));
+        commits.put(WS1, Change.of("x"));
         assertThrows(WorkspaceFileOpException.class, () -> history.mutate(commits, USER,
             () -> fs.copyDirectory(WS1, rootPath, WS2, Path.of("x"), USER), r -> r));
       }
@@ -662,14 +692,14 @@ class WorkspaceHistoryIntegrationTest {
       final var secondEntered = new AtomicBoolean(false);
       final var pool = Executors.newFixedThreadPool(2);
       try {
-        final var first = pool.submit(() -> history.mutate(WS1, "first", "first", () -> {
+        final var first = pool.submit(() -> history.mutate(WS1, "first", Change.of("first", Path.of("a.txt")), () -> {
           Files.writeString(root(WS1).resolve("a.txt"), "first");
           firstWrote.countDown();
           assertTrue(releaseFirst.await(10, TimeUnit.SECONDS));
           return true;
         }, r -> true));
         assertTrue(firstWrote.await(10, TimeUnit.SECONDS));
-        final var second = pool.submit(() -> history.mutate(WS1, "second", "second", () -> {
+        final var second = pool.submit(() -> history.mutate(WS1, "second", Change.of("second", Path.of("a.txt")), () -> {
           secondEntered.set(true);
           Files.writeString(root(WS1).resolve("a.txt"), "second");
           return true;
@@ -921,11 +951,25 @@ class WorkspaceHistoryIntegrationTest {
       return result.jsonResponse().asJsonObject().getString("message");
     }
 
+    /**
+     * Normal mutations rely on workspace-server being the sole writer and do not scan the workspace, so an out-of-band
+     * edit is not detected by them; it is never swept into their commits, and it is rejected at the next trust
+     * boundary: an explicit integrity check, or the first mutation by a new process.
+     */
     @Test
-    void outOfBandChangesAreRejectedNotCommitted() throws Exception {
+    void outOfBandChangesAreNeverCommittedAndAreRejectedAtTrustBoundaries() throws Exception {
       Files.writeString(root(WS1).resolve("a.txt"), "edited on disk");
       Files.writeString(root(WS1).resolve("dropped-in.txt"), "new on disk");
 
+      saveOk(WS1, "c.txt", "v1");
+      assertEquals(Set.of("c.txt", ".c.txt.meta.seqdev"), headChanges(WS1));
+      assertFalse(headTree(WS1).contains("dropped-in.txt"));
+
+      final var check = assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () -> history.verifyIntegrity(WS1));
+      assertEquals(WorkspaceHistory.Kind.REPOSITORY_INCONSISTENT, check.kind);
+      assertTrue(check.getMessage().contains("a.txt") && check.getMessage().contains("dropped-in.txt"), check.getMessage());
+
+      restart();
       final var message = assertRefused();
       assertTrue(message.contains("a.txt") && message.contains("dropped-in.txt"), message);
       assertEquals("edited on disk", read(WS1, "a.txt"), "left untouched, not reset");
@@ -1152,9 +1196,11 @@ class WorkspaceHistoryIntegrationTest {
         assertThrows(ReservedPathException.class, () -> fs.loadFile(WS1, Path.of(path)), path);
         assertThrows(ReservedPathException.class, () -> fs.checkFileExists(WS1, Path.of(path)), path);
       }
-      // The workspace is no longer as PlanDev left it, so nothing is written anywhere, inside or outside it.
-      assertFailure(save(WS1, "toOutside/secret.txt", "overwritten", "*"), 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
-      assertFailure(save(WS1, "toGit/config", "overwritten", "*"), 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
+      // A mutation's declared paths may not go through a link, so nothing is written anywhere, inside or outside it.
+      assertFailure(save(WS1, "toOutside/secret.txt", "overwritten", "*"), 400, "RESERVED_PATH");
+      assertFailure(save(WS1, "toGit/config", "overwritten", "*"), 400, "RESERVED_PATH");
+      assertFailure(bindings.handleDelete(WS1, Path.of("toInside/x.txt"), USER), 400, "RESERVED_PATH");
+      assertEquals("x", read(WS1, "d/x.txt"));
       assertEquals("secret", Files.readString(outside.resolve("secret.txt")));
       assertEquals(head, head(WS1));
     }
@@ -1275,14 +1321,317 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
+  /** A mutation stages, commits and restores only the paths it declared, never the rest of the workspace. */
+  @Nested
+  class ScopedCommits {
+    @Test
+    void anUnrelatedFileIsNeverPartOfACommit() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      Files.writeString(root(WS1).resolve("stray.txt"), "not written through PlanDev");
+      saveOk(WS1, "b.txt", "v1");
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      try (final var git = git(WS1)) {
+        assertEquals(Set.of("stray.txt"), git.status().call().getUntracked());
+      }
+    }
+
+    @Test
+    void aMutationCommitsOnlyWhatItDeclared() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")), () -> {
+        Files.writeString(root(WS1).resolve("a.txt"), "v2");
+        Files.writeString(root(WS1).resolve("undeclared.txt"), "x");
+        return true;
+      }, r -> true);
+      assertEquals(Set.of("a.txt"), headChanges(WS1));
+      assertFalse(headTree(WS1).contains("undeclared.txt"));
+    }
+
+    @Test
+    void fileOperationsRefuseToWriteOutsideTheDeclaredPaths() throws Exception {
+      init(WS1);
+      final var head = head(WS1);
+      assertThrows(IllegalStateException.class, () -> history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")),
+          () -> fs.createDirectory(WS1, Path.of("elsewhere")), r -> r));
+      // Saving a file also writes its sidecar, which must be declared too
+      assertThrows(IllegalStateException.class, () -> history.mutate(WS1, USER, Change.of("x", Path.of("a.txt")),
+          () -> fs.saveFile(WS1, Path.of("a.txt"), upload("a.txt", "x"), USER), Optional::isPresent));
+      assertFalse(Files.exists(root(WS1).resolve("elsewhere")));
+      assertFalse(Files.exists(root(WS1).resolve("a.txt")));
+      assertEquals(head, head(WS1));
+      assertClean(WS1);
+    }
+
+    @Test
+    void declaredPathsAreValidated() throws Exception {
+      init(WS1);
+      for (final var path : List.of(".git/config", "d/.seqdev/x", ".gitignore", ".GIT")) {
+        assertThrows(ReservedPathException.class,
+            () -> history.mutate(WS1, USER, Change.of("x", Path.of(path)), () -> true, r -> r), path);
+      }
+      assertThrows(SecurityException.class,
+          () -> history.mutate(WS1, USER, Change.of("x", Path.of("../ws2/a.txt")), () -> true, r -> r));
+      for (final var path : List.of("", ".", "d/..")) {
+        assertThrows(WorkspaceFileOpException.class,
+            () -> history.mutate(WS1, USER, Change.of("x", Path.of(path)), () -> true, r -> r), path);
+      }
+      assertFalse(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
+    }
+
+    @Test
+    void deleteStagesOnlyTheFileAndItsSidecar() throws Exception {
+      saveOk(WS1, "a.txt", "content");
+      saveOk(WS1, "b.txt", "content");
+      assertSuccess(bindings.handleDelete(WS1, Path.of("a.txt"), USER));
+      assertEquals(Set.of("a.txt", ".a.txt.meta.seqdev"), headChanges(WS1));
+      assertTrue(headDiff(WS1).stream().allMatch(d -> d.getChangeType() == DiffEntry.ChangeType.DELETE));
+      assertClean(WS1);
+    }
+
+    /** A directory root covers its subtree only: not siblings that merely share its name as a prefix. */
+    @Test
+    void aDirectoryRootDoesNotCoverPrefixSiblings() throws Exception {
+      for (final var path : List.of("d/x.txt", "d/sub/y.txt", "dx.txt", "d2/z.txt")) saveOk(WS1, path, "v1");
+      // Edited out of band: these would show up in the commit if the scope leaked onto them
+      Files.writeString(root(WS1).resolve("dx.txt"), "v2");
+      Files.writeString(root(WS1).resolve("d2/z.txt"), "v2");
+
+      assertSuccess(bindings.handleMove(Path.of("d"), Path.of("e"), WS1, WS1, false, USER));
+      assertEquals(Set.of("d/x.txt", "d/.x.txt.meta.seqdev", "d/sub/y.txt", "d/sub/.y.txt.meta.seqdev",
+                          "e/x.txt", "e/.x.txt.meta.seqdev", "e/sub/y.txt", "e/sub/.y.txt.meta.seqdev"), headChanges(WS1));
+      assertSuccess(bindings.handleDelete(WS1, Path.of("e"), USER));
+      assertEquals(Set.of("e/x.txt", "e/.x.txt.meta.seqdev", "e/sub/y.txt", "e/sub/.y.txt.meta.seqdev"), headChanges(WS1));
+      try (final var git = git(WS1)) {
+        assertEquals(Set.of("dx.txt", "d2/z.txt"), git.status().call().getModified());
+      }
+    }
+
+    @Test
+    void crossWorkspaceOperationsScopeEachRepositoryIndependently() throws Exception {
+      saveOk(WS1, "a.txt", "content");
+      saveOk(WS1, "keep.txt", "content");
+      init(WS2);
+      Files.writeString(root(WS1).resolve("stray1.txt"), "x");
+      Files.writeString(root(WS2).resolve("stray2.txt"), "x");
+
+      assertSuccess(bindings.handleMove(Path.of("a.txt"), Path.of("moved.txt"), WS1, WS2, false, USER));
+      assertEquals(Set.of("a.txt", ".a.txt.meta.seqdev"), headChanges(WS1));
+      assertEquals(Set.of("moved.txt", ".moved.txt.meta.seqdev"), headChanges(WS2));
+      final var ws1Head = head(WS1);
+      assertSuccess(bindings.handleCopy(Path.of("keep.txt"), Path.of("keep.txt"), WS1, WS2, false, USER));
+      assertEquals(ws1Head, head(WS1), "a copy's source records nothing");
+      assertEquals(Set.of("keep.txt", ".keep.txt.meta.seqdev"), headChanges(WS2));
+      assertFalse(headTree(WS1).contains("stray1.txt"));
+      assertFalse(headTree(WS2).contains("stray2.txt"));
+    }
+  }
+
+  /**
+   * A process can die anywhere between changing files and committing them. Each test stops a mutation at a checkpoint
+   * exactly as a crash would (no rollback runs), then starts a new process on the same volume, whose next use of the
+   * workspace must resolve the interrupted change to either the old or the new committed state.
+   */
+  @Nested
+  class CrashRecovery {
+    private void crash(final WorkspaceHistory.Checkpoint at, final int ws, final Runnable operation) {
+      history.crashAt = at;
+      history.crashIn = root(ws);
+      assertThrows(SimulatedCrash.class, operation::run);
+      assertTrue(Files.exists(WorkspaceHistory.recordFile(root(ws))), "the crash left its record behind");
+      restart();
+    }
+
+    private void assertRecovered(final int ws) throws Exception {
+      assertFalse(Files.exists(WorkspaceHistory.recordFile(root(ws))));
+      assertClean(ws);
+      history.verifyIntegrity(ws);
+    }
+
+    @Test
+    void aCreateInterruptedBeforeStagingIsRolledBack() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      final var before = head(WS1);
+      crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1, () -> save(WS1, "dir/new.txt", "x", null));
+      assertTrue(Files.exists(root(WS1).resolve("dir/new.txt")), "written before the crash");
+
+      saveOk(WS1, "other.txt", "next");
+      assertFalse(Files.exists(root(WS1).resolve("dir")), "the created file, its sidecar and its new folder are gone");
+      assertEquals(before, head(WS1).getParent(0));
+      assertEquals(Set.of("other.txt", ".other.txt.meta.seqdev"), headChanges(WS1));
+      assertRecovered(WS1);
+    }
+
+    @Test
+    void aSaveInterruptedAfterStagingIsRolledBack() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      final var before = head(WS1);
+      crash(WorkspaceHistory.Checkpoint.BEFORE_COMMIT, WS1, () -> save(WS1, "a.txt", "v2", "*"));
+      try (final var git = git(WS1)) {
+        assertEquals(Set.of("a.txt"), git.status().call().getChanged(), "staged, not committed");
+      }
+
+      history.verifyIntegrity(WS1);
+      assertEquals("v1", read(WS1, "a.txt"));
+      assertEquals(before, head(WS1));
+      assertRecovered(WS1);
+    }
+
+    @Test
+    void aSaveInterruptedAfterItsCommitIsKept() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      final var before = head(WS1);
+      crash(WorkspaceHistory.Checkpoint.BEFORE_RECORD_CLEARED, WS1, () -> save(WS1, "a.txt", "v2", "*"));
+
+      saveOk(WS1, "b.txt", "next");
+      assertEquals("v2", read(WS1, "a.txt"));
+      final var commits = log(WS1);
+      assertEquals("Update b.txt", commits.get(0).getFullMessage());
+      assertEquals("Update a.txt", commits.get(1).getFullMessage());
+      assertEquals(before, commits.get(2));
+      assertRecovered(WS1);
+    }
+
+    @Test
+    void aDeleteInterruptedBeforeStagingIsRolledBack() throws Exception {
+      saveOk(WS1, "a.txt", "content");
+      setUserMetadata(WS1, "a.txt", "final");
+      setReadOnly(WS1, "a.txt", false); // an explicit flag, so runtime state has an entry the delete removes
+      final var sidecar = read(WS1, ".a.txt.meta.seqdev");
+      final var state = Files.readAllBytes(WorkspaceState.file(root(WS1)));
+      crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1, () -> bindings.handleDelete(WS1, Path.of("a.txt"), USER));
+      assertFalse(Files.exists(root(WS1).resolve("a.txt")));
+
+      history.verifyIntegrity(WS1);
+      assertEquals("content", read(WS1, "a.txt"));
+      assertEquals(sidecar, read(WS1, ".a.txt.meta.seqdev"));
+      assertArrayEquals(state, Files.readAllBytes(WorkspaceState.file(root(WS1))));
+      assertRecovered(WS1);
+    }
+
+    @Test
+    void aMoveInterruptedAfterStagingIsRolledBackWithItsLock() throws Exception {
+      saveOk(WS1, "d/a.txt", "content");
+      setReadOnly(WS1, "d/a.txt", true);
+      final var before = head(WS1);
+      crash(WorkspaceHistory.Checkpoint.BEFORE_COMMIT, WS1,
+            () -> bindings.handleMove(Path.of("d"), Path.of("e"), WS1, WS1, false, USER));
+      assertTrue(Files.exists(root(WS1).resolve("e/a.txt")));
+
+      history.verifyIntegrity(WS1);
+      assertEquals("content", read(WS1, "d/a.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("e")));
+      assertEquals(before, head(WS1));
+      assertTrue(isReadOnly(WS1, "d/a.txt"), "the lock is back where the file is");
+      assertEquals(List.of("d/a.txt"), WorkspaceState.load(root(WS1)).readOnlyAtOrUnder(""));
+      assertRecovered(WS1);
+    }
+
+    /** The destination committed first; the source's change is rolled back, so the move degrades to a copy. */
+    @Test
+    void aCrossWorkspaceMoveInterruptedBetweenCommitsDegradesToACopy() throws Exception {
+      saveOk(WS1, "a.txt", "content");
+      init(WS2);
+      final var sourceHead = head(WS1);
+      crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1,
+            () -> bindings.handleMove(Path.of("a.txt"), Path.of("a.txt"), WS1, WS2, false, USER));
+      assertFalse(Files.exists(WorkspaceHistory.recordFile(root(WS2))), "the destination had finished");
+
+      history.verifyIntegrity(WS1);
+      assertEquals("content", read(WS1, "a.txt"));
+      assertEquals(sourceHead, head(WS1));
+      assertEquals("content", read(WS2, "a.txt"));
+      assertEquals(Set.of("a.txt", ".a.txt.meta.seqdev"), headTree(WS2));
+      assertRecovered(WS1);
+      assertRecovered(WS2);
+    }
+
+    @Test
+    void gitLockFilesLeftByTheCrashedProcessAreRemoved() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      crash(WorkspaceHistory.Checkpoint.BEFORE_COMMIT, WS1, () -> save(WS1, "a.txt", "v2", "*"));
+      Files.writeString(root(WS1).resolve(".git/index.lock"), "");
+      Files.writeString(root(WS1).resolve(".git/refs/heads/main.lock"), "");
+
+      saveOk(WS1, "a.txt", "v3");
+      assertEquals("v3", read(WS1, "a.txt"));
+      assertFalse(Files.exists(root(WS1).resolve(".git/index.lock")));
+      assertFalse(Files.exists(root(WS1).resolve(".git/refs/heads/main.lock")));
+      assertRecovered(WS1);
+    }
+
+    /** Recovery is retried until the whole workspace is consistent; the record is kept until then. */
+    @Test
+    void aRecoveryBlockedByOtherDamageKeepsItsRecordAndIsRetried() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1, () -> save(WS1, "new.txt", "x", null));
+      Files.writeString(root(WS1).resolve("stray.txt"), "out of band");
+
+      final var result = save(WS1, "b.txt", "v1", null);
+      assertFailure(result, 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
+      assertTrue(result.jsonResponse().asJsonObject().getString("message").contains("stray.txt"));
+      assertTrue(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
+      assertTrue(Files.exists(root(WS1).resolve("stray.txt")), "never deleted: it is outside the interrupted change");
+
+      Files.delete(root(WS1).resolve("stray.txt"));
+      saveOk(WS1, "b.txt", "v1");
+      assertFalse(Files.exists(root(WS1).resolve("new.txt")));
+      assertRecovered(WS1);
+    }
+
+    @Test
+    void anAmbiguousRecordFailsClosed() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      crash(WorkspaceHistory.Checkpoint.BEFORE_STAGE, WS1, () -> save(WS1, "new.txt", "x", null));
+      try (final var git = git(WS1)) { // HEAD is now neither the recorded commit nor one commit on top of it
+        for (int i = 0; i < 2; i++) git.commit().setMessage("elsewhere").setAllowEmpty(true).setSign(false).call();
+      }
+      final var head = head(WS1);
+
+      final var result = save(WS1, "b.txt", "v1", null);
+      assertFailure(result, 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
+      assertTrue(result.jsonResponse().asJsonObject().getString("message").contains("interrupted"));
+      assertEquals("x", read(WS1, "new.txt"), "left untouched");
+      assertEquals(head, head(WS1));
+      assertTrue(Files.exists(WorkspaceHistory.recordFile(root(WS1))));
+    }
+
+    @Test
+    void anUnreadableRecordFailsClosed() throws Exception {
+      saveOk(WS1, "a.txt", "v1");
+      Files.writeString(WorkspaceHistory.recordFile(root(WS1)), "{\"version\":1,");
+      assertFailure(save(WS1, "b.txt", "v1", null), 500, "WORKSPACE_REPOSITORY_INCONSISTENT");
+      assertFalse(Files.exists(root(WS1).resolve("b.txt")));
+    }
+  }
+
+  @Nested
+  class Maintenance {
+    @Test
+    void noGitStartsAnAutomaticGcAndMaintenancePacksUnderTheLock() throws Exception {
+      for (int i = 0; i < 20; i++) saveOk(WS1, "a.txt", "v" + i);
+      try (final var git = git(WS1)) {
+        assertEquals(0, git.getRepository().getConfig().getInt("gc", "auto", -1));
+        assertEquals(0, git.getRepository().getConfig().getInt("gc", "autoPackLimit", -1));
+      }
+      assertTrue(history.statistics(WS1).looseObjects() > 20, history.statistics(WS1)::toString);
+
+      final var after = history.maintain(WS1);
+      assertEquals(0, after.looseObjects(), after::toString);
+      assertTrue(after.packedObjects() > 20 && after.packFiles() == 1, after::toString);
+      saveOk(WS1, "a.txt", "after maintenance");
+      assertClean(WS1);
+      history.verifyIntegrity(WS1);
+    }
+  }
+
   @Test
   void everyFileSystemMutationRequiresTheLock() {
     assertThrows(IllegalStateException.class, () -> fs.createDirectory(WS1, Path.of("x")));
     assertThrows(IllegalStateException.class, () -> fs.deleteFile(WS1, Path.of("x")));
     assertThrows(IllegalStateException.class, () -> fs.saveFile(WS1, Path.of("x"), upload("x", "x"), USER));
     assertThrows(IllegalStateException.class, () -> fs.copyDirectory(WS1, Path.of("x"), WS2, Path.of("y"), USER));
-    final var commits = new LinkedHashMap<Integer, String>();
-    commits.put(WS1, "only ws1");
+    final var commits = new LinkedHashMap<Integer, Change>();
+    commits.put(WS1, Change.of("only ws1", Path.of("a"), Path.of("b")));
     // Holding one workspace's lock does not authorize mutating another
     assertThrows(IllegalStateException.class, () -> history.mutate(commits, USER,
         () -> fs.moveDirectory(WS1, Path.of("a"), WS2, Path.of("b")), r -> true));

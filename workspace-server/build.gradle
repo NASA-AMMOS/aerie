@@ -45,6 +45,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    // Opt-in probes such as WorkspaceSaveScaleProbe read -Dworkspace.* from the Gradle command line
+    systemProperties System.properties.findAll { it.key.toString().startsWith('workspace.') }
 }
 
 jacocoTestReport {
