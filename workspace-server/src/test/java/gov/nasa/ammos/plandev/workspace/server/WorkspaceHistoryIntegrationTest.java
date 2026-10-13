@@ -1646,6 +1646,25 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
+  @Nested
+  class Maintenance {
+    @Test
+    void noGitStartsAnAutomaticGcAndMaintenancePacksUnderTheLock() throws Exception {
+      for (int i = 0; i < 20; i++) saveOk(WS1, "a.txt", "v" + i);
+      try (final var git = git(WS1)) {
+        assertEquals(0, git.getRepository().getConfig().getInt("gc", "auto", -1));
+        assertEquals(0, git.getRepository().getConfig().getInt("gc", "autoPackLimit", -1));
+      }
+      assertTrue(history.statistics(WS1).looseObjects() > 20, history.statistics(WS1)::toString);
+
+      final var after = history.maintain(WS1);
+      assertEquals(0, after.looseObjects(), after::toString);
+      assertTrue(after.packedObjects() > 20 && after.packFiles() == 1, after::toString);
+      saveOk(WS1, "a.txt", "after maintenance");
+      assertClean(WS1);
+    }
+  }
+
   @Test
   void everyFileSystemMutationRequiresTheLock() {
     assertThrows(IllegalStateException.class, () -> fs.createDirectory(WS1, Path.of("x")));

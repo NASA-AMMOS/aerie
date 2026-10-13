@@ -46,6 +46,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
@@ -112,6 +115,11 @@ import java.util.function.Predicate;
  * mid-operation, a manual checkout) is rejected with {@link Kind#REPOSITORY_INCONSISTENT} naming what is wrong. It is
  * never committed, reset or repaired automatically.
  *
+ * <p><b>Maintenance.</b> Commits create loose objects. JGit only auto-GCs from fetch, push, receive, merge and rebase,
+ * none of which this class uses, and {@link #configure} disables auto-GC for any other Git that opens the repository.
+ * Packing is instead done by {@link #maintain}, under the workspace lock, either explicitly or in the background
+ * after every {@link #MAINTENANCE_INTERVAL} commits to a workspace.
+ *
  * <p><b>Deployment assumption.</b> Locks are in-process. This is correct only while a single workspace-server
  * instance owns the workspace volume (the current deployment: one replica, no other service mounts the volume) and
  * nothing outside this class writes to a workspace's working tree. Reads do not take the lock.
@@ -122,6 +130,8 @@ public class WorkspaceHistory {
   static final String INIT_MESSAGE = "Initialize workspace history";
   static final String ADOPT_MESSAGE = "Adopt workspace into history";
   static final String BRANCH = "main";
+  /** Commits to one workspace, made by this process, after which it is packed in the background. */
+  static final int MAINTENANCE_INTERVAL = 1000;
   private static final String MANAGED_SECTION = "plandev";
   private static final String MANAGED_KEY = "managed";
   private static final int RECORD_VERSION = 1;
@@ -189,6 +199,9 @@ public class WorkspaceHistory {
   /** A file's most recent content change, derived from history. {@code baseline} marks the history's root commit. */
   public record LastEdit(String by, Instant at, boolean baseline) {}
 
+  /** Object-store size, for deciding when (and checking that) maintenance is needed. */
+  public record RepositoryStats(long looseObjects, long looseBytes, long packedObjects, long packBytes, long packFiles) {}
+
   private record Before(ObjectId head, byte[] state) {}
 
   /** What a mutation record holds: the pre-operation state and the paths the interrupted mutation declared. */
@@ -203,6 +216,13 @@ public class WorkspaceHistory {
   private final ThreadLocal<Boolean> inLockScope = ThreadLocal.withInitial(() -> false);
   private final Map<Path, LastEditIndex> lastEditCache = new ConcurrentHashMap<>();
   private final Set<Path> configured = ConcurrentHashMap.newKeySet();
+  // ponytail: per-process commit counts; a restart resets them, which only delays the next background pack.
+  private final Map<Integer, AtomicInteger> commitsSinceMaintenance = new ConcurrentHashMap<>();
+  private final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor(r -> {
+    final var thread = new Thread(r, "workspace-maintenance");
+    thread.setDaemon(true);
+    return thread;
+  });
 
   public WorkspaceHistory(final WorkspaceRoots roots) {
     this.roots = roots;
@@ -253,6 +273,7 @@ public class WorkspaceHistory {
     final var ids = List.copyOf(changes.keySet());
     final var lockOrder = ids.stream().sorted().map(this::lockFor).toList();
     lockOrder.forEach(ReentrantLock::lock);
+    final var committedAny = new ArrayList<Integer>();
     try {
       final var rootsById = new LinkedHashMap<Integer, Path>();
       final var before = new HashMap<Integer, Before>();
@@ -285,7 +306,8 @@ public class WorkspaceHistory {
           checkpoint(Checkpoint.BEFORE_STAGE, root);
           stage(git, scopes.get(id));
           checkpoint(Checkpoint.BEFORE_COMMIT, root);
-          if (indexDiffersFromHead(git.getRepository())) {
+          final var changed = indexDiffersFromHead(git.getRepository());
+          if (changed) {
             requireValidIndex(git.getRepository());
             commit(git, changes.get(id).message(), userIdent(userId));
           }
@@ -293,6 +315,7 @@ public class WorkspaceHistory {
           checkpoint(Checkpoint.BEFORE_RECORD_CLEARED, root);
           Files.delete(recordFile(root));
           committed.add(id);
+          if (changed) committedAny.add(id);
         } catch (Exception e) {
           logger.error("Recording history for workspace {} failed; restoring", id, e);
           restoreAll(ids.subList(committed.size(), ids.size()), rootsById, before, e);
@@ -309,20 +332,27 @@ public class WorkspaceHistory {
     } finally {
       ids.forEach(scopes::remove);
       lockOrder.reversed().forEach(ReentrantLock::unlock);
+      committedAny.forEach(this::countCommit);
     }
   }
 
   /** Run an action under a workspace's lock without recording history (e.g. deleting the whole workspace). */
   public <T> T withLock(final int workspaceId, final Mutation<T> action) throws Exception {
+    final var root = roots.workspaceRootPath(workspaceId).normalize(); // before the action may delete the record
+    return locked(workspaceId, () -> {
+      final var result = action.apply();
+      lastEditCache.remove(root);
+      configured.remove(root);
+      return result;
+    });
+  }
+
+  private <T> T locked(final int workspaceId, final Mutation<T> action) throws Exception {
     return notNested(() -> {
       final var lock = lockFor(workspaceId);
       lock.lock();
       try {
-        final var root = roots.workspaceRootPath(workspaceId).normalize(); // before the action may delete the record
-        final var result = action.apply();
-        lastEditCache.remove(root);
-        configured.remove(root);
-        return result;
+        return action.apply();
       } finally {
         lock.unlock();
       }
@@ -575,8 +605,9 @@ public class WorkspaceHistory {
   }
 
   /**
-   * Make every repository behavior that could change file bytes or what is tracked explicit at repository level,
-   * rather than inheriting it from the server's $HOME or system Git config. Applied once per process per workspace.
+   * Make every repository behavior that could change file bytes, what is tracked, or when objects are repacked
+   * explicit at repository level, rather than inheriting it from the server's $HOME or system Git config. Applied once
+   * per process per workspace.
    */
   private void configure(final Path root, final Repository repo) throws IOException {
     if (configured.contains(root)) return;
@@ -588,6 +619,10 @@ public class WorkspaceHistory {
     cfg.setString("core", null, "hooksPath", "/dev/null");
     cfg.setBoolean("commit", null, "gpgSign", false);
     cfg.setBoolean("tag", null, "gpgSign", false);
+    // No Git may start an unlocked background GC; packing is done by maintain(), under the workspace lock
+    cfg.setInt("gc", null, "auto", 0);
+    cfg.setInt("gc", null, "autoPackLimit", 0);
+    cfg.setBoolean("gc", null, "autoDetach", false);
     cfg.save();
 
     final var info = repo.getDirectory().toPath().resolve("info");
@@ -914,6 +949,50 @@ public class WorkspaceHistory {
     try (final var entries = Files.list(dir)) {
       return entries.findAny().isEmpty();
     }
+  }
+  //endregion
+
+  //region Maintenance
+  /** Object counts and sizes of a workspace's repository. Lock-free; reads only the object store's directories. */
+  public RepositoryStats statistics(final int workspaceId) throws Exception {
+    try (final var git = open(roots.workspaceRootPath(workspaceId).normalize())) {
+      final var p = git.gc().getStatistics();
+      return new RepositoryStats(
+          ((Number) p.get("numberOfLooseObjects")).longValue(),
+          ((Number) p.get("sizeOfLooseObjects")).longValue(),
+          ((Number) p.get("numberOfPackedObjects")).longValue(),
+          ((Number) p.get("sizeOfPackedObjects")).longValue(),
+          ((Number) p.get("numberOfPackFiles")).longValue());
+    }
+  }
+
+  /**
+   * Pack a workspace's loose objects (and prune unreachable ones past Git's default expiry) under its lock, so no
+   * mutation runs concurrently. Only for managed workspaces with no unfinished mutation.
+   */
+  public RepositoryStats maintain(final int workspaceId) throws Exception {
+    final var root = roots.workspaceRootPath(workspaceId).normalize();
+    locked(workspaceId, () -> {
+      if (!isManaged(root) || Files.exists(recordFile(root), LinkOption.NOFOLLOW_LINKS)) return null;
+      try (final var git = open(root)) {
+        git.gc().setAggressive(false).call();
+      }
+      return null;
+    });
+    return statistics(workspaceId);
+  }
+
+  private void countCommit(final int workspaceId) {
+    final var count = commitsSinceMaintenance.computeIfAbsent(workspaceId, k -> new AtomicInteger());
+    if (count.incrementAndGet() < MAINTENANCE_INTERVAL) return;
+    count.set(0);
+    maintenanceExecutor.execute(() -> {
+      try {
+        logger.info("Workspace {} maintenance: {}", workspaceId, maintain(workspaceId));
+      } catch (Exception e) {
+        logger.warn("Background maintenance of workspace {} failed", workspaceId, e);
+      }
+    });
   }
   //endregion
 
