@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import javax.json.Json;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -104,10 +105,11 @@ import java.util.function.Predicate;
  * valid runtime state; otherwise every mutation of the workspace is rejected with
  * {@link Kind#REPOSITORY_INCONSISTENT}, and nothing is repaired. Working-tree <i>drift</i> (a tracked file modified or
  * missing, an untracked file, made outside PlanDev) is path-local and never committed. Drift elsewhere is left
- * untouched. Drift at or under a mutation's declared roots is healed first: its bytes are moved to
- * {@code .seqdev/recovery/} and the roots are restored from HEAD, so the mutation starts from canonical state. Drift
- * above a root (an untracked file {@code d} where the mutation needs folder {@code d}), a symbolic link or a special
- * file is not healed: the mutation is rejected and it is left untouched.
+ * untouched. Drift at or under a mutation's declared roots, or an untracked file in the way above one (a file
+ * {@code d} where the mutation needs folder {@code d}), is healed first: its bytes are moved to
+ * {@code .seqdev/recovery/} and the roots are restored from HEAD, so the mutation starts from canonical state. A
+ * tracked file above a root, a symbolic link or a special file is not healed: the mutation is rejected and it is left
+ * untouched.
  *
  * <p><b>Deployment assumption.</b> Locks are in-process. This is correct only while a single workspace-server
  * instance owns the workspace volume (the current deployment: one replica, no other service mounts the volume) and
@@ -466,10 +468,14 @@ public class WorkspaceHistory {
     final var overlapping = new TreeMap<String, String>();
     drift.forEach((path, change) -> { if (overlaps(path, scope)) overlapping.put(path, change); });
     if (overlapping.isEmpty()) return;
-    // Healing above a root would touch paths outside the scope; links and special files are never moved or followed
-    final var unhealable = overlapping.keySet().stream().filter(path ->
-        scope.stream().noneMatch(r -> isAtOrUnder(path, r))
-        || (!overlapping.get(path).equals("deleted") && !Files.isRegularFile(root.resolve(path), LinkOption.NOFOLLOW_LINKS))).toList();
+    // Above a root, only an untracked file in the way is moved aside: a tracked one is history the mutation would
+    // collide with. Links and special files are never moved or followed.
+    final var unhealable = overlapping.keySet().stream().filter(path -> {
+      final var change = overlapping.get(path);
+      final var above = scope.stream().noneMatch(r -> isAtOrUnder(path, r));
+      return (above && !change.equals("untracked"))
+             || (!change.equals("deleted") && !Files.isRegularFile(root.resolve(path), LinkOption.NOFOLLOW_LINKS));
+    }).toList();
     if (!unhealable.isEmpty()) {
       throw inconsistent("Workspace at %s: %s differ from managed history and were left untouched."
                              .formatted(root, summarize(unhealable)));
@@ -505,9 +511,9 @@ public class WorkspaceHistory {
   /**
    * Move each drifted file into a new incident (a rename within the workspace's filesystem) and record what was found.
    * A deleted file has no bytes to keep; its absence is recorded. If anything fails, files already moved are moved
-   * back and the incident is removed, so the workspace is left as it was.
+   * back; only if all of them were is the incident removed. Otherwise it is kept, holding what could not be returned.
    */
-  private static Path preserve(
+  private Path preserve(
       final int workspaceId,
       final Path root,
       final ObjectId head,
@@ -533,7 +539,7 @@ public class WorkspaceHistory {
           path.add("executable", Files.isExecutable(file));
           final var target = dir.resolve("files").resolve(e.getKey());
           Files.createDirectories(target.getParent());
-          Files.move(file, target, StandardCopyOption.ATOMIC_MOVE);
+          move(file, target);
           moved.put(file, target);
         }
         paths.add(path);
@@ -551,21 +557,58 @@ public class WorkspaceHistory {
       if (userId != null) json.add("userId", userId);
       WorkspacePaths.writeAtomically(root, dir.resolve("incident.json"), json.build().toString().getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
-      for (final var m : moved.reversed().entrySet()) Files.move(m.getValue(), m.getKey(), StandardCopyOption.ATOMIC_MOVE);
-      deleteTree(dir);
+      final var stranded = new ArrayList<String>();
+      for (final var m : moved.reversed().entrySet()) {
+        try {
+          move(m.getValue(), m.getKey());
+        } catch (IOException back) {
+          e.addSuppressed(back);
+          stranded.add(WorkspacePaths.key(root, m.getKey()));
+        }
+      }
+      if (stranded.isEmpty()) {
+        try {
+          deleteTree(dir);
+        } catch (IOException cleanup) {
+          e.addSuppressed(cleanup);
+        }
+        throw new WorkspaceHistoryException(Kind.REPOSITORY_INCONSISTENT,
+            "Workspace at %s: %s differ from managed history and could not be preserved, so they were left untouched."
+                .formatted(root, summarize(drift.keySet())), e);
+      }
+      logger.error("Workspace {}: preserving {} failed and {} could not be moved back; they remain in {}",
+                   workspaceId, summarize(drift.keySet()), stranded, dir, e);
       throw new WorkspaceHistoryException(Kind.REPOSITORY_INCONSISTENT,
-          "Workspace at %s: %s differ from managed history and could not be preserved, so they were left untouched."
-              .formatted(root, summarize(drift.keySet())), e);
+          "Workspace at %s: %s differ from managed history and could not be preserved; %s could not be moved back and "
+              .formatted(root, summarize(drift.keySet()), summarize(stranded))
+          + "remain in " + dir + ".", e);
     }
     pruneIncidents(root);
     return dir;
   }
 
-  /** Keep the newest {@link #MAX_INCIDENTS} incidents (names start with their time). */
-  private static void pruneIncidents(final Path root) throws IOException {
+  /**
+   * Rename within the workspace's filesystem, atomically where the filesystem supports it. Overridable only so tests
+   * can inject a failure.
+   */
+  protected void move(final Path from, final Path to) throws IOException {
+    try {
+      Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
+    } catch (AtomicMoveNotSupportedException e) {
+      Files.move(from, to);
+    }
+  }
+
+  /**
+   * Keep the newest {@link #MAX_INCIDENTS} incidents (names start with their time). Best effort: the current incident
+   * is already written, so a failure here is logged and never fails the mutation.
+   */
+  private static void pruneIncidents(final Path root) {
     try (final var entries = Files.list(recoveryDir(root))) {
       final var newestFirst = entries.sorted(Comparator.reverseOrder()).toList();
       for (final var old : newestFirst.subList(Math.min(MAX_INCIDENTS, newestFirst.size()), newestFirst.size())) deleteTree(old);
+    } catch (IOException e) {
+      logger.warn("Could not prune old recovery incidents in {}", recoveryDir(root), e);
     }
   }
 

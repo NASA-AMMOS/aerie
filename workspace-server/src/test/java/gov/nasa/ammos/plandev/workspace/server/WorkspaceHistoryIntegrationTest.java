@@ -67,9 +67,20 @@ class WorkspaceHistoryIntegrationTest {
   /** A WorkspaceHistory whose commit step can be made to fail for chosen workspaces (deterministic injection). */
   static final class FlakyHistory extends WorkspaceHistory {
     final Set<Path> failCommitsIn = ConcurrentHashMap.newKeySet();
+    /** Moves during drift healing fail if their destination is listed or ends with this (incident names vary). */
+    final Set<Path> failMovesTo = ConcurrentHashMap.newKeySet();
+    volatile String failMovesEndingWith;
 
     FlakyHistory(final WorkspaceRoots roots) {
       super(roots);
+    }
+
+    @Override
+    protected void move(final Path from, final Path to) throws IOException {
+      if (failMovesTo.contains(to) || (failMovesEndingWith != null && to.endsWith(failMovesEndingWith))) {
+        throw new IOException("injected move failure: " + to);
+      }
+      super.move(from, to);
     }
 
     @Override
@@ -1247,17 +1258,29 @@ class WorkspaceHistoryIntegrationTest {
     }
 
     @Test
+    void anUntrackedFileInTheWayOfANewFolderIsMovedAside() throws Exception {
+      Files.writeString(root(WS1).resolve("p"), "an untracked file where a folder would go");
+
+      saveOk(WS1, "p/x.txt", "v1");
+      assertEquals("v1", read(WS1, "p/x.txt"));
+      assertEquals(Set.of("p/x.txt", "p/.x.txt.meta.seqdev"), headChanges(WS1));
+      assertEquals(java.util.Map.of("p", "untracked"), changesIn(onlyIncident(WS1)));
+      assertEquals("an untracked file where a folder would go", preserved(onlyIncident(WS1), "p"));
+      assertEquals(Set.of(), drift(WS1));
+    }
+
+    @Test
     void driftThatCannotBeHealedWithinTheScopeIsRejectedAndLeftUntouched() throws Exception {
       final var commits = log(WS1).size();
-      Files.writeString(root(WS1).resolve("p"), "an untracked file where a folder would go");
-      assertFailedWith(save(WS1, "p/x.txt", "v1", null), "left untouched"); // above the declared path
+      Files.writeString(root(WS1).resolve("a.txt"), "a tracked file, edited, where a folder would go");
+      assertFailedWith(save(WS1, "a.txt/x.txt", "v1", null), "left untouched"); // tracked, above the declared path
       if (POSIX) {
-        Files.createSymbolicLink(root(WS1).resolve("d/link"), root(WS1).resolve("a.txt"));
+        Files.createSymbolicLink(root(WS1).resolve("d/link"), root(WS1).resolve("b.txt"));
         assertFailedWith(bindings.handleDelete(WS1, Path.of("d"), USER), "left untouched"); // never moved or followed
         assertTrue(Files.isSymbolicLink(root(WS1).resolve("d/link")));
       }
       assertEquals(commits, log(WS1).size());
-      assertEquals("an untracked file where a folder would go", read(WS1, "p"));
+      assertEquals("a tracked file, edited, where a folder would go", read(WS1, "a.txt"));
       assertEquals(List.of(), incidents(WS1));
     }
 
@@ -1286,6 +1309,66 @@ class WorkspaceHistoryIntegrationTest {
       Files.delete(WorkspaceHistory.recoveryDir(root(WS1)));
       saveOk(WS1, "a.txt", "Y");
       assertEquals("X", preserved(onlyIncident(WS1), "a.txt"));
+    }
+
+    /** Heal a.txt and b.txt (moved in that order), with the move of b.txt into the incident failing. */
+    private WorkspaceHistory.WorkspaceHistoryException healFailingOnB() {
+      history.failMovesEndingWith = "files/b.txt";
+      try {
+        return assertThrows(WorkspaceHistory.WorkspaceHistoryException.class, () ->
+            history.mutate(WS1, USER, Change.of("x", Path.of("a.txt"), Path.of("b.txt")), () -> true, r -> r));
+      } finally {
+        history.failMovesEndingWith = null;
+        history.failMovesTo.clear();
+      }
+    }
+
+    /** A failure partway through preserving moves back what was already moved, and leaves no incident. */
+    @Test
+    void aPartlyPreservedScopeIsPutBack() throws Exception {
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      Files.writeString(root(WS1).resolve("b.txt"), "Y");
+
+      assertTrue(healFailingOnB().getMessage().contains("left untouched"));
+      assertEquals("X", read(WS1, "a.txt"));
+      assertEquals("Y", read(WS1, "b.txt"));
+      assertEquals(List.of(), incidents(WS1));
+    }
+
+    /** If a file cannot be moved back either, the incident is kept as evidence and the failure says so. */
+    @Test
+    void aFileThatCannotBeMovedBackStaysInTheIncident() throws Exception {
+      Files.writeString(root(WS1).resolve("a.txt"), "X");
+      Files.writeString(root(WS1).resolve("b.txt"), "Y");
+      history.failMovesTo.add(root(WS1).resolve("a.txt"));
+
+      final var message = healFailingOnB().getMessage();
+      assertTrue(message.contains("could not be moved back") && message.contains("a.txt"), message);
+      assertFalse(Files.exists(root(WS1).resolve("a.txt")));
+      assertEquals("X", preserved(onlyIncident(WS1), "a.txt"));
+      assertEquals("Y", read(WS1, "b.txt"));
+    }
+
+    /** Pruning old incidents is best effort: failing to delete one never fails the mutation that is healing. */
+    @Test
+    void aPruneFailureDoesNotFailTheMutation() throws Exception {
+      assumeTrue(POSIX);
+      final var recovery = Files.createDirectories(WorkspaceHistory.recoveryDir(root(WS1)));
+      for (int i = 0; i < WorkspaceHistory.MAX_INCIDENTS; i++) {
+        Files.createDirectories(recovery.resolve("00000000T000000000Z-old-%02d/files".formatted(i)));
+        Files.writeString(recovery.resolve("00000000T000000000Z-old-%02d/files/f".formatted(i)), "old");
+      }
+      final var locked = recovery.resolve("00000000T000000000Z-old-00/files");
+      Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("r-xr-xr-x"));
+      try {
+        Files.writeString(root(WS1).resolve("a.txt"), "X");
+        saveOk(WS1, "a.txt", "Y");
+      } finally {
+        Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("rwxr-xr-x"));
+      }
+      assertEquals("Y", read(WS1, "a.txt"));
+      assertEquals("X", preserved(incidents(WS1).getLast(), "a.txt"));
+      assertTrue(Files.exists(locked.resolve("f")), "the old incident could not be pruned; that was only logged");
     }
 
     @Test
