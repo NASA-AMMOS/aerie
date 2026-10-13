@@ -931,7 +931,7 @@ class WorkspaceHistoryIntegrationTest {
     }
   }
 
-  /** A managed workspace must be exactly as PlanDev left it before anything is mutated. */
+  /** A managed workspace's Git state, index and runtime state must be exactly as PlanDev left them. */
   @Nested
   class Trust {
     private static final String INCONSISTENT = "WORKSPACE_REPOSITORY_INCONSISTENT";
@@ -952,15 +952,12 @@ class WorkspaceHistoryIntegrationTest {
     }
 
     @Test
-    void outOfBandChangesAreRejectedNotCommitted() throws Exception {
-      Files.writeString(root(WS1).resolve("a.txt"), "edited on disk");
-      Files.writeString(root(WS1).resolve("dropped-in.txt"), "new on disk");
-
-      final var message = assertRefused();
-      assertTrue(message.contains("a.txt") && message.contains("dropped-in.txt"), message);
-      assertEquals("edited on disk", read(WS1, "a.txt"), "left untouched, not reset");
-      assertTrue(Files.exists(root(WS1).resolve("dropped-in.txt")));
-      assertTrue(log(WS1).stream().noneMatch(c -> c.getAuthorIdent().getName().equals("PlanDev") && c.getParentCount() > 0));
+    void stagedChangesAreRejected() throws Exception {
+      Files.writeString(root(WS1).resolve("a.txt"), "edited and staged outside PlanDev");
+      try (final var git = git(WS1)) {
+        git.add().addFilepattern("a.txt").call();
+      }
+      assertTrue(assertRefused().contains("staged changes"));
     }
 
     @Test
@@ -1065,6 +1062,143 @@ class WorkspaceHistoryIntegrationTest {
       assertEquals(WorkspaceHistory.ADOPT_MESSAGE, log(WS1).get(1).getFullMessage());
       assertTrue(history.isManaged(root(WS1)));
       assertClean(WS1);
+    }
+  }
+
+  /**
+   * Working-tree drift (edits made outside PlanDev) is path-local: it blocks only mutations whose declared paths
+   * overlap it, and is never touched, reset or committed.
+   */
+  @Nested
+  class Drift {
+    private static final String INCONSISTENT = "WORKSPACE_REPOSITORY_INCONSISTENT";
+
+    @BeforeEach
+    void initWs() {
+      for (final var path : List.of("a.txt", "b.txt", "m.txt", "gone.txt", "d/x.txt", "dx.txt", "d2/z.txt")) saveOk(WS1, path, "v1");
+      init(WS2);
+    }
+
+    private Set<String> drift(final int ws) throws Exception {
+      try (final var git = git(ws)) {
+        return WorkspaceHistory.dirtyPaths(git.status().call());
+      }
+    }
+
+    private void assertBlocked(final HandlerResult result) {
+      assertFailure(result, 500, INCONSISTENT);
+      assertTrue(result.jsonResponse().asJsonObject().getString("message").contains("differ from managed history"),
+                 () -> result.jsonResponse().toString());
+    }
+
+    @Test
+    void unrelatedDriftDoesNotBlockAndIsNeitherTouchedNorCommitted() throws Exception {
+      Files.writeString(root(WS1).resolve("m.txt"), "modified outside PlanDev");
+      Files.delete(root(WS1).resolve("gone.txt"));
+      Files.writeString(root(WS1).resolve("new.txt"), "untracked");
+      final var drift = Set.of("m.txt", "gone.txt", "new.txt");
+
+      saveOk(WS1, "c.txt", "v1");
+      assertEquals(Set.of("c.txt", ".c.txt.meta.seqdev"), headChanges(WS1));
+      assertSuccess(bindings.handleDelete(WS1, Path.of("b.txt"), USER));
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      assertSuccess(bindings.handleMove(Path.of("a.txt"), Path.of("e.txt"), WS1, WS1, false, USER));
+      assertSuccess(bindings.handleCopy(Path.of("e.txt"), Path.of("a.txt"), WS1, WS2, false, USER));
+
+      assertEquals(drift, drift(WS1), "each mutation left its own paths clean and the drift exactly as it was");
+      assertEquals("modified outside PlanDev", read(WS1, "m.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("gone.txt")));
+      assertEquals("untracked", read(WS1, "new.txt"));
+      assertFalse(headTree(WS1).contains("new.txt"));
+      assertTrue(headTree(WS1).contains("gone.txt"));
+      assertClean(WS2);
+    }
+
+    @Test
+    void driftOnAMutationsOwnPathsBlocksIt() throws Exception {
+      final var commits = log(WS1).size();
+      Files.writeString(root(WS1).resolve("a.txt"), "modified outside PlanDev");
+      Files.writeString(root(WS1).resolve(".b.txt.meta.seqdev"), "sidecar modified outside PlanDev");
+      Files.writeString(root(WS1).resolve("d/stray.txt"), "untracked");
+      Files.writeString(root(WS1).resolve("taken.txt"), "untracked");
+      Files.writeString(root(WS1).resolve("p"), "an untracked file where a folder would go");
+      Files.delete(root(WS1).resolve("gone.txt"));
+
+      assertBlocked(save(WS1, "a.txt", "v2", "*"));
+      assertBlocked(save(WS1, "b.txt", "v2", "*")); // through its sidecar
+      assertBlocked(save(WS1, "p/x.txt", "v1", null)); // drift above a declared path
+      assertBlocked(save(WS1, "gone.txt", "v2", "*")); // missing from disk
+      assertBlocked(bindings.handleDelete(WS1, Path.of("a.txt"), USER));
+      assertBlocked(bindings.handleDelete(WS1, Path.of("d"), USER)); // drift under a declared directory
+      assertBlocked(bindings.handleMove(Path.of("a.txt"), Path.of("e.txt"), WS1, WS1, false, USER)); // dirty source
+      assertBlocked(bindings.handleMove(Path.of("m.txt"), Path.of("taken.txt"), WS1, WS1, true, USER)); // dirty destination
+      assertBlocked(bindings.handleCopy(Path.of("a.txt"), Path.of("copy.txt"), WS1, WS1, false, USER)); // dirty source
+      assertBlocked(bindings.handleCopy(Path.of("m.txt"), Path.of("taken.txt"), WS1, WS1, true, USER)); // dirty destination
+
+      assertEquals(commits, log(WS1).size());
+      assertEquals("modified outside PlanDev", read(WS1, "a.txt"));
+      assertEquals("untracked", read(WS1, "taken.txt"));
+      assertTrue(Files.exists(root(WS1).resolve("d/x.txt")));
+      assertFalse(Files.exists(root(WS1).resolve("e.txt")));
+      assertFalse(Files.exists(root(WS1).resolve("copy.txt")));
+      assertEquals(Set.of("a.txt", ".b.txt.meta.seqdev", "d/stray.txt", "taken.txt", "p", "gone.txt"), drift(WS1));
+    }
+
+    @Test
+    void crossWorkspaceDriftBlocksOnEitherSide() throws Exception {
+      final var heads = List.of(head(WS1), head(WS2));
+      Files.writeString(root(WS1).resolve("a.txt"), "modified outside PlanDev");
+      Files.writeString(root(WS2).resolve("taken.txt"), "untracked");
+
+      assertBlocked(bindings.handleMove(Path.of("a.txt"), Path.of("a.txt"), WS1, WS2, false, USER)); // source
+      assertBlocked(bindings.handleCopy(Path.of("a.txt"), Path.of("a.txt"), WS1, WS2, false, USER)); // source
+      assertBlocked(bindings.handleMove(Path.of("m.txt"), Path.of("taken.txt"), WS1, WS2, true, USER)); // destination
+      assertBlocked(bindings.handleCopy(Path.of("m.txt"), Path.of("taken.txt"), WS1, WS2, true, USER)); // destination
+      assertEquals(heads, List.of(head(WS1), head(WS2)));
+      assertFalse(Files.exists(root(WS2).resolve("a.txt")));
+
+      // Clean paths on both sides still move and copy; the copy's source records nothing
+      assertSuccess(bindings.handleCopy(Path.of("m.txt"), Path.of("m.txt"), WS1, WS2, false, USER));
+      assertEquals(heads.getFirst(), head(WS1));
+      assertSuccess(bindings.handleMove(Path.of("b.txt"), Path.of("b.txt"), WS1, WS2, false, USER));
+      assertEquals(Set.of("b.txt", ".b.txt.meta.seqdev"), headChanges(WS1));
+      assertEquals(Set.of("a.txt"), drift(WS1));
+      assertEquals(Set.of("taken.txt"), drift(WS2));
+    }
+
+    /** A directory root covers its subtree only: drift on a sibling that merely shares its prefix does not overlap it. */
+    @Test
+    void aDirectoryDoesNotOverlapPrefixSiblings() throws Exception {
+      Files.writeString(root(WS1).resolve("dx.txt"), "modified outside PlanDev");
+      Files.writeString(root(WS1).resolve("d2/z.txt"), "modified outside PlanDev");
+
+      assertSuccess(bindings.handleMove(Path.of("d"), Path.of("e"), WS1, WS1, false, USER));
+      assertEquals(Set.of("d/x.txt", "d/.x.txt.meta.seqdev", "e/x.txt", "e/.x.txt.meta.seqdev"), headChanges(WS1));
+      assertSuccess(bindings.handleDelete(WS1, Path.of("e"), USER));
+      assertEquals(Set.of("dx.txt", "d2/z.txt"), drift(WS1));
+    }
+
+    /** A failed mutation restores its own paths and leaves drift elsewhere exactly as it was. */
+    @Test
+    void aRollbackLeavesUnrelatedDriftAlone() throws Exception {
+      Files.writeString(root(WS1).resolve("m.txt"), "modified outside PlanDev");
+      Files.delete(root(WS1).resolve("gone.txt"));
+      Files.writeString(root(WS1).resolve("new.txt"), "untracked");
+      final var head = head(WS1);
+
+      history.failCommitsIn.add(root(WS1));
+      final var result = save(WS1, "a.txt", "v2", "*");
+      assertFailure(result, 500, null);
+      final var created = save(WS1, "dir/fresh.txt", "v1", null);
+      assertFailure(created, 500, null);
+      history.failCommitsIn.clear();
+
+      assertEquals(head, head(WS1));
+      assertEquals("v1", read(WS1, "a.txt"));
+      assertFalse(Files.exists(root(WS1).resolve("dir")));
+      assertEquals(Set.of("m.txt", "gone.txt", "new.txt"), drift(WS1));
+      assertEquals("modified outside PlanDev", read(WS1, "m.txt"));
+      assertEquals("untracked", read(WS1, "new.txt"));
     }
   }
 

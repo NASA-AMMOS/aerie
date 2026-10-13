@@ -6,7 +6,6 @@ import gov.nasa.ammos.plandev.workspace.server.postgres.RenderType;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.dircache.DirCacheCheckout;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -15,7 +14,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -59,9 +57,10 @@ import java.util.function.Predicate;
  * operations cannot deadlock; lock operations cannot nest), brings each repository to a clean, initialized state, records the pre-operation state,
  * runs the mutation (which performs its own validation, e.g. existence, readOnly and ETag checks, under the lock),
  * stages only the declared path roots ({@code git add -A -- <roots>}), commits if the index then differs from HEAD,
- * and verifies the repository is clean before returning. Because the workspace was clean before the mutation and
- * must be clean after it, a write outside the declared roots fails the request (and is rolled back) rather than
- * being committed or left behind. A request never reports success if the history update failed.
+ * and checks the outcome before returning: Git and the index match HEAD, the declared roots have no working-tree
+ * changes left, and nothing outside them became dirty during the mutation (a write that bypassed the scope guard
+ * fails the request and is rolled back rather than being left uncommitted). A request never reports success if the
+ * history update failed.
  *
  * <p><b>Clean.</b> A repository is clean when {@code git status} reports no staged, modified, missing, conflicting or
  * untracked files, and no ignored file exists outside {@code .seqdev/}. Ignore rules are fully controlled here:
@@ -70,11 +69,11 @@ import java.util.function.Predicate;
  * definition by design: {@code .git/} itself, {@code .seqdev/} (runtime state, never committed) and empty
  * directories (not representable in Git; creating or deleting one produces no commit).
  *
- * <p><b>Failure.</b> If the mutation throws, reports failure, or its history cannot be recorded, the workspace is
- * restored to its pre-operation state: tracked files and the index are checked out from the pre-operation HEAD, the
- * paths this operation created (untracked or newly added after it ran; equivalent to "created by this operation"
- * because the repository was verified clean beforehand under the same lock) are removed along with any parent
- * directories that leaves empty, and {@code .seqdev/state.json} is restored. Empty directories are not versioned
+ * <p><b>Failure.</b> If the mutation throws, reports failure, or its history cannot be recorded, the paths it may have
+ * changed (its declared roots, plus any path that became dirty while it ran) are restored from the pre-operation HEAD:
+ * files there that HEAD lacks are removed along with any parent directories that leaves empty, tracked files and their
+ * index entries are checked out, and {@code .seqdev/state.json} is restored. Drift that existed before the operation,
+ * outside its roots, is never touched. Empty directories are not versioned
  * state, so a pre-existing empty directory the operation removed is not recreated. If restoration itself fails, a
  * {@link Kind#REPOSITORY_INCONSISTENT} error is raised rather than claiming success; nothing is ever {@code git clean}ed
  * wholesale or reset on the strength of an unverified assumption.
@@ -91,11 +90,14 @@ import java.util.function.Predicate;
  * state is recorded by a commit authored by {@link #systemIdent()} ("Initialize workspace history" for a new
  * repository, "Adopt workspace into history" for an existing one with uncommitted state).
  *
- * <p><b>Trust.</b> Before every mutation of a managed workspace the repository must be exactly what this class left
- * behind: no in-progress Git operation, HEAD attached to {@code main}, an index of plain files outside reserved names,
- * runtime state present, and a clean working tree. Anything else (an out-of-band edit, residue of a crash
- * mid-operation, a manual checkout) is rejected with {@link Kind#REPOSITORY_INCONSISTENT} naming what is wrong. It is
- * never committed, reset or repaired automatically.
+ * <p><b>Trust.</b> Git and the index are trusted globally; the working tree only where a mutation touches it. Before
+ * every mutation of a managed workspace (one {@code git status}): no in-progress Git operation, HEAD attached to
+ * {@code main}, an index of plain files outside reserved names that matches HEAD (nothing staged, no conflicts), and
+ * valid runtime state; otherwise every mutation of the workspace is rejected. Working-tree <i>drift</i> (a tracked file
+ * modified or missing, an untracked file, made outside PlanDev) is path-local: a mutation is rejected only if drift
+ * lies at, under or above one of its declared roots, and other mutations proceed. Rejections use
+ * {@link Kind#REPOSITORY_INCONSISTENT} and name what is wrong; drift is never committed, reset or repaired
+ * automatically.
  *
  * <p><b>Deployment assumption.</b> Locks are in-process. This is correct only while a single workspace-server
  * instance owns the workspace volume (the current deployment: one replica, no other service mounts the volume) and
@@ -154,8 +156,9 @@ public class WorkspaceHistory {
   }
 
   /**
-   * One workspace's part of a mutation: its commit message and the workspace-relative path roots the mutation may
-   * change there. A root covers the path itself and everything beneath it, so a directory root covers its subtree.
+   * One workspace's part of a mutation: its commit message and the workspace-relative path roots whose canonical
+   * working-tree state participates in the mutation (what it writes, and what it reads as a copy source); its
+   * filesystem writes must stay within them. A root covers the path itself and everything beneath it.
    */
   public record Change(String message, List<Path> paths) {
     public Change {
@@ -170,7 +173,8 @@ public class WorkspaceHistory {
   /** A file's most recent content change, derived from history. {@code baseline} marks the history's root commit. */
   public record LastEdit(String by, Instant at, boolean baseline) {}
 
-  private record Before(ObjectId head, byte[] state) {}
+  /** Pre-operation HEAD, runtime state, and working-tree drift (all of it outside the declared roots). */
+  private record Before(ObjectId head, byte[] state, Set<String> drift) {}
 
   private record LastEditIndex(ObjectId head, Map<String, LastEdit> edits) {}
 
@@ -238,8 +242,9 @@ public class WorkspaceHistory {
         final var root = roots.workspaceRootPath(id).normalize();
         rootsById.put(id, root);
         final var scope = scopeKeys(root, changes.get(id).paths());
-        ensureReady(root);
-        before.put(id, capture(root));
+        final var drift = ensureReady(root);
+        requireNoDrift(root, scope, drift);
+        before.put(id, capture(root, drift));
         scopes.put(id, scope);
       }
 
@@ -264,7 +269,7 @@ public class WorkspaceHistory {
             requireValidIndex(git.getRepository());
             commit(git, changes.get(id).message(), userIdent(userId));
           }
-          requireClean(git, root);
+          requireRecorded(git, root, scopes.get(id), before.get(id).drift());
           committed.add(id);
         } catch (Exception e) {
           logger.error("Recording history for workspace {} failed; restoring", id, e);
@@ -391,35 +396,54 @@ public class WorkspaceHistory {
   private static boolean isAtOrUnder(final String key, final String root) {
     return key.equals(root) || key.startsWith(root + "/");
   }
+
+  /** Whether a path is at, under or above one of the roots (an untracked file {@code d} blocks a root {@code d/x}). */
+  private static boolean overlaps(final String path, final Set<String> scope) {
+    return scope.stream().anyMatch(root -> isAtOrUnder(path, root) || isAtOrUnder(root, path));
+  }
   //endregion
 
   //region Adoption and trust
-  /** Bring a workspace to "managed, trusted and clean", adopting it first if it is not managed yet. Caller holds the lock. */
-  private void ensureReady(final Path root) throws IOException, GitAPIException {
+  /**
+   * Bring a workspace to "managed and trusted", adopting it first if it is not managed yet. Caller holds the lock.
+   *
+   * @return the working tree's drift from HEAD (empty right after adoption)
+   */
+  private Set<String> ensureReady(final Path root) throws IOException, GitAPIException {
     if (!Files.isDirectory(root)) {
       throw inconsistent("Workspace directory " + root + " is missing.");
     }
-    if (isManaged(root)) {
-      requireTrusted(root);
-    } else {
+    if (!isManaged(root)) {
       adopt(root);
+      return Set.of();
     }
+    return requireTrusted(root);
   }
 
-  /** Fail closed unless a managed workspace is exactly as this class left it. */
-  private void requireTrusted(final Path root) throws IOException, GitAPIException {
+  /**
+   * Fail closed unless a managed workspace's runtime state, Git state and index are as this class left them; return
+   * its working-tree drift, which is not fatal by itself (see {@link #requireNoDrift}).
+   */
+  private Set<String> requireTrusted(final Path root) throws IOException, GitAPIException {
     requireValidRuntimeState(root, true);
+    final Set<String> drift;
     try (final var git = open(root)) {
       requireExpectedGitState(git.getRepository(), false);
       configure(root, git.getRepository());
       requireValidIndex(git.getRepository());
-      final var dirty = dirtyPaths(git.status().call());
-      if (!dirty.isEmpty()) {
-        throw inconsistent("Workspace at %s has changes that are not in its history: %s. They were left untouched."
-                               .formatted(root, summarize(dirty)));
-      }
+      drift = worktreeDrift(git, root);
     }
     WorkspacePaths.removeStaleTempFiles(root); // only once trusted: a rejected workspace is left exactly as found
+    return drift;
+  }
+
+  /** Reject a mutation whose declared roots overlap drift: PlanDev must neither overwrite it nor copy or commit it. */
+  private static void requireNoDrift(final Path root, final Set<String> scope, final Set<String> drift) {
+    final var overlapping = drift.stream().filter(path -> overlaps(path, scope)).toList();
+    if (!overlapping.isEmpty()) {
+      throw inconsistent("Workspace at %s: %s differ from managed history and were left untouched."
+                             .formatted(root, summarize(overlapping)));
+    }
   }
 
   /**
@@ -671,6 +695,40 @@ public class WorkspaceHistory {
     if (!dirty.isEmpty()) throw inconsistent("Workspace at %s is not clean: %s".formatted(root, summarize(dirty)));
   }
 
+  /**
+   * One {@code git status}: fail if the index differs from HEAD (staged or conflicting changes are not path-local:
+   * the next commit would record them), otherwise return the working-tree drift.
+   */
+  private static Set<String> worktreeDrift(final Git git, final Path root) throws GitAPIException {
+    final var status = git.status().call();
+    final var staged = new TreeSet<String>();
+    staged.addAll(status.getAdded());
+    staged.addAll(status.getChanged());
+    staged.addAll(status.getRemoved());
+    staged.addAll(status.getConflicting());
+    if (!staged.isEmpty()) {
+      throw inconsistent("Workspace at %s has staged changes that are not in its history: %s. They were left untouched."
+                             .formatted(root, summarize(staged)));
+    }
+    return dirtyPaths(status);
+  }
+
+  /**
+   * After recording (or restoring): Git and the index match HEAD, the declared roots are clean, and nothing outside
+   * them became dirty while the mutation ran. Drift that existed before, outside the roots, may remain.
+   */
+  private static void requireRecorded(final Git git, final Path root, final Set<String> scope, final Set<String> driftBefore)
+  throws IOException, GitAPIException
+  {
+    requireExpectedGitState(git.getRepository(), false);
+    final var left = worktreeDrift(git, root).stream()
+                                             .filter(path -> overlaps(path, scope) || !driftBefore.contains(path))
+                                             .toList();
+    if (!left.isEmpty()) {
+      throw inconsistent("Workspace at %s: %s were left out of the recorded change.".formatted(root, summarize(left)));
+    }
+  }
+
   static PersonIdent systemIdent() {
     return new PersonIdent("PlanDev", "");
   }
@@ -681,12 +739,12 @@ public class WorkspaceHistory {
   //endregion
 
   //region Rollback
-  private Before capture(final Path root) throws IOException {
+  private Before capture(final Path root, final Set<String> drift) throws IOException {
     try (final var git = open(root)) {
       final var head = git.getRepository().resolve(Constants.HEAD);
       final var stateFile = WorkspaceState.file(root);
       final var state = Files.isRegularFile(stateFile) ? Files.readAllBytes(stateFile) : null;
-      return new Before(head, state);
+      return new Before(head, state, Set.copyOf(drift));
     }
   }
 
@@ -701,7 +759,7 @@ public class WorkspaceHistory {
     final var errors = new ArrayList<Exception>();
     for (final var id : ids) {
       try {
-        restore(rootsById.get(id), before.get(id));
+        restore(rootsById.get(id), before.get(id), scopes.getOrDefault(id, Set.of()));
       } catch (Exception e) {
         logger.error("Could not restore workspace {} after a failed mutation", id, e);
         failed.add(id);
@@ -720,16 +778,15 @@ public class WorkspaceHistory {
     }
   }
 
-  private void restore(final Path root, final Before before) throws IOException, GitAPIException {
+  /**
+   * Undo a failed mutation in one workspace. The paths it may have changed are its declared roots plus any path that
+   * became dirty while it ran; there, files the pre-operation HEAD lacks are removed (with any parent directories that
+   * leaves empty) and tracked files and their index entries are checked out from it. Drift that existed before the
+   * mutation, all of it outside its roots, is left alone.
+   */
+  private void restore(final Path root, final Before before, final Set<String> scope) throws IOException, GitAPIException {
     try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
       final var repo = git.getRepository();
-
-      // Record what this operation created. The repository was clean before it ran (verified under this lock),
-      // so every untracked or newly added path now is one it created.
-      final var status = git.status().call();
-      final var created = new TreeSet<String>();
-      created.addAll(status.getUntracked());
-      created.addAll(status.getAdded());
 
       // Move the branch back only if the operation's commit actually landed.
       if (!before.head().equals(repo.resolve(Constants.HEAD))) {
@@ -741,18 +798,26 @@ public class WorkspaceHistory {
         }
       }
 
-      // Index and tracked files back to the pre-operation commit.
-      final RevCommit commit = walk.parseCommit(before.head());
-      final var checkout = new DirCacheCheckout(repo, repo.lockDirCache(), commit.getTree());
-      checkout.setFailOnConflict(false);
-      checkout.checkout();
+      final var status = git.status().call();
+      final var touched = new TreeSet<>(scope);
+      dirtyPaths(status).stream().filter(path -> !before.drift().contains(path)).forEach(touched::add);
 
       // Remove what the operation created, then any parent directory that leaves empty (empty directories are not
       // versioned state; this only avoids leaving a failed save's new folders behind).
+      final var created = new TreeSet<String>();
+      created.addAll(status.getUntracked());
+      created.addAll(status.getAdded());
       for (final var path : created) {
+        if (touched.stream().noneMatch(t -> isAtOrUnder(path, t))) continue;
         var p = root.resolve(path);
         Files.deleteIfExists(p);
         for (p = p.getParent(); !p.equals(root) && isEmptyDirectory(p); p = p.getParent()) Files.delete(p);
+      }
+
+      // Tracked files and their index entries back to the pre-operation commit, then drop index entries of removed files
+      if (!touched.isEmpty()) {
+        git.checkout().setStartPoint(walk.parseCommit(before.head())).addPaths(List.copyOf(touched)).call();
+        stage(git, touched);
       }
 
       final var stateFile = WorkspaceState.file(root);
@@ -762,9 +827,10 @@ public class WorkspaceHistory {
         WorkspacePaths.writeAtomically(root, stateFile, before.state());
       }
 
-      requireClean(git, root);
+      requireRecorded(git, root, scope, before.drift());
     }
   }
+
   private static boolean isEmptyDirectory(final Path dir) throws IOException {
     if (!Files.isDirectory(dir, LinkOption.NOFOLLOW_LINKS)) return false;
     try (final var entries = Files.list(dir)) {
