@@ -24,8 +24,9 @@ import java.util.regex.Pattern;
  *   <li>{@code .gitignore}, {@code .gitattributes} and {@code .gitmodules} would change what Git tracks or how it
  *       rewrites file bytes, which would let a "clean" repository silently omit or alter user files. They are reserved
  *       in Phase 1; {@code .gitignore} may be relaxed once Git remote interoperability exists.</li>
- *   <li>{@code .seqdev} holds non-versioned runtime state (see {@link WorkspaceState}). It is never committed and is
- *       not part of the versioned workspace.</li>
+ *   <li>{@code .seqdev} holds non-versioned runtime state (see {@link WorkspaceState}) and the record of a mutation
+ *       that has not finished (see {@link WorkspaceHistory#recordFile}). It is never committed and is not part of the
+ *       versioned workspace.</li>
  * </ul>
  *
  * Reserved names are rejected at every path segment, case-insensitively, by

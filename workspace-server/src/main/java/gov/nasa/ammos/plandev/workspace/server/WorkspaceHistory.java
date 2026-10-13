@@ -23,7 +23,11 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonString;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -79,6 +83,16 @@ import java.util.function.Predicate;
  * {@link Kind#REPOSITORY_INCONSISTENT} error is raised rather than claiming success; nothing is ever {@code git clean}ed
  * wholesale or reset on the strength of an unverified assumption.
  *
+ * <p><b>Crash.</b> A process can die between changing files and committing them. Before a mutation runs, each involved
+ * workspace gets a {@linkplain #recordFile mutation record} (pre-operation HEAD, runtime state, declared paths), written
+ * atomically and removed once that workspace is clean again; its presence means "a mutation did not finish". The next
+ * use of the workspace recovers it (see {@link #recover}): if HEAD is still the recorded HEAD the change never
+ * committed and, provided nothing changed outside its declared paths, is rolled back exactly as a failed mutation
+ * is; if HEAD is exactly one commit on top of it, the commit
+ * landed and is kept. Either way the workspace must then be clean before the record is removed; anything else fails
+ * closed with {@link Kind#REPOSITORY_INCONSISTENT}. This covers the process or container dying, not power loss:
+ * neither the record nor Git's own files are fsynced.
+ *
  * <p><b>Cross-workspace.</b> Two repositories cannot share a transaction. Commits are made in the order the caller
  * lists the workspaces (destination first for moves). If the first commit fails, every workspace is restored. If a
  * later commit fails, the workspaces already committed keep their change and the remaining ones are restored, raising
@@ -109,6 +123,7 @@ public class WorkspaceHistory {
   static final String BRANCH = "main";
   private static final String MANAGED_SECTION = "plandev";
   private static final String MANAGED_KEY = "managed";
+  private static final int RECORD_VERSION = 1;
 
   public enum Kind {
     /** The history could not be recorded; the workspace was restored to its pre-operation state. */
@@ -167,10 +182,16 @@ public class WorkspaceHistory {
     }
   }
 
+  /** Points at which {@link #checkpoint} is called, for simulating a process crash in tests. */
+  enum Checkpoint { BEFORE_STAGE, BEFORE_COMMIT, BEFORE_RECORD_CLEARED }
+
   /** A file's most recent content change, derived from history. {@code baseline} marks the history's root commit. */
   public record LastEdit(String by, Instant at, boolean baseline) {}
 
   private record Before(ObjectId head, byte[] state) {}
+
+  /** What a mutation record holds: the pre-operation state and the paths the interrupted mutation declared. */
+  private record Interrupted(Before before, Set<String> scope) {}
 
   private record LastEditIndex(ObjectId head, Map<String, LastEdit> edits) {}
 
@@ -242,6 +263,7 @@ public class WorkspaceHistory {
         before.put(id, capture(root));
         scopes.put(id, scope);
       }
+      writeRecords(rootsById, before, scopes);
 
       final T result;
       try {
@@ -259,12 +281,16 @@ public class WorkspaceHistory {
       for (final var id : ids) {
         final var root = rootsById.get(id);
         try (final var git = open(root)) {
+          checkpoint(Checkpoint.BEFORE_STAGE, root);
           stage(git, scopes.get(id));
+          checkpoint(Checkpoint.BEFORE_COMMIT, root);
           if (indexDiffersFromHead(git.getRepository())) {
             requireValidIndex(git.getRepository());
             commit(git, changes.get(id).message(), userIdent(userId));
           }
           requireClean(git, root);
+          checkpoint(Checkpoint.BEFORE_RECORD_CLEARED, root);
+          Files.delete(recordFile(root));
           committed.add(id);
         } catch (Exception e) {
           logger.error("Recording history for workspace {} failed; restoring", id, e);
@@ -364,6 +390,12 @@ public class WorkspaceHistory {
   }
 
   /**
+   * No-op. Tests override it to stop a mutation exactly as a process crash would: by throwing an {@link Error}, which
+   * nothing in {@link #mutate} catches, so no rollback runs and the on-disk state is left as it was at that point.
+   */
+  protected void checkpoint(final Checkpoint point, final Path root) {}
+
+  /**
    * Normalize declared paths to workspace-relative keys, rejecting what no mutation may touch: the root itself (it
    * owns the history and runtime state), anything outside it, reserved names, and paths through a symbolic link.
    */
@@ -400,7 +432,11 @@ public class WorkspaceHistory {
       throw inconsistent("Workspace directory " + root + " is missing.");
     }
     if (isManaged(root)) {
-      requireTrusted(root);
+      if (Files.exists(recordFile(root), LinkOption.NOFOLLOW_LINKS)) {
+        recover(root);
+      } else {
+        requireTrusted(root);
+      }
     } else {
       adopt(root);
     }
@@ -680,7 +716,96 @@ public class WorkspaceHistory {
   }
   //endregion
 
-  //region Rollback
+  //region Rollback and crash recovery
+  /** Where an unfinished mutation is recorded. Runtime state: never versioned, reserved from the file API. */
+  static Path recordFile(final Path root) {
+    return root.resolve(WorkspacePaths.STATE_DIR).resolve("mutation.json");
+  }
+
+  /** Persist every workspace's record before anything changes; if one cannot be written, none is left behind. */
+  private static void writeRecords(
+      final Map<Integer, Path> rootsById,
+      final Map<Integer, Before> before,
+      final Map<Integer, Set<String>> scopes) throws IOException
+  {
+    final var written = new ArrayList<Path>();
+    try {
+      for (final var e : rootsById.entrySet()) {
+        final var b = before.get(e.getKey());
+        final var paths = Json.createArrayBuilder();
+        scopes.get(e.getKey()).forEach(paths::add);
+        final var json = Json.createObjectBuilder()
+                             .add("version", RECORD_VERSION)
+                             .add("head", b.head().name())
+                             .add("paths", paths);
+        if (b.state() != null) json.add("state", new String(b.state(), StandardCharsets.UTF_8));
+        WorkspacePaths.writeAtomically(e.getValue(), recordFile(e.getValue()), json.build().toString().getBytes(StandardCharsets.UTF_8));
+        written.add(e.getValue());
+      }
+    } catch (IOException e) {
+      for (final var root : written) Files.deleteIfExists(recordFile(root));
+      throw e;
+    }
+  }
+
+  private static Interrupted readRecord(final Path root) {
+    final var file = recordFile(root);
+    try (final var reader = Json.createReader(new StringReader(Files.readString(file)))) {
+      final var json = reader.readObject();
+      if (json.getInt("version") != RECORD_VERSION) throw new IllegalArgumentException("unsupported version");
+      final var state = json.containsKey("state") ? json.getString("state").getBytes(StandardCharsets.UTF_8) : null;
+      final var scope = new TreeSet<String>();
+      json.getJsonArray("paths").getValuesAs(JsonString.class).forEach(p -> scope.add(p.getString()));
+      return new Interrupted(new Before(ObjectId.fromString(json.getString("head")), state), scope);
+    } catch (IOException | JsonException | ClassCastException | NullPointerException | IllegalArgumentException e) {
+      throw new WorkspaceHistoryException(
+          Kind.REPOSITORY_INCONSISTENT,
+          "Workspace at %s has an unreadable record of an interrupted change (%s); it was left untouched."
+              .formatted(root, file),
+          e);
+    }
+  }
+
+  /**
+   * Resolve a mutation this or an earlier process did not finish. If HEAD is the recorded pre-operation HEAD, the
+   * change never committed and is rolled back ({@link #restore}, which treats everything that differs from HEAD as the
+   * mutation's doing: true when it ran, since the workspace was clean, so anything changed outside its declared paths
+   * since then is refused rather than discarded). If HEAD is exactly one commit on top of it, the commit landed and is
+   * kept. Then the workspace must be clean before the record is removed. Anything else is ambiguous and fails closed,
+   * keeping the record. Caller holds the lock.
+   */
+  private void recover(final Path root) throws IOException, GitAPIException {
+    final var record = readRecord(root);
+    try (final var git = open(root); final var walk = new RevWalk(git.getRepository())) {
+      final var repo = git.getRepository();
+      requireExpectedGitState(repo, false);
+      // Our in-process lock was held, so Git lock files left now were the dead process's, mid index write or commit
+      for (final var lock : List.of("index.lock", Constants.R_HEADS + BRANCH + ".lock", "HEAD.lock")) {
+        if (Files.deleteIfExists(repo.getDirectory().toPath().resolve(lock))) logger.warn("Removed stale {} in {}", lock, root);
+      }
+      final var head = walk.parseCommit(repo.resolve(Constants.HEAD));
+      if (head.equals(record.before().head())) {
+        final var outside = dirtyPaths(git.status().call());
+        outside.removeIf(path -> record.scope().stream().anyMatch(s -> isAtOrUnder(path, s)));
+        if (!outside.isEmpty()) {
+          throw inconsistent("Workspace at %s has an interrupted change to %s, but %s changed outside it; it was left "
+                                 .formatted(root, record.scope(), summarize(outside))
+                             + "untouched.");
+        }
+        logger.warn("Rolling back an interrupted change to {} in workspace {}", record.scope(), root);
+        restore(root, record.before());
+      } else if (head.getParentCount() == 1 && head.getParent(0).equals(record.before().head())) {
+        logger.warn("An interrupted change in workspace {} had been committed; keeping it", root);
+      } else {
+        throw inconsistent("Workspace at %s has an interrupted change recorded on top of %s, but HEAD is %s; it cannot "
+                               .formatted(root, record.before().head().name(), head.name())
+                           + "be recovered automatically and was left untouched.");
+      }
+    }
+    requireTrusted(root);
+    Files.delete(recordFile(root));
+  }
+
   private Before capture(final Path root) throws IOException {
     try (final var git = open(root)) {
       final var head = git.getRepository().resolve(Constants.HEAD);
@@ -690,7 +815,7 @@ public class WorkspaceHistory {
     }
   }
 
-  /** Restore each workspace; if any cannot be restored, fail with REPOSITORY_INCONSISTENT. */
+  /** Restore each workspace; if any cannot be restored, fail with REPOSITORY_INCONSISTENT, keeping its record. */
   private void restoreAll(
       final List<Integer> ids,
       final Map<Integer, Path> rootsById,
@@ -702,6 +827,7 @@ public class WorkspaceHistory {
     for (final var id : ids) {
       try {
         restore(rootsById.get(id), before.get(id));
+        Files.deleteIfExists(recordFile(rootsById.get(id)));
       } catch (Exception e) {
         logger.error("Could not restore workspace {} after a failed mutation", id, e);
         failed.add(id);
