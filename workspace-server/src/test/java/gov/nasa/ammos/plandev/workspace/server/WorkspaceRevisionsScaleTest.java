@@ -13,6 +13,7 @@ import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.TreeFormatter;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -62,7 +63,7 @@ class WorkspaceRevisionsScaleTest {
       // "many-files,     1000,    1000,  20,          10,        20",
       "many-tags,      1000,    100,   20,          100,       1000",
   })
-  void scenario(String name, int commits, int files, int targetEvery, int revisions, int otherTags) throws Exception {
+  void scenario(String name, int commits, int files, int targetEvery, int revisions, int otherTags) throws Throwable {
     commits *= SCALE;
     final var repository = new WorkspaceTestRepository(tmp.toRealPath());
     final var root = repository.workspaceRootPath(WS);
@@ -94,23 +95,20 @@ class WorkspaceRevisionsScaleTest {
         bindings.handleRestoreRevision(WS, TARGET, oldest, "*", "bench")));
   }
 
-  interface Op { void run() throws Exception; }
-
-  /** Median of 3 runs after a warm-up. Fails after the warm-up alone if that is already over budget. */
-  private static void time(String op, int budgetMs, Op action) throws Exception {
-    final var warmUp = System.nanoTime();
-    action.run();
-    final var warmUpMs = (System.nanoTime() - warmUp) / 1e6;
-    if (SCALE == 1) assertTrue(warmUpMs < budgetMs, "%s took %.1f ms, budget %d ms".formatted(op, warmUpMs, budgetMs));
-    final var ms = new double[3];
+  /**
+   * Median of 3 runs after a warm-up. Every run, the warm-up included, must be under budget, so a regression fails after
+   * one slow call rather than four.
+   */
+  private static void time(String op, int budgetMs, Executable action) throws Throwable {
+    final var ms = new double[4]; // ms[0] is the warm-up
     for (var i = 0; i < ms.length; i++) {
       final var start = System.nanoTime();
-      action.run();
+      action.execute();
       ms[i] = (System.nanoTime() - start) / 1e6;
+      if (SCALE == 1) assertTrue(ms[i] < budgetMs, "%s took %.1f ms, budget %d ms".formatted(op, ms[i], budgetMs));
     }
-    Arrays.sort(ms);
-    System.out.printf("  %-28s %9.1f ms%n", op, ms[1]);
-    if (SCALE == 1) assertTrue(ms[1] < budgetMs, "%s took %.1f ms, budget %d ms".formatted(op, ms[1], budgetMs));
+    Arrays.sort(ms, 1, ms.length);
+    System.out.printf("  %-28s %9.1f ms%n", op, ms[2]);
   }
 
   private static int saves = 0;
@@ -178,7 +176,7 @@ class WorkspaceRevisionsScaleTest {
     try (final var walk = new RevWalk(git.getRepository())) {
       for (var i = 0; i < commits.size(); i++) {
         final var revision = new WorkspaceRevisions.Revision(
-            WorkspaceRevisions.name(i + 1), i + 1, path, "", "bench", Instant.now(), commits.get(i), null);
+            i + 1, path, "", "bench", Instant.now(), commits.get(i), null);
         git.tag()
            .setName(WorkspaceRevisions.TAG_PREFIX + UUID.randomUUID())
            .setObjectId(walk.parseCommit(commits.get(i)))

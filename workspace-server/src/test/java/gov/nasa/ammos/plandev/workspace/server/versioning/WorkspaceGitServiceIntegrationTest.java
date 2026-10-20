@@ -2062,7 +2062,7 @@ class WorkspaceGitServiceIntegrationTest {
       assertFailure(bindings.handleRestoreRevision(WS1, Path.of("a.txt"), "zz", "*", USER), 404, "NO_SUCH_REVISION");
       assertFailure(bindings.handleCreateRevision(WS1, Path.of("gone.txt"), etag, "", USER), 412, null);
       assertFailure(bindings.handleCreateRevision(WS1, Path.of("gone.txt"), "*", "", USER), 404, null);
-      assertFailure(bindings.handleCreateRevision(WS1, Path.of(".a.txt.meta.seqdev"), "*", "", USER), 405, null);
+      assertFailure(bindings.handleCreateRevision(WS1, Path.of(".a.txt.meta.seqdev"), "*", "", USER), 400, null);
       assertEquals("v2", read(WS1, "a.txt"));
       assertEquals(List.of("a"), names("a.txt"));
       assertEquals(commits, log(WS1).size());

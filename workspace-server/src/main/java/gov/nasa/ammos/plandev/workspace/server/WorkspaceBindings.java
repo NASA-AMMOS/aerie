@@ -1859,8 +1859,6 @@ public class WorkspaceBindings implements Plugin {
       return;
     }
 
-    if(rejectMetadataFile(context, pathInfo)) return;
-
     final var revision = context.queryParam("revision");
     try {
       if (revision == null) {
@@ -1897,8 +1895,6 @@ public class WorkspaceBindings implements Plugin {
     if (!checkPermissions(context, pathInfo.workspaceId, WorkspaceAction.read_file_directory)) {
       return;
     }
-
-    if(rejectMetadataFile(context, pathInfo)) return;
 
     final var revision = context.queryParam("revision");
     if (revision == null) {
@@ -1972,16 +1968,13 @@ public class WorkspaceBindings implements Plugin {
   }
 
   /**
-   * Shared checks for creating or restoring a revision, run under the workspace lock: the target is a content file that
-   * still exists, is not readOnly (restore only), and matches If-Match. Returns the failure, or null to proceed.
+   * Shared checks for creating or restoring a revision, run under the workspace lock: the target still exists, is not
+   * readOnly (restore only), and matches If-Match. Returns the failure, or null to proceed. A metadata file or directory
+   * is rejected afterwards by the service.
    */
   private HandlerResult.Failure checkRevisionTarget(final int workspaceId, final Path filePath, final String ifMatch, final boolean writes)
-  throws NoSuchWorkspaceException, WorkspaceFileOpException, IOException
+  throws NoSuchWorkspaceException, NoSuchFileException, WorkspaceFileOpException, IOException
   {
-    if (RenderType.isAerieMetadataFile(filePath.getFileName().toString())) {
-      return new HandlerResult.Failure(405, new WorkspaceFormattedError(new MalformedRequest(
-          "Metadata files do not have revisions.")));
-    }
     if (!workspaceService.checkFileExists(workspaceId, filePath)) {
       return ifMatch.equals("*")
           ? new HandlerResult.Failure(404, new WorkspaceFormattedError(new NoSuchFileException(workspaceId, filePath)))
@@ -1993,22 +1986,10 @@ public class WorkspaceBindings implements Plugin {
           "Cannot update file at " + filePath));
     }
     if (!ifMatch.equals("*")) {
-      try {
-        final var currentETag = workspaceService.getETag(workspaceId, filePath);
-        if (!currentETag.equals(ifMatch)) return conflict(workspaceId, filePath, currentETag);
-      } catch (NoSuchFileException nfe) {
-        return new HandlerResult.Failure(412, WorkspaceFormattedError.saveConflict("deleted", null, null, null));
-      }
+      final var currentETag = workspaceService.getETag(workspaceId, filePath);
+      if (!currentETag.equals(ifMatch)) return conflict(workspaceId, filePath, currentETag);
     }
     return null;
-  }
-
-  private static boolean rejectMetadataFile(final Context context, final PathInformation pathInfo) {
-    if (!RenderType.isAerieMetadataFile(pathInfo.fileName())) return false;
-    context.status(405).json(new WorkspaceFormattedError(new MalformedRequest(
-        "Unable to get revision data",
-        "Revision data for metadata files may not be directly accessed.")));
-    return true;
   }
 
   private static FormattedError noSuchRevision(final Path filePath, final String revision) {
