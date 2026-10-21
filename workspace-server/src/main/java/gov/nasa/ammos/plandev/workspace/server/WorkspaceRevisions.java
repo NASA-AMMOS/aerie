@@ -40,7 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,9 +48,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * Representation:
  * A save makes a commit, never a revision. A revision is an annotated tag {@code plandev/revisions/<uuid>} on the
- * newest commit that changed the file or its sidecar when it was made (so its tree holds exactly the recorded state,
- * and revisions with nothing changed between them share a commit), whose message is a small JSON record (path,
- * ordinal, message, createdBy, createdAt, lastEdit). Git is the only store. Historical content and sidecar metadata
+ * commit that was HEAD when it was made, whose message is a small JSON record (path, ordinal, message, createdBy,
+ * createdAt, lastEdit). Git is the only store. Historical content and sidecar metadata
  * are read from the tagged commit's tree; nothing is checked out, so HEAD, the index and the working tree are never
  * touched by a read.
  *
@@ -100,10 +98,8 @@ public final class WorkspaceRevisions {
    *
    * @param computedAtHead the HEAD commit the list was computed at; it covers that commit and everything older
    * @param revisions the file's revisions as of that HEAD, newest first
-   * @param knownRevisions every revision tag in the repository when the list was computed (or added since by
-   *     {@link #remember}). A tag outside this set is new, and may sit on an old commit this list never saw.
    */
-  private record CachedRevisionList(ObjectId computedAtHead, List<Revision> revisions, Set<Revision> knownRevisions) {}
+  private record CachedRevisionList(ObjectId computedAtHead, List<Revision> revisions) {}
 
   /**
    * The ids of a file's two Git blobs in one tree: its content and its sidecar (zero id when it has no sidecar). A
@@ -134,8 +130,8 @@ public final class WorkspaceRevisions {
    *    revisions are added and the walk ends. Normally only the commits since the last call are walked.
    * 4. Cache the result at this HEAD for the next call.
    *
-   * The cache can only be trusted if no tag appeared on an older commit since it was computed: revisions are tagged on
-   * the commit that last changed the file, which can be far behind HEAD. See {@link #cacheKnowsAllUnvisitedRevisions}.
+   * The cache is safe because a revision is always tagged on the HEAD of its time. Any tag created since a list was
+   * cached is on that list's commit or a newer one, so the walk visits it before reaching the cached list.
    *
    * @param key the file's workspace-relative path at HEAD, '/'-separated
    */
@@ -157,7 +153,6 @@ public final class WorkspaceRevisions {
 
       // 2. Walk state.
       final var fileRevisions = new LinkedHashSet<Revision>(); // the result: this file's revisions found so far
-      final var visitedRevisions = new HashSet<Revision>();     // every revision tagged on a commit walked so far
       var unvisitedTaggedCommits = revisionsByTaggedCommit.size(); // once zero, no older commit can add a revision
       var pathAtCommit = key;                                    // the file's path at the commit being walked
       var commit = walk.parseCommit(headCommitId);
@@ -169,7 +164,6 @@ public final class WorkspaceRevisions {
         final var revisionsTaggedAtThisCommit = revisionsByTaggedCommit.get(commit);
         if (revisionsTaggedAtThisCommit != null) {
           unvisitedTaggedCommits--;
-          visitedRevisions.addAll(revisionsTaggedAtThisCommit);
           for (final var revision : revisionsTaggedAtThisCommit) {
             if (revision.path().equals(pathAtCommit)) fileRevisions.add(revision);
           }
@@ -177,10 +171,7 @@ public final class WorkspaceRevisions {
 
         // 3. A list cached at this commit for this path covers everything older: use it and stop.
         final var cachedList = workspaceListCache.get(pathAtCommit);
-        if (cachedList != null
-            && cachedList.computedAtHead().equals(commit)
-            && cacheKnowsAllUnvisitedRevisions(cachedList, allCurrentRevisions, visitedRevisions))
-        {
+        if (cachedList != null && cachedList.computedAtHead().equals(commit)) {
           for (final var revision : cachedList.revisions()) {
             if (allCurrentRevisions.contains(revision)) fileRevisions.add(revision); // skip tags deleted since
           }
@@ -207,28 +198,12 @@ public final class WorkspaceRevisions {
         commit = parent;
       }
 
-      // 4. Cache the result at this HEAD, with every tag that existed now.
+      // 4. Cache the result at this HEAD.
       final var newestFirst =
           fileRevisions.stream().sorted(Comparator.comparingInt(Revision::ordinal).reversed()).toList();
-      workspaceListCache.put(key, new CachedRevisionList(headCommitId.copy(), newestFirst, allCurrentRevisions));
+      workspaceListCache.put(key, new CachedRevisionList(headCommitId.copy(), newestFirst));
       return newestFirst;
     }
-  }
-
-  /**
-   * Whether a cached list can stand in for the rest of the walk: true if every revision the walk has not visited
-   * yet already existed when the list was computed. A revision tag created since then on an older, unvisited commit
-   * could be this file's, and the cached list would not include it.
-   */
-  private static boolean cacheKnowsAllUnvisitedRevisions(
-      final CachedRevisionList cachedList,
-      final Set<Revision> allCurrentRevisions,
-      final Set<Revision> visitedRevisions)
-  {
-    for (final var revision : allCurrentRevisions) {
-      if (!visitedRevisions.contains(revision) && !cachedList.knownRevisions().contains(revision)) return false;
-    }
-    return true;
   }
 
   Optional<Revision> find(final Path root, final String key, final String name) throws IOException {
@@ -238,8 +213,7 @@ public final class WorkspaceRevisions {
   /**
    * Record the file's committed state at HEAD as its next revision. Makes no commit. Caller holds the workspace lock,
    * which serializes ordinal assignment, and passes the file's last edit at HEAD, which becomes the revision's. The tag
-   * goes on the newest commit that changed the file or its sidecar ({@code git log -1 -- <file> <sidecar>}), whose
-   * tree holds that same state.
+   * goes on HEAD, whose tree holds that state.
    */
   Revision create(
       final Path root,
@@ -252,46 +226,19 @@ public final class WorkspaceRevisions {
     final var existing = list(root, key);
     final var ordinal = existing.isEmpty() ? 1 : existing.getFirst().ordinal() + 1;
     try (final var git = Git.open(root.toFile()); final var walk = new RevWalk(git.getRepository())) {
-      final var head = git.getRepository().resolve(Constants.HEAD);
-      // ponytail: an uncached walk back to the file's last change, under the lock; cache it if creates on rarely
-      // edited files in long histories get slow.
-      final var changed = walk.parseCommit(
-          git.log().add(head).addPath(key).addPath(sidecarKey(key)).setMaxCount(1).call().iterator().next());
+      final var head = walk.parseCommit(git.getRepository().resolve(Constants.HEAD));
       final var createdBy = userId == null || userId.isBlank() ? WorkspaceGitService.systemIdent().getName() : userId;
-      final var revision = new Revision(ordinal, key, message, createdBy, Instant.now(), changed.copy(), lastEdit);
+      final var revision = new Revision(ordinal, key, message, createdBy, Instant.now(), head.copy(), lastEdit);
       git.tag()
          .setName(TAG_PREFIX + UUID.randomUUID())
-         .setObjectId(changed)
+         .setObjectId(head)
          .setAnnotated(true)
          .setSigned(false)
          .setTagger(new PersonIdent(createdBy, "", revision.createdAt(), ZoneOffset.UTC))
          .setMessage(annotation(revision))
          .call();
-      remember(root, key, revision);
       return revision;
     }
-  }
-
-  /**
-   * Add a revision this process just made to every cached list in the workspace. Without this, the new tag would be
-   * unknown to all of them, so the next list of every file would ignore its cache and walk the file's whole lineage
-   * once. It is the file's own revision (the list in create just cached the file's revisions at this HEAD) and a known,
-   * unrelated tag to every other cached list.
-   */
-  private void remember(final Path root, final String key, final Revision newRevision) {
-    final var workspaceListCache = revisionListCache.get(root.normalize());
-    if (workspaceListCache == null) return;
-    workspaceListCache.replaceAll((listedKey, cachedList) -> {
-      final var knownRevisions = new HashSet<>(cachedList.knownRevisions());
-      knownRevisions.add(newRevision);
-      if (!listedKey.equals(key)) {
-        return new CachedRevisionList(cachedList.computedAtHead(), cachedList.revisions(), knownRevisions);
-      }
-      final var revisions = new ArrayList<Revision>();
-      revisions.add(newRevision); // the newest ordinal
-      revisions.addAll(cachedList.revisions());
-      return new CachedRevisionList(cachedList.computedAtHead(), List.copyOf(revisions), knownRevisions);
-    });
   }
 
   /**
