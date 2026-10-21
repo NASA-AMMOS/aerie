@@ -171,6 +171,16 @@ public final class WorkspaceRevisions {
     }
   }
 
+  static class FileIdCache {
+    // For every fileId, what is its current filename (and vice versa)?
+
+    // Impl 1: For each unique fileId, grab the latest revision and walk commits forward, following renames
+
+    // Impl 2: iterate over all commits from the beginning, updating a map from file-id to current name
+
+
+  }
+
   List<Revision> getRevisions(final Path root, final String key) throws IOException {
     if (!Files.isDirectory(root.resolve(WorkspacePaths.GIT_DIR), LinkOption.NOFOLLOW_LINKS)) return List.of();
     // The slice of the list cache belonging to this workspace
