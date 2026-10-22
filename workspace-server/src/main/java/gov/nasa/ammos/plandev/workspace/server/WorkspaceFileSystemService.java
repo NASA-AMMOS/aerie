@@ -130,25 +130,25 @@ public class WorkspaceFileSystemService implements WorkspaceService {
 
   //region Workspace Operations
   @Override
-  public Optional<Integer> createWorkspace(final Path workspaceLocation, final String workspaceName, String username, int parcelId) {
-    final var repoPath = workspaceRepository.getBaseRepositoryPath().resolve(workspaceLocation).normalize();
+  public Optional<Integer> createWorkspace(final Path workspaceRelativePath, final String workspaceName, String username, int parcelId) {
+    final var workspaceAbsolutePath = workspaceRepository.getBaseRepositoryPath().resolve(workspaceRelativePath).normalize();
     final Workspace workspace;
 
-    if (!repoPath.toFile().mkdirs()) return Optional.empty();
+    if (!workspaceAbsolutePath.toFile().mkdirs()) return Optional.empty();
 
     try {
       final int workspaceId = workspaceRepository.createWorkspace(
-          workspaceLocation.toString(), workspaceName, username, parcelId);
-      workspace = new Workspace(workspaceId, workspaceLocation);
+          workspaceRelativePath.toString(), workspaceName, username, parcelId);
+      workspace = new Workspace(workspaceId, workspaceAbsolutePath);
     } catch (SQLException ex) {
-      logger.error("CREATE WORKSPACE: Unable to create database entry for {}", repoPath, ex);
+      logger.error("CREATE WORKSPACE: Unable to create database entry for {}", workspaceAbsolutePath, ex);
       return Optional.empty();
     }
 
     try {
       gitService.initializeNewWorkspace(workspace);
     } catch (IOException | GitAPIException ex) {
-      logger.error("CREATE WORKSPACE: Unable to initialize workspace history at {}", repoPath, ex);
+      logger.error("CREATE WORKSPACE: Unable to initialize workspace history at {}", workspaceAbsolutePath, ex);
       return Optional.empty();
     }
     return Optional.of(workspace.id());
