@@ -124,14 +124,14 @@ class WorkspaceRevisionsScaleTest {
     time("save other + lastEdits all", 10000, () -> { save(git, root, OTHER); git.lastEdits(WS, all); });
 
     timeComparison("create", 1000, impl -> {
-      final var fs = new WorkspaceFileSystemService(repository, git, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+      final var fs = new WorkspaceFileSystemService(repository, git, impl);
       final var bindings = new WorkspaceBindings(null, fs, git, null, "");
       assertInstanceOf(
           HandlerResult.Success.class,
           bindings.handleCreateRevision(WS, TARGET, "*", "", "bench"));
     });
     timeComparison("restore oldest", 1000, impl -> {
-      final var fs = new WorkspaceFileSystemService(repository, git, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+      final var fs = new WorkspaceFileSystemService(repository, git, impl);
       final var bindings = new WorkspaceBindings(null, fs, git, null, "");
       assertInstanceOf(
           HandlerResult.Success.class,
