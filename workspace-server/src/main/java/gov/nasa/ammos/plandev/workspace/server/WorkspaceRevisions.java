@@ -401,8 +401,8 @@ public final class WorkspaceRevisions {
   }
 
   private Optional<Revision> getMostRecentRevision(Path root, String key) throws IOException {
-    final var existing = list(root, key); // dailis: TODO Using list when we only want the most recent revision
-    return existing.isEmpty() ? Optional.empty() : Optional.of(existing.getFirst());
+    final LinkedHashMap<UUID, List<Revision>> revisionsByFileId = new LinkedHashMap<>();
+    return getMostRecentRevision(root, key, revisionsByFileId);
   }
 
   /**
