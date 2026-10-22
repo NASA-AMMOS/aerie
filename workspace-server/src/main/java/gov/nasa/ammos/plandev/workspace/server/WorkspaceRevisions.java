@@ -324,7 +324,7 @@ public final class WorkspaceRevisions {
         }
       }
 
-      var cacheEntry = workspaceFileIdCache.get(key);
+      var cacheEntry = workspaceFileIdCache.get(pathAtCommit);
       if (cacheEntry != null && cacheEntry.computedAtHead.equals(commit)) {
         return Optional.of(cacheEntry.revision());
       }

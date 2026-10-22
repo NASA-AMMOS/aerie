@@ -20,7 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.json.Json;
@@ -102,9 +105,14 @@ class WorkspaceGitServiceIntegrationTest {
 
   /** Recreate all in-memory coordination state while keeping the workspace disks, as a process restart would. */
   private void restartServer() {
+    restartServer(WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+  }
+
+  /** As {@link #restartServer()}, but with a chosen revision-listing implementation (see {@link Revisions}). */
+  private void restartServer(final WorkspaceRevisions.Implementation implementation) {
     history = new FlakyHistory();
-    fs = new WorkspaceFileSystemService(wsRepo, history, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
-    bindings = new MockBindings(fs, history);
+    fs = new WorkspaceFileSystemService(wsRepo, history, implementation);
+    bindings = new MockBindings(null, history);
   }
 
   //region Helpers
@@ -1774,15 +1782,30 @@ class WorkspaceGitServiceIntegrationTest {
     assertFalse(Files.exists(WS1.rootPath().resolve("x")));
   }
 
+  /**
+   * Run every revision test against both listing implementations: the result must not depend on which one lists.
+   * {@link #names} additionally cross-checks each implementation's warm listing against the reference
+   * ({@code WITHOUT_FILE_ID}) computed from scratch, so any divergence on a lineage fails here.
+   */
   @Nested
+  @ParameterizedClass
+  @EnumSource(WorkspaceRevisions.Implementation.class)
   class Revisions {
+    @Parameter
+    WorkspaceRevisions.Implementation implementation;
+
+    @BeforeEach
+    void useImplementation() {
+      restartServer(implementation);
+    }
+
     private String revise(final String path, final String message) {
       final var result = bindings.handleCreateRevision(WS1.id(), Path.of(path), "*", message, DEFAULT_USER);
       assertSuccess(result);
       return ((HandlerResult.Success) result).response();
     }
 
-    /** Also checks the cached listing against one computed from scratch. */
+    /** Also checks the cached listing against the reference implementation computed from scratch. */
     private List<String> names(final String path) throws Exception {
       final var warm = fs.listRevisions(WS1, Path.of(path));
       assertEquals(new WorkspaceFileSystemService(wsRepo, history, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID).listRevisions(WS1, Path.of(path)), warm);

@@ -80,7 +80,7 @@ class WorkspaceRevisionsScaleTest {
     final var root = WS.rootPath();
     final var start = System.nanoTime();
     generate(root, commits, files, targetEvery, revisions, otherTags, revisionStopAt);
-    final var git = new WorkspaceGitService(repository);
+    final var git = new WorkspaceGitService();
 
     final Set<Path> all = new HashSet<>();
     try (final var paths = Files.walk(root)) {
@@ -120,7 +120,7 @@ class WorkspaceRevisionsScaleTest {
         new WorkspaceFileSystemService(repository, git, impl).readRevision(WS, TARGET, oldest));
 
     // These don't depend on implementation
-    time("lastEdits all cold", 10000, () -> new WorkspaceGitService(repository).lastEdits(WS, all));
+    time("lastEdits all cold", 10000, () -> new WorkspaceGitService().lastEdits(WS, all));
     time("save other + lastEdits all", 10000, () -> { save(git, root, OTHER); git.lastEdits(WS, all); });
 
     timeComparison("create", 1000, impl -> {
@@ -128,14 +128,14 @@ class WorkspaceRevisionsScaleTest {
       final var bindings = new WorkspaceBindings(null, fs, git, null, "");
       assertInstanceOf(
           HandlerResult.Success.class,
-          bindings.handleCreateRevision(WS, TARGET, "*", "", "bench"));
+          bindings.handleCreateRevision(WS.id(), TARGET, "*", "", "bench"));
     });
     timeComparison("restore oldest", 1000, impl -> {
       final var fs = new WorkspaceFileSystemService(repository, git, impl);
       final var bindings = new WorkspaceBindings(null, fs, git, null, "");
       assertInstanceOf(
           HandlerResult.Success.class,
-          bindings.handleRestoreRevision(WS, TARGET, oldest, "*", "bench"));
+          bindings.handleRestoreRevision(WS.id(), TARGET, oldest, "*", "bench"));
     });
   }
 
