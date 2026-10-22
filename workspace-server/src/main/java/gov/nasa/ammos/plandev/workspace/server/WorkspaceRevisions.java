@@ -69,6 +69,16 @@ public final class WorkspaceRevisions {
   private static final String TYPE = "plandev-file-revision";
   private static final int VERSION = 1;
 
+  private final Implementation implementation;
+
+  public WorkspaceRevisions(Implementation implementation) {
+    this.implementation = implementation;
+  }
+
+  public enum Implementation {
+    WITHOUT_FILE_ID
+  }
+
   public record Revision(
       int ordinal,
       String path,
@@ -150,6 +160,10 @@ public final class WorkspaceRevisions {
    * @param key the file's workspace-relative path at HEAD, '/'-separated
    */
   List<Revision> list(final Path root, final String key) throws IOException {
+    return getRevisions(root, key);
+  }
+
+  List<Revision> getRevisions(final Path root, final String key) throws IOException {
     if (!Files.isDirectory(root.resolve(WorkspacePaths.GIT_DIR), LinkOption.NOFOLLOW_LINKS)) return List.of();
     // The slice of the list cache belonging to this workspace
     final var workspaceListCache =
@@ -279,8 +293,8 @@ public final class WorkspaceRevisions {
       final LastEdit lastEdit)
   throws IOException, GitAPIException
   {
-    final var existing = list(root, key);
-    final var ordinal = existing.isEmpty() ? 1 : existing.getFirst().ordinal() + 1;
+    var mostRecentRevision = getMostRecentRevision(root, key);
+    final var ordinal = mostRecentRevision.map(value -> value.ordinal() + 1).orElse(1);
     try (final var git = Git.open(root.toFile()); final var walk = new RevWalk(git.getRepository())) {
       final var head = git.getRepository().resolve(Constants.HEAD);
       // ponytail: an uncached walk back to the file's last change, under the lock; cache it if creates on rarely
@@ -300,6 +314,11 @@ public final class WorkspaceRevisions {
       remember(root, key, revision);
       return revision;
     }
+  }
+
+  private Optional<Revision> getMostRecentRevision(Path root, String key) throws IOException {
+    final var existing = list(root, key); // dailis: TODO Using list when we only want the most recent revision
+    return existing.isEmpty() ? Optional.empty() : Optional.of(existing.getFirst());
   }
 
   /**

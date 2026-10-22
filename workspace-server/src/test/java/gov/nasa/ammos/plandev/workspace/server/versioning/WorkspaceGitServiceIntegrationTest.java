@@ -103,7 +103,7 @@ class WorkspaceGitServiceIntegrationTest {
   /** Recreate all in-memory coordination state while keeping the workspace disks, as a process restart would. */
   private void restartServer() {
     history = new FlakyHistory();
-    fs = new WorkspaceFileSystemService(wsRepo, history);
+    fs = new WorkspaceFileSystemService(wsRepo, history, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
     bindings = new MockBindings(fs, history);
   }
 
@@ -1785,7 +1785,7 @@ class WorkspaceGitServiceIntegrationTest {
     /** Also checks the cached listing against one computed from scratch. */
     private List<String> names(final String path) throws Exception {
       final var warm = fs.listRevisions(WS1, Path.of(path));
-      assertEquals(new WorkspaceFileSystemService(wsRepo, history).listRevisions(WS1, Path.of(path)), warm);
+      assertEquals(new WorkspaceFileSystemService(wsRepo, history, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID).listRevisions(WS1, Path.of(path)), warm);
       return warm.stream().map(WorkspaceRevisions.Revision::name).toList();
     }
 

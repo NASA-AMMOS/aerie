@@ -26,8 +26,10 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -51,30 +53,33 @@ class WorkspaceRevisionsScaleTest {
 
   @TempDir Path tmp;
 
+  // Store results for each implementation
+  private final Map<WorkspaceRevisions.Implementation, Map<String, Double>> implResults = new HashMap<>();
+
   /**
    * commits: history length (times SCALE). files: other files, one edited per commit, round robin. targetEvery: the
    * target is edited every N commits. revisions: on the target, spread evenly. otherTags: revisions on another file.
+   * revisionStopAt: if >0, stop creating revisions after this fraction of commits (0.0-1.0 as percentage).
    */
   @ParameterizedTest(name = "{0}")
   @CsvSource({
-      // name,         commits, files, targetEvery, revisions, otherTags
-      "typical,        1000,    100,   20,          10,        20",
-      "rarely-edited,  1000,    100,   500,         2,         0",
+      // name,              commits, files, targetEvery, revisions, otherTags, revisionStopAt
+      "typical,             1000,    100,   20,          10,        20,        100",
+      "rarely-edited,       1000,    100,   500,         2,         0,         100",
       // Disabled until lastEdits stops walking history once per path: its cold call takes ~90 s at 1000 files.
-      // "many-files,     1000,    1000,  20,          10,        20",
-      "many-tags,      1000,    100,   20,          100,       1000",
+      // "many-files,          1000,    1000,  20,          10,        20,        100",
+      "many-tags,           1000,    100,   20,          100,       1000,      100",
+      "stale-revisions,     1000,    100,   20,          10,        20,        20",
   })
-  void scenario(String name, int commits, int files, int targetEvery, int revisions, int otherTags) throws Throwable {
+  void scenario(String name, int commits, int files, int targetEvery, int revisions, int otherTags, int revisionStopAt) throws Throwable {
     commits *= SCALE;
     final var repository = new WorkspaceTestRepository(tmp.toRealPath());
     WS = repository.createWorkspace("ws1");
     final var root = WS.rootPath();
     final var start = System.nanoTime();
-    generate(root, commits, files, targetEvery, revisions, otherTags);
-    final var git = new WorkspaceGitService();
-    final var fs = new WorkspaceFileSystemService(repository, git);
-    final var bindings = new WorkspaceBindings(null, fs, git, null, "");
-    save(git, root, OTHER); // adopts the generated repository, as a legacy workspace's first mutation would
+    generate(root, commits, files, targetEvery, revisions, otherTags, revisionStopAt);
+    final var git = new WorkspaceGitService(repository);
+
     final Set<Path> all = new HashSet<>();
     try (final var paths = Files.walk(root)) {
       paths.filter(p -> Files.isRegularFile(p) && !root.relativize(p).toString().matches("(.*/)?\\..*")) // no dot files or dirs
@@ -84,20 +89,84 @@ class WorkspaceRevisionsScaleTest {
     final var oldest = WorkspaceRevisions.name(1);
     System.out.printf("%s: %d commits, %d files, target every %d, %d revisions, %d other tags (setup %.1fs)%n",
         name, commits, all.size(), targetEvery, revisions, otherTags, (System.nanoTime() - start) / 1e9);
+
+    // Run both implementations and compare
+    System.out.printf("  %-28s %16s %16s %12s%n", "", "WITHOUT_FILE_ID", "WITH_FILE_ID", "Δ");
+
+    for (final var impl : WorkspaceRevisions.Implementation.values()) {
+      implResults.put(impl, new HashMap<>());
+    }
+
     // Budgets (ms, SCALE=1) are ~10x a laptop run, to absorb slow CI runners.
-    time("list cold", 2000, () -> new WorkspaceFileSystemService(repository, git).listRevisions(WS, TARGET));
-    time("list warm", 300, () -> fs.listRevisions(WS, TARGET));
-    final var listed = fs.listRevisions(WS, TARGET);
-    // Matches no revision unless the target is unchanged since the latest one, so this is usually a scan of all of them.
-    time("matchingRevision", 300, () -> fs.matchingRevision(WS, TARGET, listed));
-    time("save other + list", 1500, () -> { save(git, root, OTHER); fs.listRevisions(WS, TARGET); });
-    time("read oldest cold", 2000, () -> new WorkspaceFileSystemService(repository, git).readRevision(WS, TARGET, oldest));
-    time("lastEdits all cold", 10000, () -> new WorkspaceGitService().lastEdits(WS, all));
+    timeComparison("list cold", 2000, impl ->
+        new WorkspaceFileSystemService(repository, git, impl).listRevisions(WS, TARGET));
+    timeComparison("list warm", 2000, impl -> {
+        final var fs = new WorkspaceFileSystemService(repository, git, impl);
+        fs.listRevisions(WS, TARGET); // warm it up
+        fs.listRevisions(WS, TARGET);
+    });
+    timeComparison("matchingRevision", 2000, impl -> {
+        final var fs = new WorkspaceFileSystemService(repository, git, impl);
+        final var listed = fs.listRevisions(WS, TARGET);
+        fs.matchingRevision(WS, TARGET, listed);
+    });
+    timeComparison("save other + list", 1500, impl -> {
+        save(git, root, OTHER);
+        new WorkspaceFileSystemService(repository, git, impl).listRevisions(WS, TARGET);
+    });
+    timeComparison("read oldest cold", 2000, impl ->
+        new WorkspaceFileSystemService(repository, git, impl).readRevision(WS, TARGET, oldest));
+
+    // These don't depend on implementation
+    time("lastEdits all cold", 10000, () -> new WorkspaceGitService(repository).lastEdits(WS, all));
     time("save other + lastEdits all", 10000, () -> { save(git, root, OTHER); git.lastEdits(WS, all); });
-    time("create", 1000, () -> assertInstanceOf(HandlerResult.Success.class,
-        bindings.handleCreateRevision(WS.id(), TARGET, "*", "", "bench")));
-    time("restore oldest", 1000, () -> assertInstanceOf(HandlerResult.Success.class,
-        bindings.handleRestoreRevision(WS.id(), TARGET, oldest, "*", "bench")));
+
+    timeComparison("create", 1000, impl -> {
+      final var fs = new WorkspaceFileSystemService(repository, git, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+      final var bindings = new WorkspaceBindings(null, fs, git, null, "");
+      assertInstanceOf(
+          HandlerResult.Success.class,
+          bindings.handleCreateRevision(WS, TARGET, "*", "", "bench"));
+    });
+    timeComparison("restore oldest", 1000, impl -> {
+      final var fs = new WorkspaceFileSystemService(repository, git, WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+      final var bindings = new WorkspaceBindings(null, fs, git, null, "");
+      assertInstanceOf(
+          HandlerResult.Success.class,
+          bindings.handleRestoreRevision(WS, TARGET, oldest, "*", "bench"));
+    });
+  }
+
+  @FunctionalInterface
+  interface ImplExecutable {
+    void execute(WorkspaceRevisions.Implementation impl) throws Throwable;
+  }
+
+  /**
+   * Run an operation with both implementations and compare results side by side.
+   */
+  private void timeComparison(
+      String op,
+      int budgetMs,
+      ImplExecutable action) throws Throwable
+  {
+    final var results = new HashMap<WorkspaceRevisions.Implementation, Double>();
+
+    for (final var impl : WorkspaceRevisions.Implementation.values()) {
+      final var ms = new double[4]; // ms[0] is the warm-up
+      for (var i = 0; i < ms.length; i++) {
+        final var start = System.nanoTime();
+        action.execute(impl);
+        ms[i] = (System.nanoTime() - start) / 1e6;
+        if (SCALE == 1) assertTrue(ms[i] < budgetMs, "%s (%s) took %.1f ms, budget %d ms".formatted(op, impl, ms[i], budgetMs));
+      }
+      Arrays.sort(ms, 1, ms.length);
+      results.put(impl, ms[2]);
+      implResults.get(impl).put(op, ms[2]);
+    }
+
+    final var without = results.get(WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
+    System.out.printf("  %-28s %13.1f ms%n", op, without);
   }
 
   /**
@@ -126,12 +195,13 @@ class WorkspaceRevisionsScaleTest {
   }
 
   /** Writes the history directly as Git objects (a save through the API takes ~25 ms) and checks out its tip. */
-  private static void generate(Path root, int commits, int files, int targetEvery, int revisions, int otherTags)
+  private static void generate(Path root, int commits, int files, int targetEvery, int revisions, int otherTags, int revisionStopAt)
   throws Exception
   {
     final var blobs = new TreeMap<String, ObjectId>(); // workspace-relative path -> blob
     final var revisionAt = new ArrayList<ObjectId>();
     final var otherTagAt = new ArrayList<ObjectId>();
+    final var revisionStopAtCommit = (int) (commits * revisionStopAt / 100.0);
     try (final var git = Git.init().setDirectory(root.toFile()).setInitialBranch("main").call();
          final var inserter = git.getRepository().newObjectInserter()) {
       final var sidecar = blob(inserter, "{}");
@@ -149,7 +219,7 @@ class WorkspaceRevisionsScaleTest {
         commit.setCommitter(who);
         commit.setMessage("c" + c);
         parent = inserter.insert(commit);
-        if (revisions > 0 && (c + 1) % Math.max(1, commits / revisions) == 0 && revisionAt.size() < revisions) revisionAt.add(parent);
+        if (revisions > 0 && c < revisionStopAtCommit && (c + 1) % Math.max(1, revisionStopAtCommit / revisions) == 0 && revisionAt.size() < revisions) revisionAt.add(parent);
         if (otherTags > 0 && c % Math.max(1, commits / otherTags) == 0 && otherTagAt.size() < otherTags) otherTagAt.add(parent);
       }
       inserter.flush();

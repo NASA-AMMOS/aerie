@@ -62,11 +62,12 @@ public class WorkspaceFileSystemService implements WorkspaceService {
 
   final WorkspaceRepository workspaceRepository;
   final WorkspaceGitService gitService;
-  private final WorkspaceRevisions revisions = new WorkspaceRevisions();
+  private final WorkspaceRevisions revisions;
 
-  public WorkspaceFileSystemService(final WorkspaceRepository workspaceRepository, final WorkspaceGitService gitService) {
+  public WorkspaceFileSystemService(final WorkspaceRepository workspaceRepository, final WorkspaceGitService gitService, WorkspaceRevisions.Implementation implementation) {
     this.workspaceRepository = workspaceRepository;
     this.gitService = gitService;
+    revisions = new WorkspaceRevisions(implementation);
   }
 
   /**
