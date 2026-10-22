@@ -49,7 +49,9 @@ class WorkspaceRevisionsScaleTest {
   private static Workspace WS;
   private static final int SCALE = Integer.parseInt(System.getenv().getOrDefault("SCALE", "1"));
   private static final Path TARGET = Path.of("seq/target.seq");
+  private static final UUID TARGET_FILE_ID = UUID.nameUUIDFromBytes(TARGET.toString().getBytes());
   private static final Path OTHER = Path.of("d01/f001.seq");
+  private static final UUID OTHER_FILE_ID = UUID.nameUUIDFromBytes(OTHER.toString().getBytes());
 
   @TempDir Path tmp;
 
@@ -166,7 +168,11 @@ class WorkspaceRevisionsScaleTest {
     }
 
     final var without = results.get(WorkspaceRevisions.Implementation.WITHOUT_FILE_ID);
-    System.out.printf("  %-28s %13.1f ms%n", op, without);
+    final var with = results.get(WorkspaceRevisions.Implementation.WITH_FILE_ID);
+    final var delta = with - without;
+    final var deltaPercent = (delta / without) * 100;
+    final var deltaStr = String.format("%+.1f ms (%+.0f%%)", delta, deltaPercent);
+    System.out.printf("  %-28s %13.1f ms %13.1f ms %12s%n", op, without, with, deltaStr);
   }
 
   /**
@@ -227,8 +233,8 @@ class WorkspaceRevisionsScaleTest {
       update.setNewObjectId(parent);
       update.forceUpdate();
       git.reset().setMode(ResetCommand.ResetType.HARD).call();
-      tag(git, revisionAt, TARGET.toString());
-      tag(git, otherTagAt, OTHER.toString());
+      tag(git, revisionAt, TARGET.toString(), TARGET_FILE_ID);
+      tag(git, otherTagAt, OTHER.toString(), OTHER_FILE_ID);
     }
   }
 
@@ -247,11 +253,11 @@ class WorkspaceRevisionsScaleTest {
   }
 
   /** Revisions 1..n of path on the given commits, written as create would write them. */
-  private static void tag(Git git, List<ObjectId> commits, String path) throws Exception {
+  private static void tag(Git git, List<ObjectId> commits, String path, UUID fileId) throws Exception {
     try (final var walk = new RevWalk(git.getRepository())) {
       for (var i = 0; i < commits.size(); i++) {
         final var revision = new WorkspaceRevisions.Revision(
-            i + 1, path, "", "bench", Instant.now(), commits.get(i), null);
+            i + 1, path, "", "bench", Instant.now(), commits.get(i), null, fileId);
         git.tag()
            .setName(WorkspaceRevisions.TAG_PREFIX + UUID.randomUUID())
            .setObjectId(walk.parseCommit(commits.get(i)))

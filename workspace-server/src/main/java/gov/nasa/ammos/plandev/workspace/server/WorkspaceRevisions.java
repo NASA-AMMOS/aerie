@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +77,8 @@ public final class WorkspaceRevisions {
   }
 
   public enum Implementation {
-    WITHOUT_FILE_ID
+    WITHOUT_FILE_ID,
+    WITH_FILE_ID
   }
 
   public record Revision(
@@ -86,7 +88,8 @@ public final class WorkspaceRevisions {
       String createdBy,
       Instant createdAt,
       ObjectId commit,
-      LastEdit lastEdit)
+      LastEdit lastEdit,
+      UUID fileId)
   {
     public String name() {
       return WorkspaceRevisions.name(ordinal);
@@ -102,7 +105,8 @@ public final class WorkspaceRevisions {
                            .add("pathAtRevision", path)
                            .add("message", message)
                            .add("createdAt", createdAt.toString())
-                           .add("createdBy", createdBy);
+                           .add("createdBy", createdBy)
+                           .add("fileId", fileId.toString());
       if (lastEdit == null || lastEdit.baseline()) {
         json.addNull("lastEditedBy").addNull("lastEditedAt");
       } else {
@@ -160,7 +164,11 @@ public final class WorkspaceRevisions {
    * @param key the file's workspace-relative path at HEAD, '/'-separated
    */
   List<Revision> list(final Path root, final String key) throws IOException {
-    return getRevisions(root, key);
+    if (implementation == Implementation.WITH_FILE_ID) {
+      return getRevisionsUsingFileId(root, key);
+    } else {
+      return getRevisions(root, key);
+    }
   }
 
   List<Revision> getRevisions(final Path root, final String key) throws IOException {
@@ -239,6 +247,81 @@ public final class WorkspaceRevisions {
     }
   }
 
+  private List<Revision> getRevisionsUsingFileId(Path root, String key) throws IOException {
+    if (!Files.isDirectory(root.resolve(WorkspacePaths.GIT_DIR), LinkOption.NOFOLLOW_LINKS)) return List.of();
+
+    final LinkedHashMap<UUID, List<Revision>> revisionsByFileId = new LinkedHashMap<>();
+
+    var mostRecentRevision = getMostRecentRevision(root, key, revisionsByFileId);
+
+    if (mostRecentRevision.isEmpty()) return List.of();
+
+    var fileRevisions = revisionsByFileId.get(mostRecentRevision.get().fileId());
+    return fileRevisions.stream().sorted(Comparator.comparingInt(Revision::ordinal).reversed()).toList();
+  }
+
+  private Optional<Revision> getMostRecentRevision(Path root, String key, LinkedHashMap<UUID, List<Revision>> revisionsByFileId) throws IOException {
+    try (final var repo = open(root); final var walk = new RevWalk(repo)) {
+      final var reader = walk.getObjectReader();
+      // Resolve HEAD before listing tags, so every listed tag is on a commit at or before it.
+      final var headCommitId = repo.resolve(Constants.HEAD);
+      if (headCommitId == null) return Optional.empty();
+
+      // 1. Every revision tag in the repository, for any file, by the commit it points at.
+      final var revisionsByTaggedCommit = revisionsByCommit(repo, walk);
+
+      for (List<Revision> revs : revisionsByTaggedCommit.values()) {
+        for (Revision rev : revs) {
+          revisionsByFileId.computeIfAbsent(rev.fileId(), $ -> new ArrayList<>()).add(rev);
+        }
+      }
+
+      // 2. Walk state.
+      var unvisitedTaggedCommits = revisionsByTaggedCommit.size(); // once zero, no older commit can add a revision
+      var pathAtCommit = key;                                    // the file's path at the commit being walked
+      var commit = walk.parseCommit(headCommitId);
+      // Blob ids of file and metadata file. null once the walk passes the creation of the file
+      var blobIdsAtCommit = fileBlobIds(reader, commit.getTree(), pathAtCommit);
+
+      while (blobIdsAtCommit != null && unvisitedTaggedCommits > 0) {
+        // Revisions tagged on this commit belong to this file if they were made at the path it had here.
+        final var revisionsTaggedAtThisCommit = revisionsByTaggedCommit.get(commit);
+
+        if (revisionsTaggedAtThisCommit != null) {
+          unvisitedTaggedCommits--;
+
+          final var fileRevisions = new LinkedHashSet<Revision>(); // the result: this file's revisions found so far
+          for (final var revision : revisionsTaggedAtThisCommit) {
+            if (revision.path().equals(pathAtCommit)) fileRevisions.add(revision);
+          }
+          if (!fileRevisions.isEmpty()) {
+            return Optional.of(fileRevisions.stream().max(Comparator.comparing($ -> $.ordinal)).get());
+          }
+        }
+
+        // Step to the first parent. If this commit changed the file's content or sidecar and was an exact rename,
+        // follow the file to its old path; otherwise keep the path (and stop once the file did not exist yet).
+        if (commit.getParentCount() == 0) break;
+        final var parent = walk.parseCommit(commit.getParent(0));
+        var blobIdsAtParent = fileBlobIds(reader, parent.getTree(), pathAtCommit);
+        if (!blobIdsAtCommit.equals(blobIdsAtParent)) {
+          final var renamedFrom =
+              renameSource(reader, parent.getTree(), commit.getTree(), pathAtCommit, blobIdsAtCommit);
+          if (renamedFrom != null) {
+            pathAtCommit = renamedFrom;
+            // TODO does this mean that this commit could have only been a rename or could there have potentially been other changes?
+            // right now we don't allow this within plandev but external git operations could break this?
+            blobIdsAtParent = blobIdsAtCommit; // a rename source has the same blob ids by definition -- TODO why? // dailis: Hmmm
+          }
+        }
+        // TODO need to understand this blob id tracking better..
+        blobIdsAtCommit = blobIdsAtParent;
+        commit = parent;
+      }
+    }
+    return Optional.empty();
+  }
+
   /**
    * The newest of {@code revisions} (the file's at {@code key}, newest first) whose content and sidecar are byte-identical to the
    * file's at HEAD, or empty if none is. A save that reverts the file to an older revision matches that revision.
@@ -295,6 +378,7 @@ public final class WorkspaceRevisions {
   {
     var mostRecentRevision = getMostRecentRevision(root, key);
     final var ordinal = mostRecentRevision.map(value -> value.ordinal() + 1).orElse(1);
+    final var fileId = mostRecentRevision.map(Revision::fileId).orElseGet(UUID::randomUUID);
     try (final var git = Git.open(root.toFile()); final var walk = new RevWalk(git.getRepository())) {
       final var head = git.getRepository().resolve(Constants.HEAD);
       // ponytail: an uncached walk back to the file's last change, under the lock; cache it if creates on rarely
@@ -302,7 +386,7 @@ public final class WorkspaceRevisions {
       final var changed = walk.parseCommit(
           git.log().add(head).addPath(key).addPath(sidecarKey(key)).setMaxCount(1).call().iterator().next());
       final var createdBy = userId == null || userId.isBlank() ? WorkspaceGitService.systemIdent().getName() : userId;
-      final var revision = new Revision(ordinal, key, message, createdBy, Instant.now(), changed.copy(), lastEdit);
+      final var revision = new Revision(ordinal, key, message, createdBy, Instant.now(), changed.copy(), lastEdit, fileId);
       git.tag()
          .setName(TAG_PREFIX + UUID.randomUUID())
          .setObjectId(changed)
@@ -387,7 +471,8 @@ public final class WorkspaceRevisions {
                          .add("ordinal", revision.ordinal())
                          .add("message", revision.message())
                          .add("createdAt", revision.createdAt().toString())
-                         .add("createdBy", revision.createdBy());
+                         .add("createdBy", revision.createdBy())
+                         .add("fileId", revision.fileId().toString());
     final var edit = revision.lastEdit();
     if (edit == null) json.addNull("lastEdit");
     else json.add("lastEdit", Json.createObjectBuilder()
@@ -439,7 +524,8 @@ public final class WorkspaceRevisions {
           json.getString("createdBy"),
           Instant.parse(json.getString("createdAt")),
           commit.copy(),
-          edit));
+          edit,
+          UUID.fromString(json.getString("fileId"))));
     } catch (IncorrectObjectTypeException | JsonException | ClassCastException | NullPointerException
              | java.time.format.DateTimeParseException e) {
       logger.debug("Malformed revision tag {} in {}", id.name(), repo.getWorkTree(), e);
