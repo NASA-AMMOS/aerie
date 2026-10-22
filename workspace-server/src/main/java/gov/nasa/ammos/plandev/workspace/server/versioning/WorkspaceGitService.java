@@ -1216,16 +1216,6 @@ public class WorkspaceGitService implements WorkspaceVersioningService {
   }
 
   /**
-   * Get the most recent commit that edited the file, or null if the workspace is not managed by Git.
-   */
-  @Override
-  public LastEdit lastEdit(final Workspace workspace, final Path filePath)
-  throws IOException, WorkspaceHistoryException
-  {
-    return lastEdits(workspace, Set.of(filePath)).get(filePath);
-  }
-
-  /**
    * Apply the by/at information from a LastEdit to a metadata object.
    * @param originalMetadata The original metadata file contents
    * @param edit the last edited information from the versioning service to be applied

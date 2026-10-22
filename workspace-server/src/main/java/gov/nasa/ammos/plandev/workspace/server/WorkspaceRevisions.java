@@ -146,8 +146,8 @@ public final class WorkspaceRevisions {
   private final Map<ObjectId, Optional<Revision>> parsedTagCache = new ConcurrentHashMap<>();
 
   // Cache should help avoiding rework when looking up the most recent revision for any file
-  private record CachedLatestRevision(ObjectId computedAtHead, Revision revision) {}
-  private final Map<Path, Map<String, CachedLatestRevision>> latestRevisionCache = new ConcurrentHashMap<>();
+  private record CachedFileId(ObjectId computedAtHead, Optional<UUID> fileId) {}
+  private final Map<Path, Map<String, CachedFileId>> fileIdCache = new ConcurrentHashMap<>();
 
   /**
    * A file's revisions, newest first. Lock-free.
@@ -174,7 +174,7 @@ public final class WorkspaceRevisions {
 
   List<Revision> list(final Path root, final String key, boolean latestOnly) throws IOException {
     if (implementation == Implementation.WITH_FILE_ID) {
-      return getRevisionsUsingFileId(root, key, latestOnly);
+      return getRevisionsUsingFileId(root, key);
     } else {
       return getRevisions(root, key, latestOnly);
     }
@@ -259,7 +259,7 @@ public final class WorkspaceRevisions {
     }
   }
 
-  private List<Revision> getRevisionsUsingFileId(Path root, String key, boolean latestOnly) throws IOException {
+  private List<Revision> getRevisionsUsingFileId(Path root, String key) throws IOException {
     if (!Files.isDirectory(root.resolve(WorkspacePaths.GIT_DIR), LinkOption.NOFOLLOW_LINKS)) return List.of();
 
     final LinkedHashMap<UUID, List<Revision>> revisionsByFileId = new LinkedHashMap<>();
@@ -268,11 +268,9 @@ public final class WorkspaceRevisions {
       final var headCommitId = repo.resolve(Constants.HEAD);
       if (headCommitId == null) return List.of();
 
-      var latestRevision = getLatestRevision(repo, walk, key);
+      var latestRevision = getFileId(repo, walk, key);
 
       if (latestRevision.isEmpty()) return List.of();
-
-      if (latestOnly) return List.of(latestRevision.get());
 
       // 1. Every revision tag in the repository, for any file, by the commit it points at.
       final var revisionsByTaggedCommit = revisionsByCommit(repo, walk);
@@ -283,14 +281,14 @@ public final class WorkspaceRevisions {
         }
       }
 
-      var fileRevisions = revisionsByFileId.get(latestRevision.get().fileId);
+      var fileRevisions = revisionsByFileId.get(latestRevision.get());
       return fileRevisions.stream().sorted(Comparator.comparingInt(Revision::ordinal).reversed()).toList();
     }
   }
 
-  private Optional<Revision> getLatestRevision(Repository repo, RevWalk walk, String key) throws IOException {
+  private Optional<UUID> getFileId(Repository repo, RevWalk walk, String key) throws IOException {
     final var workspaceFileIdCache =
-        latestRevisionCache.computeIfAbsent(repo.getDirectory().toPath().getParent().toAbsolutePath(), unused -> new ConcurrentHashMap<>());
+        fileIdCache.computeIfAbsent(repo.getDirectory().toPath().getParent().toAbsolutePath(), unused -> new ConcurrentHashMap<>());
     final var reader = walk.getObjectReader();
     // Resolve HEAD before listing tags, so every listed tag is on a commit at or before it.
     final var headCommitId = repo.resolve(Constants.HEAD);
@@ -318,15 +316,16 @@ public final class WorkspaceRevisions {
           if (revision.path().equals(pathAtCommit)) fileRevisions.add(revision);
         }
         if (!fileRevisions.isEmpty()) {
-          workspaceFileIdCache.put(key, new CachedLatestRevision(headCommitId, fileRevisions.getFirst()));
-
-          return Optional.of(fileRevisions.stream().max(Comparator.comparing($ -> $.ordinal)).get());
+          Optional<UUID> fileId = Optional.of(fileRevisions.stream().max(Comparator.comparing(Revision::ordinal)).get().fileId());
+          workspaceFileIdCache.put(key, new CachedFileId(headCommitId, fileId));
+          return fileId;
         }
       }
 
       var cacheEntry = workspaceFileIdCache.get(pathAtCommit);
       if (cacheEntry != null && cacheEntry.computedAtHead.equals(commit)) {
-        return Optional.of(cacheEntry.revision());
+        workspaceFileIdCache.put(key, new CachedFileId(headCommitId, cacheEntry.fileId()));
+        return cacheEntry.fileId();
       }
 
       // Step to the first parent. If this commit changed the file's content or sidecar and was an exact rename,
@@ -348,6 +347,8 @@ public final class WorkspaceRevisions {
       blobIdsAtCommit = blobIdsAtParent;
       commit = parent;
     }
+
+    workspaceFileIdCache.putIfAbsent(key, new CachedFileId(headCommitId, Optional.empty()));
     return Optional.empty();
   }
 
@@ -414,7 +415,7 @@ public final class WorkspaceRevisions {
       // edited files in long histories get slow.
       final var changed = walk.parseCommit(
           git.log().add(head).addPath(key).addPath(sidecarKey(key)).setMaxCount(1).call().iterator().next());
-      final var createdBy = userId == null || userId.isBlank() ? WorkspaceGitService.systemIdent().getName() : userId;
+      final var createdBy = (userId == null || userId.isBlank()) ? WorkspaceGitService.systemIdent().getName() : userId;
       final var revision = new Revision(ordinal, key, message, createdBy, Instant.now(), changed.copy(), lastEdit, fileId);
       git.tag()
          .setName(TAG_PREFIX + UUID.randomUUID())
@@ -424,7 +425,7 @@ public final class WorkspaceRevisions {
          .setTagger(new PersonIdent(createdBy, "", revision.createdAt(), ZoneOffset.UTC))
          .setMessage(annotation(revision))
          .call();
-      remember(root, key, revision);
+      remember(root, key, revision, head);
       return revision;
     }
   }
@@ -440,20 +441,27 @@ public final class WorkspaceRevisions {
    * once. It is the file's own revision (the list in create just cached the file's revisions at this HEAD) and a known,
    * unrelated tag to every other cached list.
    */
-  private void remember(final Path root, final String key, final Revision newRevision) {
-    final var workspaceListCache = revisionListCache.get(root.normalize());
-    if (workspaceListCache == null) return;
-    workspaceListCache.replaceAll((listedKey, cachedList) -> {
-      final var knownRevisions = new HashSet<>(cachedList.knownRevisions());
-      knownRevisions.add(newRevision);
-      if (!listedKey.equals(key)) {
-        return new CachedRevisionList(cachedList.computedAtHead(), cachedList.revisions(), knownRevisions);
+  private void remember(final Path root, final String key, final Revision newRevision, final ObjectId headCommit) {
+    if (implementation == Implementation.WITHOUT_FILE_ID) {
+      final var workspaceListCache = revisionListCache.get(root.normalize());
+      if (workspaceListCache == null) return;
+      workspaceListCache.replaceAll((listedKey, cachedList) -> {
+        final var knownRevisions = new HashSet<>(cachedList.knownRevisions());
+        knownRevisions.add(newRevision);
+        if (!listedKey.equals(key)) {
+          return new CachedRevisionList(cachedList.computedAtHead(), cachedList.revisions(), knownRevisions);
+        }
+        final var revisions = new ArrayList<Revision>();
+        revisions.add(newRevision); // the newest ordinal
+        revisions.addAll(cachedList.revisions());
+        return new CachedRevisionList(cachedList.computedAtHead(), revisions, knownRevisions);
+      });
+    } else if (implementation == Implementation.WITH_FILE_ID) {
+      final var workspaceFileIdCache = fileIdCache.get(root.normalize().resolve(WorkspacePaths.GIT_DIR).getParent());
+      if (workspaceFileIdCache != null) {
+        workspaceFileIdCache.put(key, new CachedFileId(headCommit, Optional.of(newRevision.fileId())));
       }
-      final var revisions = new ArrayList<Revision>();
-      revisions.add(newRevision); // the newest ordinal
-      revisions.addAll(cachedList.revisions());
-      return new CachedRevisionList(cachedList.computedAtHead(), List.copyOf(revisions), knownRevisions);
-    });
+    }
   }
 
   /**

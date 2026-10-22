@@ -72,6 +72,7 @@ class WorkspaceRevisionsScaleTest {
       // "many-files,          1000,    1000,  20,          10,        20,        100",
       "many-tags,           1000,    100,   20,          100,       1000,      100",
       "stale-revisions,     1000,    100,   20,          10,        20,        20",
+      "no-revisions,        1000,    100,   20,          0,         1000,      100",
   })
   void scenario(String name, int commits, int files, int targetEvery, int revisions, int otherTags, int revisionStopAt) throws Throwable {
     commits *= SCALE;
@@ -119,24 +120,38 @@ class WorkspaceRevisionsScaleTest {
     timeComparison("read oldest cold", 2000, impl ->
         new WorkspaceFileSystemService(repository, git, impl).readRevision(WS, TARGET, oldest));
 
+    // Test for files with no revisions - demonstrates cache invalidation issue
+    // WITH_FILE_ID walks entire history each time because getFileId returns empty and doesn't cache negative results
+    if (revisions == 0) {
+      timeComparison("list no-revisions cold", 2000, impl ->
+          new WorkspaceFileSystemService(repository, git, impl).listRevisions(WS, TARGET));
+      timeComparison("list no-revisions warm", 2000, impl -> {
+          final var fs = new WorkspaceFileSystemService(repository, git, impl);
+          fs.listRevisions(WS, TARGET); // warm it up
+          fs.listRevisions(WS, TARGET); // should use cache, but WITH_FILE_ID walks full history again
+      });
+    }
+
     // These don't depend on implementation
     time("lastEdits all cold", 10000, () -> new WorkspaceGitService().lastEdits(WS, all));
     time("save other + lastEdits all", 10000, () -> { save(git, root, OTHER); git.lastEdits(WS, all); });
 
-    timeComparison("create", 1000, impl -> {
-      final var fs = new WorkspaceFileSystemService(repository, git, impl);
-      final var bindings = new WorkspaceBindings(null, fs, git, null, "");
-      assertInstanceOf(
-          HandlerResult.Success.class,
-          bindings.handleCreateRevision(WS.id(), TARGET, "*", "", "bench"));
-    });
-    timeComparison("restore oldest", 1000, impl -> {
-      final var fs = new WorkspaceFileSystemService(repository, git, impl);
-      final var bindings = new WorkspaceBindings(null, fs, git, null, "");
-      assertInstanceOf(
-          HandlerResult.Success.class,
-          bindings.handleRestoreRevision(WS.id(), TARGET, oldest, "*", "bench"));
-    });
+    if (revisions > 0) {
+      timeComparison("create", 1000, impl -> {
+        final var fs = new WorkspaceFileSystemService(repository, git, impl);
+        final var bindings = new WorkspaceBindings(null, fs, git, null, "");
+        assertInstanceOf(
+            HandlerResult.Success.class,
+            bindings.handleCreateRevision(WS.id(), TARGET, "*", "", "bench"));
+      });
+      timeComparison("restore oldest", 1000, impl -> {
+        final var fs = new WorkspaceFileSystemService(repository, git, impl);
+        final var bindings = new WorkspaceBindings(null, fs, git, null, "");
+        assertInstanceOf(
+            HandlerResult.Success.class,
+            bindings.handleRestoreRevision(WS.id(), TARGET, oldest, "*", "bench"));
+      });
+    }
   }
 
   @FunctionalInterface
@@ -236,8 +251,8 @@ class WorkspaceRevisionsScaleTest {
       tag(git, revisionAt, TARGET.toString(), TARGET_FILE_ID);
       tag(git, otherTagAt, OTHER.toString(), OTHER_FILE_ID);
 
-      // Pack all loose objects to test realistic performance (repos are typically packed)
-      git.gc().setExpire(null).call();
+//      // Pack all loose objects to test realistic performance (repos are typically packed)
+//      git.gc().setExpire(null).call();
     }
   }
 
