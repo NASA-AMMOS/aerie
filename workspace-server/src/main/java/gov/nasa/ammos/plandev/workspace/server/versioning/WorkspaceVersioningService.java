@@ -23,7 +23,7 @@ public interface WorkspaceVersioningService {
   Map<Path, LastEdit> lastEdits(final Workspace workspace, final Set<Path> paths)
   throws IOException, WorkspaceFileOpException;
 
-  default LastEdit lastEdit(final Workspace workspace, Path filePath) throws IOException, NoSuchWorkspaceException, WorkspaceFileOpException {
+  default LastEdit lastEdit(final Workspace workspace, Path filePath) throws IOException, WorkspaceFileOpException {
     return lastEdits(workspace, Set.of(filePath)).values().stream().findFirst().get();
   }
 
