@@ -65,7 +65,7 @@ class WorkspaceRevisionsScaleTest {
    */
   @ParameterizedTest(name = "{0}")
   @CsvSource({
-      // name,              commits, files, targetEvery, revisions, otherTags, revisionStopAt
+//      // name,              commits, files, targetEvery, revisions, otherTags, revisionStopAt
       "typical,             1000,    100,   20,          10,        20,        100",
       "rarely-edited,       1000,    100,   500,         2,         0,         100",
       // Disabled until lastEdits stops walking history once per path: its cold call takes ~90 s at 1000 files.
@@ -235,6 +235,9 @@ class WorkspaceRevisionsScaleTest {
       git.reset().setMode(ResetCommand.ResetType.HARD).call();
       tag(git, revisionAt, TARGET.toString(), TARGET_FILE_ID);
       tag(git, otherTagAt, OTHER.toString(), OTHER_FILE_ID);
+
+      // Pack all loose objects to test realistic performance (repos are typically packed)
+      git.gc().setExpire(null).call();
     }
   }
 
